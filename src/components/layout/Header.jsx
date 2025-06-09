@@ -1,10 +1,11 @@
-import React from 'react';
-import { Search, Moon, Sun, Settings, ChevronDown, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { Moon, Sun, Settings, ChevronDown, User, Upload, FileText, FileSpreadsheet, FileCode } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import ThemeToggle from '../ui/ThemeToggle';
 
-const Header = ({ toggleCommandPalette }) => {
+const Header = () => {
   const { theme, toggleTheme } = useTheme();
+  const [showFileMenu, setShowFileMenu] = useState(false);
   
   return (
     <div className={`flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700`}>
@@ -14,15 +15,34 @@ const Header = ({ toggleCommandPalette }) => {
           <span>Sheet1</span>
           <ChevronDown size={14} />
         </div>
-      </div>
-      
-      {/* Search/Command Bar */}
-      <div 
-        className="relative flex items-center mx-2 px-3 py-1 flex-grow max-w-lg rounded-lg border border-gray-200 dark:border-gray-700 cursor-text"
-        onClick={toggleCommandPalette}
-      >
-        <Search size={16} className="mr-2 text-gray-500" />
-        <span className="text-gray-500 text-sm">Search or type '/' for commands...</span>
+        <button 
+          className="hidden md:flex items-center space-x-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1"
+          onClick={() => setShowFileMenu(!showFileMenu)}
+        >
+          <Upload size={14} />
+          <span>Import</span>
+        </button>
+        
+        {/* File Menu Dropdown */}
+        {showFileMenu && (
+          <div className="absolute top-12 left-32 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+            <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2">
+              <FileSpreadsheet size={16} />
+              <span>Import Excel</span>
+            </button>
+            <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2">
+              <FileCode size={16} />
+              <span>Import CSV</span>
+            </button>
+            <div className="px-4 py-2 text-left text-sm text-gray-500 dark:text-gray-400 flex items-center space-x-2 opacity-50 cursor-not-allowed">
+              <FileText size={16} />
+              <div className="flex flex-col">
+                <span>Import Text</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">Coming soon</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Right Side Icons */}

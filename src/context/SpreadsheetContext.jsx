@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
+import api from '../services/api';
 
 // Initial spreadsheet data
 const initialData = {
@@ -6,75 +7,151 @@ const initialData = {
     {
       id: 'sheet1',
       name: 'Sheet1',
-      cells: {
-        'A1': { value: 'Quarter', type: 'text' },
-        'B1': { value: 'Revenue', type: 'text' },
-        'C1': { value: 'Expenses', type: 'text' },
-        'D1': { value: 'Profit', type: 'text' },
-        'A2': { value: 'Q1', type: 'text' },
-        'B2': { value: 45231.89, type: 'currency', formatted: '$45,231.89' },
-        'C2': { value: 23456.78, type: 'currency', formatted: '$23,456.78' },
-        'D2': { value: 21775.11, type: 'currency', formatted: '$21,775.11' },
-        'A3': { value: 'Q2', type: 'text' },
-        'B3': { value: 52347.65, type: 'currency', formatted: '$52,347.65' },
-        'C3': { value: 27891.34, type: 'currency', formatted: '$27,891.34' },
-        'D3': { value: 24456.31, type: 'currency', formatted: '$24,456.31' },
-        'A4': { value: 'Q3', type: 'text' },
-        'B4': { value: 59872.43, type: 'currency', formatted: '$59,872.43' },
-        'C4': { value: 29763.21, type: 'currency', formatted: '$29,763.21' },
-        'D4': { value: 30109.22, type: 'currency', formatted: '$30,109.22' },
-        'A5': { value: 'Q4', type: 'text' },
-        'B5': { value: '=SUM(B2:B4)', type: 'formula', formatted: '$157,451.97' },
-      },
+      cells: {},
       columns: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
       rows: 100,
-      activeCell: 'B5',
+      activeCell: 'A1',
     }
   ],
   activeSheet: 'sheet1',
 };
 
-const SpreadsheetContext = createContext();
+const SpreadsheetContext = createContext(null);
 
 export const SpreadsheetProvider = ({ children }) => {
   const [spreadsheetData, setSpreadsheetData] = useState(initialData);
-  const [selectedCell, setSelectedCell] = useState({ col: 'B', row: 5 });
-  const [activeFormula, setActiveFormula] = useState('=SUM(B2:B4)');
+  const [selectedCell, setSelectedCell] = useState({ col: 'A', row: 1 });
+  const [activeFormula, setActiveFormula] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [updateQueue, setUpdateQueue] = useState({});
+
+  // Process any pending updates
+  useEffect(() => {
+    const keys = Object.keys(updateQueue);
+    if (keys.length > 0) {
+      // Take the first pending update and process it
+      const cellId = keys[0];
+      const { col, row, value } = updateQueue[cellId];
+
+      // Remove this item from the queue
+      const newQueue = { ...updateQueue };
+      delete newQueue[cellId];
+      setUpdateQueue(newQueue);
+
+      // Process the update (without adding it back to the queue)
+      processCellUpdate(col, row, value);
+    }
+  }, [updateQueue]);
 
   // Get the currently active sheet
-  const getActiveSheet = () => {
+  const getActiveSheet = useCallback(() => {
     return spreadsheetData.sheets.find(sheet => sheet.id === spreadsheetData.activeSheet);
-  };
+  }, [spreadsheetData]);
 
-  // Get cell by coordinates
-  const getCell = (col, row) => {
+  // Internal function to process cell updates
+  const processCellUpdate = useCallback(async (col, row, newValue) => {
     const cellId = `${col}${row}`;
-    const activeSheet = getActiveSheet();
-    return activeSheet.cells[cellId] || { value: '', type: 'text', formatted: '' };
-  };
+    try {
+      setIsLoading(true);
+      setError(null);
 
-  // Get cell by ID
-  const getCellById = (cellId) => {
-    const activeSheet = getActiveSheet();
-    return activeSheet.cells[cellId] || { value: '', type: 'text', formatted: '' };
-  };
+      // Update local state immediately for responsive UI
+      setSpreadsheetData(prevData => {
+        const updatedSheets = prevData.sheets.map(sheet => {
+          if (sheet.id === prevData.activeSheet) {
+            const updatedCells = {
+              ...sheet.cells,
+              [cellId]: {
+                value: newValue,
+                formula: '',
+                type: 'text',
+                formatted: newValue
+              }
+            };
+            return {
+              ...sheet,
+              cells: updatedCells
+            };
+          }
+          return sheet;
+        });
 
-  // Update cell value
-  const updateCell = (col, row, newValue) => {
+        return {
+          ...prevData,
+          sheets: updatedSheets
+        };
+      });
+
+      // Send to backend (or simulate API call if needed)
+      try {
+        const response = await api.editCell(cellId, newValue);
+        
+        // Update with server response if it's different
+        if (response && (response.value !== newValue || response.formula)) {
+          setSpreadsheetData(prevData => {
+            const updatedSheets = prevData.sheets.map(sheet => {
+              if (sheet.id === prevData.activeSheet) {
+                const updatedCells = {
+                  ...sheet.cells,
+                  [cellId]: {
+                    value: response.value || newValue,
+                    formula: response.formula || '',
+                    type: response.formula ? 'formula' : 'text',
+                    formatted: response.value || newValue
+                  }
+                };
+                return {
+                  ...sheet,
+                  cells: updatedCells
+                };
+              }
+              return sheet;
+            });
+
+            return {
+              ...prevData,
+              sheets: updatedSheets
+            };
+          });
+        }
+      } catch (apiError) {
+        console.error("API error:", apiError);
+        // The local update remains even if API fails
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Update cell value (public method)
+  const updateCell = useCallback(async (col, row, newValue) => {
     const cellId = `${col}${row}`;
+    
+    // Add to update queue
+    setUpdateQueue(prev => ({
+      ...prev,
+      [cellId]: { col, row, value: newValue }
+    }));
+    
+    // Also update immediately in local state for responsive UI
     setSpreadsheetData(prevData => {
       const updatedSheets = prevData.sheets.map(sheet => {
         if (sheet.id === prevData.activeSheet) {
+          const updatedCells = {
+            ...sheet.cells,
+            [cellId]: {
+              value: newValue,
+              formula: '',
+              type: 'text',
+              formatted: newValue
+            }
+          };
           return {
             ...sheet,
-            cells: {
-              ...sheet.cells,
-              [cellId]: {
-                ...sheet.cells[cellId],
-                value: newValue,
-                // Here you would also add logic to detect formula, format, etc.
-              }
-            }
+            cells: updatedCells
           };
         }
         return sheet;
@@ -85,37 +162,92 @@ export const SpreadsheetProvider = ({ children }) => {
         sheets: updatedSheets
       };
     });
-  };
+    
+    return { success: true };
+  }, []);
 
-  // Calculate formula result (very simplified)
-  const calculateFormula = (formula) => {
-    // This is a simplified example - a real implementation would use a formula parser
-    if (formula.startsWith('=SUM(') && formula.endsWith(')')) {
-      const range = formula.substring(5, formula.length - 1);
-      const [start, end] = range.split(':');
+  // Get cell by coordinates
+  const getCell = useCallback((col, row) => {
+    const cellId = `${col}${row}`;
+    const activeSheet = getActiveSheet();
+    return activeSheet.cells[cellId] || { value: '', formula: '', type: 'text', formatted: '' };
+  }, [getActiveSheet]);
+
+  // Get cell by ID
+  const getCellById = async (cellId) => {
+    try {
+      setIsLoading(true);
+      setError(null);
       
-      // Extract the column and row start/end
-      const startCol = start.charAt(0);
-      const startRow = parseInt(start.substring(1));
-      const endCol = end.charAt(0);
-      const endRow = parseInt(end.substring(1));
+      // First check if we have it locally
+      const [col, ...rowParts] = cellId.split('');
+      const row = parseInt(rowParts.join(''));
+      const localCell = getCell(col, row);
       
-      let sum = 0;
-      
-      // Simple implementation for B2:B4 type ranges (same column)
-      if (startCol === endCol) {
-        for (let row = startRow; row <= endRow; row++) {
-          const cell = getCell(startCol, row);
-          if (typeof cell.value === 'number') {
-            sum += cell.value;
-          }
-        }
+      if (localCell.value || localCell.formatted) {
+        return localCell;
       }
       
-      return sum;
+      // If not found locally or is empty, try API
+      const response = await api.getCell(cellId);
+      return response;
+    } catch (err) {
+      setError(err.message);
+      return { value: '', type: 'text', formatted: '' };
+    } finally {
+      setIsLoading(false);
     }
-    
-    return 0;
+  };
+
+  // Import workbook
+  const importWorkbook = async (file) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await api.importWorkbook(file);
+      setSpreadsheetData(response);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Export workbook
+  const exportWorkbook = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const blob = await api.exportWorkbook();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'workbook.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Convert natural language to formula
+  const nl2formula = async (query) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await api.nl2formula(query);
+      setActiveFormula(response.formula);
+      return response.formula;
+    } catch (err) {
+      setError(err.message);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const value = {
@@ -124,11 +256,15 @@ export const SpreadsheetProvider = ({ children }) => {
     setSelectedCell,
     activeFormula,
     setActiveFormula,
+    isLoading,
+    error,
     getActiveSheet,
     getCell,
     getCellById,
     updateCell,
-    calculateFormula,
+    importWorkbook,
+    exportWorkbook,
+    nl2formula,
   };
 
   return (
@@ -138,6 +274,12 @@ export const SpreadsheetProvider = ({ children }) => {
   );
 };
 
-export const useSpreadsheet = () => useContext(SpreadsheetContext);
+export const useSpreadsheet = () => {
+  const context = useContext(SpreadsheetContext);
+  if (!context) {
+    throw new Error('useSpreadsheet must be used within a SpreadsheetProvider');
+  }
+  return context;
+};
 
 export default SpreadsheetContext;

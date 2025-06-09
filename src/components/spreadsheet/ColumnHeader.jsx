@@ -10,7 +10,10 @@ const ColumnHeader = ({ label, isHighlighted }) => {
   `;
 
   return (
-    <th className={classes}>
+    <th 
+      className={classes}
+      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+    >
       {label}
     </th>
   );

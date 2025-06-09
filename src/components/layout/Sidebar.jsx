@@ -1,13 +1,13 @@
 import React from 'react';
-import { Table, BarChart, Calculator, Database } from 'lucide-react';
+import { Table, BarChart, Calculator, Bot } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
 
-const Sidebar = ({ onFormulaClick }) => {
+const Sidebar = ({ onFormulaClick, onChartClick, onTableClick, onAIClick }) => {
   const tools = [
-    { id: 'table', icon: <Table size={18} />, label: 'Tables' },
-    { id: 'chart', icon: <BarChart size={18} />, label: 'Charts' },
-    { id: 'calculator', icon: <Calculator size={18} />, label: 'Formulas' },
-    { id: 'database', icon: <Database size={18} />, label: 'Data' }
+    { id: 'table', icon: <Table size={18} />, label: 'Tables', onClick: onTableClick },
+    { id: 'chart', icon: <BarChart size={18} />, label: 'Charts', onClick: onChartClick },
+    { id: 'calculator', icon: <Calculator size={18} />, label: 'Formulas', onClick: onFormulaClick },
+    { id: 'ai', icon: <Bot size={18} />, label: 'AI Assistant', onClick: onAIClick }
   ];
 
   return (
@@ -16,8 +16,13 @@ const Sidebar = ({ onFormulaClick }) => {
         {tools.map(tool => (
           <Tooltip key={tool.id} text={tool.label} position="right">
             <button 
-              className="p-2 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
-              onClick={() => tool.id === 'calculator' && onFormulaClick()}
+              className={`p-2 rounded transition-colors ${
+                tool.onClick 
+                  ? 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600' 
+                  : 'bg-gray-50 dark:bg-gray-800 opacity-50 cursor-not-allowed'
+              }`}
+              onClick={tool.onClick}
+              disabled={!tool.onClick}
             >
               {tool.icon}
             </button>

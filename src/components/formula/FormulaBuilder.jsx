@@ -1,61 +1,98 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Calculator, DollarSign, CheckSquare, Type, Calendar, Search as SearchIcon, GripVertical } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useFormulaPreview } from '../../context/FormulaPreviewContext';
 
 const formulaCategories = [
-  { id: 'math', label: 'Math', icon: <Calculator size={16} /> },
-  { id: 'financial', label: 'Financial', icon: <DollarSign size={16} /> },
-  { id: 'logical', label: 'Logical', icon: <CheckSquare size={16} /> },
-  { id: 'text', label: 'Text', icon: <Type size={16} /> },
-  { id: 'date', label: 'Date', icon: <Calendar size={16} /> },
-  { id: 'lookup', label: 'Lookup', icon: <SearchIcon size={16} /> },
+  { 
+    id: 'math', 
+    label: 'Math & Statistics', 
+    icon: <Calculator size={16} />,
+    functions: [
+      { name: 'SUM', syntax: '=SUM(range)', description: 'Adds all numbers in a range of cells' },
+      { name: 'AVERAGE', syntax: '=AVERAGE(range)', description: 'Calculates the arithmetic mean of numbers' },
+      { name: 'COUNT', syntax: '=COUNT(range)', description: 'Counts cells containing numbers' },
+      { name: 'MAX', syntax: '=MAX(range)', description: 'Returns the largest value in a set' },
+      { name: 'MIN', syntax: '=MIN(range)', description: 'Returns the smallest value in a set' },
+      { name: 'ROUND', syntax: '=ROUND(number, digits)', description: 'Rounds a number to specified decimal places' }
+    ]
+  },
+  { 
+    id: 'lookup', 
+    label: 'Lookup & Reference', 
+    icon: <SearchIcon size={16} />,
+    functions: [
+      { name: 'VLOOKUP', syntax: '=VLOOKUP(lookup, table, col, exact)', description: 'Searches vertically in a table for a value' },
+      { name: 'XLOOKUP', syntax: '=XLOOKUP(lookup, array, return)', description: 'Modern lookup function (Excel 365)' },
+      { name: 'INDEX', syntax: '=INDEX(array, row, col)', description: 'Returns value at intersection of row and column' },
+      { name: 'MATCH', syntax: '=MATCH(lookup, array, type)', description: 'Finds position of value in array' }
+    ]
+  },
+  { 
+    id: 'logical', 
+    label: 'Logical & Conditional', 
+    icon: <CheckSquare size={16} />,
+    functions: [
+      { name: 'IF', syntax: '=IF(condition, true_value, false_value)', description: 'Returns different values based on condition' },
+      { name: 'SUMIF', syntax: '=SUMIF(range, criteria, sum_range)', description: 'Sums cells that meet a criteria' },
+      { name: 'COUNTIF', syntax: '=COUNTIF(range, criteria)', description: 'Counts cells that meet a criteria' },
+      { name: 'AND', syntax: '=AND(condition1, condition2, ...)', description: 'Returns TRUE if all conditions are true' },
+      { name: 'OR', syntax: '=OR(condition1, condition2, ...)', description: 'Returns TRUE if any condition is true' },
+      { name: 'IFERROR', syntax: '=IFERROR(formula, error_value)', description: 'Returns custom value if formula has error' },
+      { name: 'ISBLANK', syntax: '=ISBLANK(cell)', description: 'Tests if cell is empty' }
+    ]
+  },
+  { 
+    id: 'text', 
+    label: 'Text Functions', 
+    icon: <Type size={16} />,
+    functions: [
+      { name: 'CONCATENATE', syntax: '=CONCATENATE(text1, text2, ...)', description: 'Joins multiple text strings together' },
+      { name: 'LEN', syntax: '=LEN(text)', description: 'Returns the length of text string' },
+      { name: 'LEFT', syntax: '=LEFT(text, num_chars)', description: 'Extracts characters from left of text' },
+      { name: 'RIGHT', syntax: '=RIGHT(text, num_chars)', description: 'Extracts characters from right of text' },
+      { name: 'MID', syntax: '=MID(text, start, length)', description: 'Extracts characters from middle of text' },
+      { name: 'TRIM', syntax: '=TRIM(text)', description: 'Removes extra spaces from text' }
+    ]
+  },
+  { 
+    id: 'date', 
+    label: 'Date & Time', 
+    icon: <Calendar size={16} />,
+    functions: [
+      { name: 'TODAY', syntax: '=TODAY()', description: 'Returns today\'s date' },
+      { name: 'NOW', syntax: '=NOW()', description: 'Returns current date and time' },
+      { name: 'DATE', syntax: '=DATE(year, month, day)', description: 'Creates date from year, month, day' },
+      { name: 'YEAR', syntax: '=YEAR(date)', description: 'Extracts year from date' },
+      { name: 'MONTH', syntax: '=MONTH(date)', description: 'Extracts month from date' },
+      { name: 'DAY', syntax: '=DAY(date)', description: 'Extracts day from date' },
+      { name: 'DATEDIF', syntax: '=DATEDIF(start, end, unit)', description: 'Calculates difference between dates' }
+    ]
+  }
 ];
 
-const functionsByCategory = {
-  math: [
-    { name: 'SUM', description: 'Adds all numbers in a range of cells' },
-    { name: 'AVERAGE', description: 'Calculates the average of numbers' },
-    { name: 'COUNT', description: 'Counts the number of cells that contain numbers' },
-  ],
-  financial: [
-    { name: 'PMT', description: 'Calculates the payment for a loan' },
-    { name: 'FV', description: 'Calculates the future value of an investment' },
-    { name: 'NPV', description: 'Calculates the net present value of an investment' },
-  ],
-  logical: [
-    { name: 'IF', description: 'Returns one value if a condition is true, another if false' },
-    { name: 'AND', description: 'Returns TRUE if all arguments are TRUE' },
-    { name: 'OR', description: 'Returns TRUE if any argument is TRUE' },
-  ],
-  text: [
-    { name: 'CONCATENATE', description: 'Joins several text strings into one' },
-    { name: 'LEFT', description: 'Returns the leftmost characters from a text string' },
-    { name: 'RIGHT', description: 'Returns the rightmost characters from a text string' },
-  ],
-  date: [
-    { name: 'TODAY', description: 'Returns the current date' },
-    { name: 'DATE', description: 'Returns the serial number of a particular date' },
-    { name: 'DATEDIF', description: 'Calculates the difference between two dates' },
-  ],
-  lookup: [
-    { name: 'VLOOKUP', description: 'Looks up a value in the first column of a table' },
-    { name: 'HLOOKUP', description: 'Looks up a value in the first row of a table' },
-    { name: 'INDEX', description: 'Returns a value from a table based on row and column numbers' },
-  ],
-};
-
-const FormulaBuilder = () => {
+const FormulaBuilder = ({ onWidthChange }) => {
   const { theme } = useTheme();
+  const { setPreview, clearPreview } = useFormulaPreview();
   const [activeCategory, setActiveCategory] = useState('math');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFunction, setSelectedFunction] = useState(null);
-  const [width, setWidth] = useState(320); // Default width in pixels
+  const [formula, setFormula] = useState('');
+  const [targetCell, setTargetCell] = useState('B4');
+  const [targetRange, setTargetRange] = useState('');
+  const [previewResult, setPreviewResult] = useState('');
+  const [width, setWidth] = useState(420);
+  const [selectedTarget, setSelectedTarget] = useState('current'); // 'current', 'column', or 'row'
   const isResizing = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
+  const formulaEditorRef = useRef(null);
 
   const handleFunctionSelect = (func) => {
     setSelectedFunction(func);
+    setFormula(func.syntax);
+    // Scroll to formula editor
+    formulaEditorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleMouseDown = (e) => {
@@ -68,10 +105,10 @@ const FormulaBuilder = () => {
 
   const handleMouseMove = (e) => {
     if (!isResizing.current) return;
-    
     const delta = startX.current - e.clientX;
-    const newWidth = Math.min(Math.max(startWidth.current + delta, 280), 600); // Min: 280px, Max: 600px
+    const newWidth = Math.min(Math.max(startWidth.current + delta, 320), 600);
     setWidth(newWidth);
+    onWidthChange(newWidth);
   };
 
   const handleMouseUp = () => {
@@ -91,12 +128,65 @@ const FormulaBuilder = () => {
 
   const isDark = theme === 'dark';
 
+  const handleApplyFormula = () => {
+    // TODO: Implement formula application logic
+    console.log('Applying formula:', formula, 'to target:', targetRange || targetCell);
+    clearPreview();
+  };
+
+  const handlePreviewFormula = () => {
+    // TODO: Implement actual formula preview logic
+    const result = '150'; // Placeholder
+    setPreviewResult(result);
+    setPreview(formula, targetCell, result);
+  };
+
+  const handleClearFormula = () => {
+    setFormula('');
+    setPreviewResult('');
+    setSelectedFunction(null);
+    clearPreview();
+  };
+
+  const handleSelectCurrentCell = () => {
+    setTargetCell('B4'); // TODO: Get actual current cell
+    setTargetRange('');
+    setSelectedTarget('current');
+    clearPreview();
+  };
+
+  const handleSelectColumn = () => {
+    const column = targetCell.replace(/[0-9]/g, '');
+    setTargetRange(`${column}:${column}`);
+    setSelectedTarget('column');
+    clearPreview();
+  };
+
+  const handleSelectRow = () => {
+    const row = targetCell.replace(/[A-Z]/g, '');
+    setTargetRange(`${row}:${row}`);
+    setSelectedTarget('row');
+    clearPreview();
+  };
+
+  // Set current cell as default on mount
+  useEffect(() => {
+    handleSelectCurrentCell();
+  }, []);
+
+  // Update preview when formula or target changes
+  useEffect(() => {
+    if (formula && targetCell) {
+      handlePreviewFormula();
+    }
+  }, [formula, targetCell]);
+
   return (
     <div 
-      className={`relative border-l p-4 ${
+      className={`relative border-l flex flex-col h-full ${
         isDark 
-          ? 'bg-gray-800 border-gray-700' 
-          : 'bg-white border-gray-200'
+          ? 'bg-gray-800 border-gray-700 text-white' 
+          : 'bg-white border-gray-200 text-gray-900'
       }`}
       style={{ width: `${width}px` }}
     >
@@ -113,108 +203,211 @@ const FormulaBuilder = () => {
         />
       </div>
 
-      <h3 className={`font-medium mb-4 ${
-        isDark ? 'text-white' : 'text-gray-900'
-      }`}>Formula Builder</h3>
-      
-      {/* Search Bar */}
-      <div className="relative mb-4">
-        <Search size={16} className={`absolute left-2 top-1/2 transform -translate-y-1/2 ${
-          isDark ? 'text-gray-400' : 'text-gray-500'
-        }`} />
-        <input
-          type="text"
-          placeholder="Search functions..."
-          className={`w-full pl-8 pr-4 py-2 rounded border ${
-            isDark 
-              ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500' 
-              : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500'
-          } focus:outline-none`}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      {/* Header */}
+      <div className={`p-4 border-b ${
+        isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
+      }`}>
+        <h3 className="font-medium text-lg">Formula Builder</h3>
+        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          Create and apply formulas to your data
+        </p>
       </div>
 
-      {/* Categories */}
-      <div className="flex space-x-2 mb-4 overflow-x-auto pb-2">
-        {formulaCategories.map((category) => (
-          <button
-            key={category.id}
-            onClick={() => setActiveCategory(category.id)}
-            className={`flex items-center space-x-1 px-3 py-1 rounded ${
-              activeCategory === category.id
-                ? 'bg-blue-500 text-white'
-                : isDark
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {category.icon}
-            <span className="text-sm">{category.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Functions List */}
-      <div className="space-y-2">
-        {functionsByCategory[activeCategory].map((func) => (
-          <div
-            key={func.name}
-            onClick={() => handleFunctionSelect(func)}
-            className={`p-3 rounded border cursor-pointer transition-colors ${
-              isDark
-                ? 'border-gray-700 hover:bg-gray-700'
-                : 'border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            <div className={`font-medium ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>{func.name}</div>
-            <div className={`text-sm ${
-              isDark ? 'text-gray-400' : 'text-gray-500'
-            }`}>{func.description}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Formula Construction Area */}
-      {selectedFunction && (
-        <div className={`mt-4 p-4 rounded ${
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {/* Target Cell Selector */}
+        <div ref={formulaEditorRef} className={`mb-6 p-4 rounded-lg ${
           isDark ? 'bg-gray-700' : 'bg-gray-50'
         }`}>
-          <div className={`font-mono mb-4 ${
-            isDark ? 'text-white' : 'text-gray-900'
-          }`}>
-            {selectedFunction.name}(<span className="text-blue-500">parameters</span>)
+          <div className="flex items-center gap-2 mb-3">
+            <span>🎯</span>
+            <span className="font-medium">Apply Formula To</span>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                placeholder="Enter parameter"
-                className={`flex-1 px-2 py-1 rounded border ${
-                  isDark
-                    ? 'bg-gray-800 border-gray-600 text-white'
-                    : 'bg-white border-gray-200 text-gray-900'
-                }`}
-              />
-              <button className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                Select Cell
-              </button>
-            </div>
+          <div className="flex gap-2 mb-3">
+            <input
+              type="text"
+              value={targetCell}
+              onChange={(e) => setTargetCell(e.target.value)}
+              className={`flex-1 px-3 py-2 rounded-md border ${
+                isDark 
+                  ? 'bg-gray-800 border-gray-600 text-white' 
+                  : 'bg-white border-gray-200 text-gray-900'
+              }`}
+              placeholder="e.g., B4"
+            />
+            <input
+              type="text"
+              value={targetRange}
+              onChange={(e) => setTargetRange(e.target.value)}
+              className={`flex-1 px-3 py-2 rounded-md border ${
+                isDark 
+                  ? 'bg-gray-800 border-gray-600 text-white' 
+                  : 'bg-white border-gray-200 text-gray-900'
+              }`}
+              placeholder="Range: B4:B10 (optional)"
+            />
           </div>
-          <div className={`mt-4 pt-4 border-t ${
-            isDark ? 'border-gray-600' : 'border-gray-200'
-          }`}>
-            <div className={`text-sm ${
-              isDark ? 'text-gray-400' : 'text-gray-500'
-            }`}>Preview:</div>
-            <div className={`font-mono mt-1 ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>= {selectedFunction.name}(A1:B10)</div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleSelectCurrentCell}
+              className={`px-3 py-1.5 text-sm rounded-md ${
+                selectedTarget === 'current'
+                  ? isDark 
+                    ? 'bg-blue-600 text-white hover:bg-blue-500' 
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                  : isDark 
+                    ? 'bg-gray-600 hover:bg-gray-500' 
+                    : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              Current Cell
+            </button>
+            <button
+              onClick={handleSelectColumn}
+              className={`px-3 py-1.5 text-sm rounded-md ${
+                selectedTarget === 'column'
+                  ? isDark 
+                    ? 'bg-blue-600 text-white hover:bg-blue-500' 
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                  : isDark 
+                    ? 'bg-gray-600 hover:bg-gray-500' 
+                    : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              Entire Column
+            </button>
+            <button
+              onClick={handleSelectRow}
+              className={`px-3 py-1.5 text-sm rounded-md ${
+                selectedTarget === 'row'
+                  ? isDark 
+                    ? 'bg-blue-600 text-white hover:bg-blue-500' 
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                  : isDark 
+                    ? 'bg-gray-600 hover:bg-gray-500' 
+                    : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              Entire Row
+            </button>
           </div>
         </div>
-      )}
+
+        {/* Formula Editor */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-medium">Formula Editor</span>
+            {previewResult && (
+              <span className={`text-sm px-2 py-1 rounded ${
+                isDark ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'
+              }`}>
+                Result: {previewResult}
+              </span>
+            )}
+          </div>
+          <textarea
+            value={formula}
+            onChange={(e) => setFormula(e.target.value)}
+            className={`w-full px-3 py-2 rounded-md border font-mono ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-200 text-gray-900'
+            }`}
+            rows={4}
+            placeholder="Enter your formula here...
+Example: =SUM(A1:A10)"
+            ref={formulaEditorRef}
+          />
+        </div>
+
+        {/* Function Categories */}
+        <div className="space-y-4">
+          {formulaCategories.map((category) => (
+            <div key={category.id} className="space-y-2">
+              <button
+                onClick={() => setActiveCategory(category.id)}
+                className={`w-full flex items-center justify-between p-2 rounded-md ${
+                  activeCategory === category.id
+                    ? isDark
+                      ? 'bg-gray-700'
+                      : 'bg-gray-100'
+                    : ''
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {category.icon}
+                  <span>{category.label}</span>
+                </div>
+                <span className="text-sm">▼</span>
+              </button>
+              
+              {activeCategory === category.id && (
+                <div className="space-y-2 pl-4">
+                  {category.functions.map((func) => (
+                    <div
+                      key={func.name}
+                      onClick={() => handleFunctionSelect(func)}
+                      className={`p-3 rounded-md cursor-pointer ${
+                        isDark 
+                          ? 'bg-gray-700 hover:bg-gray-600' 
+                          : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className={`font-mono text-sm ${
+                        isDark ? 'text-green-400' : 'text-green-600'
+                      }`}>
+                        {func.name}
+                      </div>
+                      <div className={`text-xs mt-1 ${
+                        isDark ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        {func.syntax}
+                      </div>
+                      <div className={`text-xs mt-1 ${
+                        isDark ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        {func.description}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className={`p-4 border-t ${
+        isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
+      }`}>
+        <button
+          onClick={handleApplyFormula}
+          className="w-full mb-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+        >
+          Apply Formula
+        </button>
+        <button
+          onClick={handlePreviewFormula}
+          className={`w-full mb-2 px-4 py-2 rounded-md ${
+            isDark 
+              ? 'bg-gray-700 text-white hover:bg-gray-600' 
+              : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+          }`}
+        >
+          Preview Result
+        </button>
+        <button
+          onClick={handleClearFormula}
+          className={`w-full px-4 py-2 rounded-md ${
+            isDark 
+              ? 'bg-gray-700 text-white hover:bg-gray-600' 
+              : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+          }`}
+        >
+          Clear
+        </button>
+      </div>
     </div>
   );
 };
