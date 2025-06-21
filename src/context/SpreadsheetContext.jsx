@@ -25,6 +25,7 @@ export const SpreadsheetProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [updateQueue, setUpdateQueue] = useState({});
+  const [zoom, setZoom] = useState(100);
 
   // Process any pending updates
   useEffect(() => {
@@ -265,6 +266,8 @@ export const SpreadsheetProvider = ({ children }) => {
     importWorkbook,
     exportWorkbook,
     nl2formula,
+    zoom,
+    setZoom,
   };
 
   return (

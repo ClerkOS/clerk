@@ -15,7 +15,8 @@ const Grid = () => {
     selectedCell,
     setSelectedCell,
     getActiveSheet,
-    getCell
+    getCell,
+    zoom
   } = useSpreadsheet();
 
   const {
@@ -162,7 +163,11 @@ const Grid = () => {
       className="flex-1 overflow-auto p-1 relative w-full" 
       onMouseDown={handleGridMouseDown}
       onMouseUp={handleGridMouseUp}
-      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+      style={{ 
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        transform: `scale(${zoom / 100})`,
+        transformOrigin: 'top left',
+      }}
     >
       <table className="border-collapse w-full">
         <thead>

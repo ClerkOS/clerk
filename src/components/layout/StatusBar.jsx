@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useSpreadsheet } from '../../context/SpreadsheetContext';
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
 const StatusBar = () => {
-  const [zoom, setZoom] = useState(100);
+  const { zoom, setZoom } = useSpreadsheet();
 
   const handleZoomIn = () => {
     setZoom(prev => Math.min(prev + 10, 200));
