@@ -241,12 +241,17 @@ const Grid = () => {
   const handleCellClick = useCallback((col, row, e) => {
     // Set as active cell
     setSelectedCell({ col, row });
-    
-    // Start a new selection if this is a left click
-    if (e.button === 0) {
+
+    if (e.shiftKey && selectedCell) {
+      // If shift is held, select range from active cell to clicked cell
+      startSelection(selectedCell.col, selectedCell.row);
+      updateSelection(col, row);
+      endSelection();
+    } else if (e.button === 0) {
+      // Start a new selection if this is a left click
       startSelection(col, row);
     }
-  }, [setSelectedCell, startSelection]);
+  }, [setSelectedCell, startSelection, updateSelection, endSelection, selectedCell]);
 
   // Handle cell hover - for selection updating during drag
   const handleCellHover = useCallback((col, row) => {

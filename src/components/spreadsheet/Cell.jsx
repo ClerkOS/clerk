@@ -42,12 +42,12 @@ const Cell = ({
     
     // Active cell styling (the main selected cell)
     if (isActiveCell) {
-      classes += 'border-2 border-black bg-blue-50 ';
+      classes += 'border-2 border-white bg-blue-50 ';
       classes += 'dark:border-white dark:bg-gray-800 ';
     } 
     // Selected cells styling (part of multi-selection)
     else if (isSelected) {
-      classes += 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-400 shadow-[0_0_0_1px_rgba(59,130,246,0.3)] ';
+      classes += 'bg-blue-50 dark:bg-blue-900/20 border-white dark:border-white shadow-[0_0_0_1px_rgba(59,130,246,0.3)] ';
     }
     // Highlighted column styling  
     else if (isHighlighted) {
