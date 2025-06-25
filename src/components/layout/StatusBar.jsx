@@ -19,7 +19,7 @@ const StatusBar = () => {
   
   return (
     <div 
-      className="flex items-center justify-end px-6 py-2 text-xs bg-gray-50 border-t border-gray-200"
+      className="flex items-center justify-end px-6 py-2 text-xs bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
       <div className="flex items-center space-x-2">
