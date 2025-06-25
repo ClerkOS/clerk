@@ -9,6 +9,10 @@ import ContextMenu from '../ai/ContextMenu';
 const ROW_BATCH_SIZE = 20;
 // Number of rows to preload before reaching the bottom
 const PRELOAD_THRESHOLD = 5;
+// Column width in pixels (from ColumnHeader component)
+const COLUMN_WIDTH = 128; // w-32 = 128px
+// Row header width
+const ROW_HEADER_WIDTH = 40; // w-10 = 40px
 
 const Grid = () => {
   const {
@@ -16,7 +20,10 @@ const Grid = () => {
     setSelectedCell,
     getActiveSheet,
     getCell,
-    zoom
+    zoom,
+    addColumns,
+    setColumnCount,
+    getTotalColumns
   } = useSpreadsheet();
 
   const {
@@ -32,9 +39,13 @@ const Grid = () => {
 
   // State for visible rows
   const [visibleRows, setVisibleRows] = useState(ROW_BATCH_SIZE);
-  const [isLoading, setIsLoading] = useState(false);
-  const observerRef = useRef(null);
-  const loadingTriggerRef = useRef(null);
+  const [isLoadingRows, setIsLoadingRows] = useState(false);
+  const [isLoadingColumns, setIsLoadingColumns] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const rowObserverRef = useRef(null);
+  const columnObserverRef = useRef(null);
+  const rowLoadingTriggerRef = useRef(null);
+  const columnLoadingTriggerRef = useRef(null);
   const gridRef = useRef(null);
 
   // State for tracking mouse events
@@ -47,7 +58,72 @@ const Grid = () => {
     cellId: null
   });
 
-  // Initialize intersection observer
+  // Calculate how many columns can fit in the viewport
+  const calculateVisibleColumns = useCallback(() => {
+    if (viewportWidth === 0) return 8; // Default fallback
+    
+    // Account for row header width and some padding
+    const availableWidth = viewportWidth - ROW_HEADER_WIDTH - 20; // 20px for padding
+    const columnsThatFit = Math.ceil(availableWidth / COLUMN_WIDTH);
+    
+    // Return at least 8 columns, or enough to fill the viewport plus some buffer
+    const result = Math.max(8, columnsThatFit + 2); // +2 for buffer
+    
+    // Debug logging (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Column calculation:', {
+        viewportWidth,
+        availableWidth,
+        columnsThatFit,
+        result,
+        currentColumns: getTotalColumns()
+      });
+    }
+    
+    return result;
+  }, [viewportWidth, getTotalColumns]);
+
+  // Update viewport width on resize
+  useEffect(() => {
+    const updateViewportWidth = () => {
+      if (gridRef.current) {
+        const rect = gridRef.current.getBoundingClientRect();
+        setViewportWidth(rect.width);
+      }
+    };
+
+    // Initial calculation
+    updateViewportWidth();
+
+    // Add resize listener
+    window.addEventListener('resize', updateViewportWidth);
+    
+    // Also update when zoom changes
+    const resizeObserver = new ResizeObserver(updateViewportWidth);
+    if (gridRef.current) {
+      resizeObserver.observe(gridRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateViewportWidth);
+      resizeObserver.disconnect();
+    };
+  }, [zoom]);
+
+  // Update column count when viewport changes
+  useEffect(() => {
+    if (viewportWidth > 0) {
+      const neededColumns = calculateVisibleColumns();
+      const currentColumns = getTotalColumns();
+      
+      // Only update if we need significantly more or fewer columns
+      if (neededColumns > currentColumns + 2 || neededColumns < currentColumns - 2) {
+        setColumnCount(neededColumns);
+      }
+    }
+  }, [viewportWidth, calculateVisibleColumns, getTotalColumns, setColumnCount]);
+
+  // Initialize row intersection observer
   useEffect(() => {
     const options = {
       root: null,
@@ -55,30 +131,68 @@ const Grid = () => {
       threshold: 0.1
     };
 
-    const handleIntersect = (entries) => {
+    const handleRowIntersect = (entries) => {
       const [entry] = entries;
-      if (entry.isIntersecting && !isLoading) {
-        setIsLoading(true);
+      if (entry.isIntersecting && !isLoadingRows) {
+        setIsLoadingRows(true);
         // Simulate loading delay
         setTimeout(() => {
           setVisibleRows(prev => prev + ROW_BATCH_SIZE);
-          setIsLoading(false);
+          setIsLoadingRows(false);
         }, 100);
       }
     };
 
-    observerRef.current = new IntersectionObserver(handleIntersect, options);
+    rowObserverRef.current = new IntersectionObserver(handleRowIntersect, options);
 
-    if (loadingTriggerRef.current) {
-      observerRef.current.observe(loadingTriggerRef.current);
+    if (rowLoadingTriggerRef.current) {
+      rowObserverRef.current.observe(rowLoadingTriggerRef.current);
     }
 
     return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
+      if (rowObserverRef.current) {
+        rowObserverRef.current.disconnect();
       }
     };
-  }, [isLoading]);
+  }, [isLoadingRows]);
+
+  // Initialize column intersection observer
+  useEffect(() => {
+    const options = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1
+    };
+
+    const handleColumnIntersect = (entries) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && !isLoadingColumns) {
+        setIsLoadingColumns(true);
+        // Simulate loading delay
+        setTimeout(() => {
+          // Calculate how many more columns we need based on viewport
+          const currentColumns = getTotalColumns();
+          const neededColumns = calculateVisibleColumns();
+          const columnsToAdd = Math.max(10, neededColumns - currentColumns + 5); // Add buffer
+          
+          addColumns(columnsToAdd);
+          setIsLoadingColumns(false);
+        }, 100);
+      }
+    };
+
+    columnObserverRef.current = new IntersectionObserver(handleColumnIntersect, options);
+
+    if (columnLoadingTriggerRef.current) {
+      columnObserverRef.current.observe(columnLoadingTriggerRef.current);
+    }
+
+    return () => {
+      if (columnObserverRef.current) {
+        columnObserverRef.current.disconnect();
+      }
+    };
+  }, [isLoadingColumns, addColumns, getTotalColumns, calculateVisibleColumns]);
 
   // Generate array of visible rows
   const rows = Array.from({ length: visibleRows }, (_, i) => i + 1);
@@ -160,7 +274,7 @@ const Grid = () => {
   return (
     <div 
       ref={gridRef}
-      className="flex-1 overflow-auto p-1 relative w-full" 
+      className="flex-1 overflow-auto p-1 relative w-full bg-white" 
       onMouseDown={handleGridMouseDown}
       onMouseUp={handleGridMouseUp}
       style={{ 
@@ -169,11 +283,17 @@ const Grid = () => {
         transformOrigin: 'top left',
       }}
     >
-      <table className="border-collapse w-full">
+      <table className="border-collapse w-full table-fixed bg-white dark:bg-gray-900">
+        <colgroup>
+          <col style={{ width: '48px' }} />
+          {columns.map((col, idx) => (
+            <col key={col} style={{ width: '112px' }} />
+          ))}
+        </colgroup>
         <thead>
           <tr>
             {/* Empty top-left corner cell */}
-            <th className="w-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700"></th>
+            <th className="w-12 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-center font-semibold text-gray-700 dark:text-gray-200"></th>
             
             {/* Column headers */}
             {columns.map((col) => (
@@ -183,13 +303,25 @@ const Grid = () => {
                 isHighlighted={isHighlighted(col)}
               />
             ))}
+            
+            {/* Column loading trigger */}
+            <th 
+              ref={columnLoadingTriggerRef}
+              className="w-4 bg-transparent border-none"
+            >
+              {isLoadingColumns && (
+                <div className="flex justify-center items-center py-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
+                </div>
+              )}
+            </th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row}>
               {/* Row header */}
-              <td className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-center">
+              <td className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-center font-semibold text-gray-700 dark:text-gray-200">
                 {row}
               </td>
 
@@ -214,13 +346,16 @@ const Grid = () => {
                   />
                 );
               })}
+              
+              {/* Empty cell for column loading trigger alignment */}
+              <td className="w-4 bg-transparent border-none"></td>
             </tr>
           ))}
           
-          {/* Loading trigger element */}
-          <tr ref={loadingTriggerRef}>
-            <td colSpan={columns.length + 1} className="h-4">
-              {isLoading && (
+          {/* Row loading trigger element */}
+          <tr ref={rowLoadingTriggerRef}>
+            <td colSpan={columns.length + 2} className="h-4">
+              {isLoadingRows && (
                 <div className="flex justify-center items-center py-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
                 </div>

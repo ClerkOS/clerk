@@ -1,6 +1,40 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
 import api from '../services/api';
 
+// Helper function to convert number to column letter (0 -> A, 1 -> B, etc.)
+const numToCol = (num) => {
+  let result = '';
+  num = num + 1; // 1-based index
+  while (num > 0) {
+    const remainder = (num - 1) % 26;
+    result = String.fromCharCode(65 + remainder) + result;
+    num = Math.floor((num - 1) / 26);
+  }
+  return result;
+};
+
+// Helper function to convert column letter to number (A -> 0, B -> 1, etc.)
+const colToNum = (col) => {
+  let result = 0;
+  for (let i = 0; i < col.length; i++) {
+    result = result * 26 + (col.charCodeAt(i) - 64);
+  }
+  return result - 1; // 0-based index
+};
+
+// Generate columns array dynamically
+const generateColumns = (count) => {
+  return Array.from({ length: count }, (_, i) => numToCol(i));
+};
+
+// Calculate initial column count based on typical viewport
+const calculateInitialColumns = () => {
+  // For a typical desktop screen (1200px wide), we can fit about 8-10 columns
+  // For mobile (375px wide), we can fit about 2-3 columns
+  // We'll start with a reasonable default and let the Grid component adjust
+  return 12; // Start with 12 columns (A-L) as a good default
+};
+
 // Initial spreadsheet data
 const initialData = {
   sheets: [
@@ -8,7 +42,7 @@ const initialData = {
       id: 'sheet1',
       name: 'Sheet1',
       cells: {},
-      columns: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
+      columns: generateColumns(calculateInitialColumns()),
       rows: 100,
       activeCell: 'A1',
     }
@@ -26,6 +60,7 @@ export const SpreadsheetProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [updateQueue, setUpdateQueue] = useState({});
   const [zoom, setZoom] = useState(100);
+  const [visibleColumns, setVisibleColumns] = useState(calculateInitialColumns());
 
   // Process any pending updates
   useEffect(() => {
@@ -47,8 +82,34 @@ export const SpreadsheetProvider = ({ children }) => {
 
   // Get the currently active sheet
   const getActiveSheet = useCallback(() => {
-    return spreadsheetData.sheets.find(sheet => sheet.id === spreadsheetData.activeSheet);
-  }, [spreadsheetData]);
+    const sheet = spreadsheetData.sheets.find(sheet => sheet.id === spreadsheetData.activeSheet);
+    // Generate columns dynamically based on visibleColumns
+    return {
+      ...sheet,
+      columns: generateColumns(visibleColumns)
+    };
+  }, [spreadsheetData, visibleColumns]);
+
+  // Add more columns when needed
+  const addColumns = useCallback((count = 10) => {
+    setVisibleColumns(prev => prev + count);
+  }, []);
+
+  // Set specific number of columns (useful for viewport-based calculations)
+  const setColumnCount = useCallback((count) => {
+    setVisibleColumns(Math.max(8, count)); // Ensure minimum of 8 columns
+  }, []);
+
+  // Get total number of columns available
+  const getTotalColumns = useCallback(() => {
+    return visibleColumns;
+  }, [visibleColumns]);
+
+  // Check if a column is visible
+  const isColumnVisible = useCallback((col) => {
+    const colNum = colToNum(col);
+    return colNum < visibleColumns;
+  }, [visibleColumns]);
 
   // Internal function to process cell updates
   const processCellUpdate = useCallback(async (col, row, newValue) => {
@@ -268,6 +329,11 @@ export const SpreadsheetProvider = ({ children }) => {
     nl2formula,
     zoom,
     setZoom,
+    visibleColumns,
+    addColumns,
+    setColumnCount,
+    getTotalColumns,
+    isColumnVisible,
   };
 
   return (

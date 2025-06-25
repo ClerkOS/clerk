@@ -11,15 +11,15 @@ const Sidebar = ({ onFormulaClick, onChartClick, onTableClick, onAIClick }) => {
   ];
 
   return (
-    <div className="hidden md:block w-14 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-2">
+    <div className="hidden md:block w-14 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 p-2">
       <div className="flex flex-col items-center space-y-4">
         {tools.map(tool => (
           <Tooltip key={tool.id} text={tool.label} position="right">
             <button 
               className={`p-2 rounded transition-colors ${
                 tool.onClick 
-                  ? 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600' 
-                  : 'bg-gray-50 dark:bg-gray-800 opacity-50 cursor-not-allowed'
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-800' 
+                  : 'opacity-50 cursor-not-allowed'
               }`}
               onClick={tool.onClick}
               disabled={!tool.onClick}

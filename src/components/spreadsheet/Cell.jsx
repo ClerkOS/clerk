@@ -38,35 +38,46 @@ const Cell = ({
 
   // Determine cell styling based on selected/highlighted state and type
   const getCellClasses = useCallback(() => {
-    let classes = 'bg-white dark:bg-gray-800 border dark:border-gray-700 px-2 ';
+    let classes = 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-2 py-1 ';
     
     // Active cell styling (the main selected cell)
     if (isActiveCell) {
-      classes += 'border-2 border-blue-500 dark:border-blue-300 ';
+      classes += 'border-2 border-black bg-blue-50 ';
+      classes += 'dark:border-white dark:bg-gray-800 ';
     } 
     // Selected cells styling (part of multi-selection)
     else if (isSelected) {
-      classes += 'bg-blue-100/40 dark:bg-blue-900/40 border-blue-300 dark:border-blue-400 shadow-[0_0_0_1px_rgba(59,130,246,0.3)] dark:shadow-[0_0_0_1px_rgba(96,165,250,0.3)] ';
+      classes += 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-400 shadow-[0_0_0_1px_rgba(59,130,246,0.3)] ';
     }
     // Highlighted column styling  
     else if (isHighlighted) {
-      classes += 'bg-blue-500/5 dark:bg-blue-500/10 ';
+      classes += 'bg-gray-50 dark:bg-gray-800 ';
     }
 
     // Default border except when selected (to avoid double borders)
     if (!isActiveCell && !isSelected) {
-      classes += 'border-gray-300 dark:border-gray-600 ';
+      classes += 'border-gray-200 dark:border-gray-700 ';
     }
 
-    // Type-specific styles
-    if (type === 'currency' || displayValue?.toString().startsWith('$')) {
+    // Type-specific styles and value-based coloring
+    if (type === 'currency' || displayValue?.toString().startsWith('$') || !isNaN(Number(displayValue))) {
       classes += 'text-right ';
-    } else if (type === 'header' || (type === 'text' && displayValue?.toString().match(/^[QW][1-4]$/))) {
-      classes += 'font-medium ';
+    } else {
+      classes += 'text-left ';
+    }
+    // Profit (green), Cost (red) - only for columns F and E
+    if (col === 'F' && !isNaN(Number(displayValue))) {
+      classes += 'text-green-600 dark:text-green-400 font-semibold ';
+    } else if (col === 'E' && !isNaN(Number(displayValue))) {
+      classes += 'text-red-500 dark:text-red-400 font-semibold ';
+    }
+    // Header
+    if (type === 'header') {
+      classes += 'font-semibold ';
     }
 
     return classes;
-  }, [isActiveCell, isSelected, isHighlighted, type, displayValue]);
+  }, [isActiveCell, isSelected, isHighlighted, type, displayValue, col]);
 
   // Handle double click to start editing
   const handleDoubleClick = useCallback(() => {
@@ -146,11 +157,11 @@ const Cell = ({
           onChange={handleChange}
           onBlur={handleCellUpdate}
           onKeyDown={handleKeyPress}
-          className="w-full h-full bg-transparent border-none outline-none p-0 text-gray-900 dark:text-gray-100"
+          className="w-full h-full bg-transparent border-none outline-none p-0 text-gray-900"
           style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
         />
       ) : (
-        <div className="relative w-full h-full min-w-[80px] min-h-[24px] text-gray-900 dark:text-gray-100">
+        <div className="relative w-full h-full text-gray-900 dark:text-gray-100">
           {isActiveCell && (
             <div className="absolute -inset-px pointer-events-none" />
           )}

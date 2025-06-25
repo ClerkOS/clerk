@@ -99,16 +99,12 @@ const AIPanel = ({ onWidthChange }) => {
     ]);
   };
 
-  const isDark = theme === 'dark';
+  const isDark = false; // Force light mode for this style
 
   return (
     <div 
-      className={`relative border-l flex flex-col h-full ${
-        isDark 
-          ? 'bg-gray-800 border-gray-700 text-white' 
-          : 'bg-white border-gray-200 text-gray-900'
-      }`}
-      style={{ width: `${width}px` }}
+      className="relative border-l flex flex-col h-full bg-white border-gray-200 text-gray-900 shadow-lg"
+      style={{ width: `${width}px`, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
       {/* Resize Handle */}
       <div
@@ -117,36 +113,21 @@ const AIPanel = ({ onWidthChange }) => {
       >
         <GripVertical 
           size={16} 
-          className={`absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 ${
-            isDark ? 'text-gray-400' : 'text-gray-500'
-          }`}
+          className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-400"
         />
       </div>
 
       {/* Header */}
-      <div className={`p-4 border-b ${
-        isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
-      }`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Bot size={20} className="text-blue-500" />
-            <h3 className="font-medium text-lg">AI Assistant</h3>
-          </div>
-          <button
-            onClick={clearChat}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            title="Clear chat"
-          >
-            <Trash2 size={18} className="text-gray-500" />
-          </button>
+      <div className="p-4 border-b border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-base">AI</div>
+          <h3 className="font-bold text-lg text-gray-900 dark:text-white">AI Assistant</h3>
         </div>
-        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-          Get help with data analysis and formulas
-        </p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Get help with data analysis and formulas</p>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white dark:bg-gray-900">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -160,17 +141,17 @@ const AIPanel = ({ onWidthChange }) => {
                 : 'bg-gray-100 dark:bg-gray-800'
             }`}>
               {message.role === 'assistant' ? (
-                <Bot size={16} className="text-blue-500" />
+                <span className="font-bold text-blue-500">AI</span>
               ) : (
-                <User size={16} className="text-gray-500" />
+                <User size={16} className="text-gray-500 dark:text-gray-300" />
               )}
             </div>
             <div className={`flex-1 max-w-[80%] ${
               message.role === 'assistant' 
-                ? 'bg-gray-100 dark:bg-gray-800' 
+                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700' 
                 : 'bg-blue-500 text-white'
-            } rounded-lg p-3`}>
-              <p className="text-sm">{message.content}</p>
+            } rounded-lg p-3 text-sm`}>
+              <p>{message.content}</p>
               <span className="text-xs opacity-50 mt-1 block">
                 {message.timestamp.toLocaleTimeString()}
               </span>
@@ -180,13 +161,13 @@ const AIPanel = ({ onWidthChange }) => {
         {isLoading && (
           <div className="flex gap-3 items-start">
             <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <Bot size={16} className="text-blue-500" />
+              <span className="font-bold text-blue-500">AI</span>
             </div>
-            <div className="flex-1 max-w-[80%] bg-gray-100 dark:bg-gray-800 rounded-lg p-3">
+            <div className="flex-1 max-w-[80%] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
               </div>
             </div>
           </div>
@@ -195,30 +176,27 @@ const AIPanel = ({ onWidthChange }) => {
       </div>
 
       {/* Input */}
-      <div className={`p-4 border-t ${
-        isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
-      }`}>
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask me anything..."
-            className={`flex-1 px-4 py-2 rounded-lg border ${
-              isDark 
-                ? 'bg-gray-800 border-gray-600 text-white' 
-                : 'bg-white border-gray-200 text-gray-900'
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          />
+      <div className="p-4 border-t border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700">
+        <form onSubmit={handleSubmit} className="flex gap-2 items-center">
+          <div className="flex-1 input-container flex items-center bg-gray-50 dark:bg-gray-800 rounded-full px-4 py-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask me anything..."
+              className="flex-1 border-none bg-transparent outline-none text-gray-900 dark:text-gray-100 text-sm"
+            />
+          </div>
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="p-2 rounded-lg bg-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+            className="send-btn p-2 rounded-full bg-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors ml-2"
+            style={{ width: 40, height: 40 }}
           >
             <Send size={18} />
           </button>
         </form>
-        <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+        <div className="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
           <Sparkles size={14} />
           <span>AI Assistant can help with data analysis, formulas, and more</span>
         </div>

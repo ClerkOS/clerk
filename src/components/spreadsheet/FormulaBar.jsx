@@ -11,7 +11,7 @@ const FormulaBar = () => {
       className="flex items-center px-2 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
-      <span className="font-mono bg-blue-500/10 px-2 py-1 rounded text-blue-500 mr-2">
+      <span className="cell-ref bg-gray-100 border border-gray-200 rounded px-6 py-2 text-blue-600 font-mono mr-4 text-base">
         {cellRef}
       </span>
       <input

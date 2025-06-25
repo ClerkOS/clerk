@@ -19,33 +19,33 @@ const StatusBar = () => {
   
   return (
     <div 
-      className="flex items-center justify-end px-4 py-1 text-xs bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700"
+      className="flex items-center justify-end px-6 py-2 text-xs bg-gray-50 border-t border-gray-200"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
       <div className="flex items-center space-x-2">
         <button 
           onClick={handleZoomOut}
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+          className="p-1 hover:bg-gray-100 rounded"
           title="Zoom Out"
         >
           <ZoomOut size={14} />
         </button>
         <button 
           onClick={handleResetZoom}
-          className="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+          className="px-2 py-1 hover:bg-gray-100 rounded"
         >
           {zoom}%
         </button>
         <button 
           onClick={handleZoomIn}
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+          className="p-1 hover:bg-gray-100 rounded"
           title="Zoom In"
         >
           <ZoomIn size={14} />
         </button>
         <button 
           onClick={handleResetZoom}
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+          className="p-1 hover:bg-gray-100 rounded"
           title="Reset Zoom"
         >
           <Maximize2 size={14} />
