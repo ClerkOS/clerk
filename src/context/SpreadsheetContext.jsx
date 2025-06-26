@@ -61,6 +61,31 @@ export const SpreadsheetProvider = ({ children }) => {
   const [updateQueue, setUpdateQueue] = useState({});
   const [zoom, setZoom] = useState(100);
   const [visibleColumns, setVisibleColumns] = useState(calculateInitialColumns());
+  const [columnWidths, setColumnWidths] = useState({});
+
+  // Initialize default column widths
+  useEffect(() => {
+    const defaultWidth = 128; // 128px default width
+    const initialWidths = {};
+    for (let i = 0; i < visibleColumns; i++) {
+      const col = numToCol(i);
+      initialWidths[col] = defaultWidth;
+    }
+    setColumnWidths(initialWidths);
+  }, [visibleColumns]);
+
+  // Get column width
+  const getColumnWidth = useCallback((col) => {
+    return columnWidths[col] || 128; // Default to 128px if not set
+  }, [columnWidths]);
+
+  // Update column width
+  const updateColumnWidth = useCallback((col, newWidth) => {
+    setColumnWidths(prev => ({
+      ...prev,
+      [col]: Math.max(50, Math.min(500, newWidth)) // Min 50px, Max 500px
+    }));
+  }, []);
 
   // Process any pending updates
   useEffect(() => {
@@ -192,6 +217,9 @@ export const SpreadsheetProvider = ({ children }) => {
   const updateCell = useCallback(async (col, row, newValue) => {
     const cellId = `${col}${row}`;
     
+    // Check if this is a formula (starts with =)
+    const isFormula = newValue.startsWith('=');
+    
     // Add to update queue
     setUpdateQueue(prev => ({
       ...prev,
@@ -205,10 +233,50 @@ export const SpreadsheetProvider = ({ children }) => {
           const updatedCells = {
             ...sheet.cells,
             [cellId]: {
-              value: newValue,
-              formula: '',
-              type: 'text',
-              formatted: newValue
+              value: isFormula ? '' : newValue, // For formulas, value will be calculated
+              formula: isFormula ? newValue : '',
+              type: isFormula ? 'formula' : 'text',
+              formatted: isFormula ? '' : newValue // For formulas, formatted will be calculated
+            }
+          };
+          return {
+            ...sheet,
+            cells: updatedCells
+          };
+        }
+        return sheet;
+      });
+
+      return {
+        ...prevData,
+        sheets: updatedSheets
+      };
+    });
+    
+    return { success: true };
+  }, []);
+
+  // Update cell with formula (specific for formula builder)
+  const updateCellWithFormula = useCallback(async (col, row, formula, targetRange = '') => {
+    const cellId = `${col}${row}`;
+    
+    // Add to update queue
+    setUpdateQueue(prev => ({
+      ...prev,
+      [cellId]: { col, row, value: formula }
+    }));
+    
+    // Update immediately in local state for responsive UI
+    setSpreadsheetData(prevData => {
+      const updatedSheets = prevData.sheets.map(sheet => {
+        if (sheet.id === prevData.activeSheet) {
+          const updatedCells = {
+            ...sheet.cells,
+            [cellId]: {
+              value: '', // Will be calculated by the backend
+              formula: formula,
+              type: 'formula',
+              formatted: '' // Will be calculated by the backend
             }
           };
           return {
@@ -324,6 +392,7 @@ export const SpreadsheetProvider = ({ children }) => {
     getCell,
     getCellById,
     updateCell,
+    updateCellWithFormula,
     importWorkbook,
     exportWorkbook,
     nl2formula,
@@ -334,6 +403,8 @@ export const SpreadsheetProvider = ({ children }) => {
     setColumnCount,
     getTotalColumns,
     isColumnVisible,
+    getColumnWidth,
+    updateColumnWidth,
   };
 
   return (

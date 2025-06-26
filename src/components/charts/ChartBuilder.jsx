@@ -41,57 +41,11 @@ const chartTypes = [
   }
 ];
 
-const chartStyles = [
-  {
-    id: 'professional',
-    title: 'Professional',
-    description: 'Clean, business-ready charts with subtle colors and clear typography',
-    tags: ['Business', 'Clean'],
-    icon: '📊'
-  },
-  {
-    id: 'vibrant',
-    title: 'Vibrant',
-    description: 'Bold, colorful designs that grab attention and energize presentations',
-    tags: ['Colorful', 'Bold'],
-    icon: '🌈'
-  },
-  {
-    id: 'focused',
-    title: 'Focused',
-    description: 'Minimal design that highlights key data points without distraction',
-    tags: ['Minimal', 'Data-driven'],
-    icon: '🎯'
-  },
-  {
-    id: 'elegant',
-    title: 'Elegant',
-    description: 'Sophisticated styling with refined colors and premium aesthetics',
-    tags: ['Premium', 'Sophisticated'],
-    icon: '✨'
-  },
-  {
-    id: 'dynamic',
-    title: 'Dynamic',
-    description: 'Energetic designs with gradients and motion-inspired elements',
-    tags: ['Gradients', 'Modern'],
-    icon: '🔥'
-  },
-  {
-    id: 'minimal',
-    title: 'Minimal',
-    description: 'Ultra-clean approach focusing on data clarity and white space',
-    tags: ['Simple', 'Clean'],
-    icon: '❄️'
-  }
-];
-
 const ChartBuilder = ({ onWidthChange }) => {
   const { theme } = useTheme();
   const [width, setWidth] = useState(420);
   const [dataMode, setDataMode] = useState('range');
   const [selectedChart, setSelectedChart] = useState('column');
-  const [selectedStyle, setSelectedStyle] = useState('professional');
   const [showLegend, setShowLegend] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
   const [dataRange, setDataRange] = useState('A1:C10');
@@ -147,7 +101,6 @@ const ChartBuilder = ({ onWidthChange }) => {
       title: chartTitle,
       xAxisLabel,
       yAxisLabel,
-      style: selectedStyle,
       showLegend,
       showGrid
     });
@@ -277,55 +230,6 @@ const ChartBuilder = ({ onWidthChange }) => {
                   isDark ? 'text-gray-400' : 'text-gray-500'
                 }`}>
                   {chart.description}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Style Cards */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <span>🎨</span>
-            <span className="font-medium">Chart Style</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {chartStyles.map((style) => (
-              <button
-                key={style.id}
-                onClick={() => setSelectedStyle(style.id)}
-                className={`p-3 rounded-lg border-2 transition-all ${
-                  selectedStyle === style.id
-                    ? isDark
-                      ? 'bg-purple-900/50 border-purple-500'
-                      : 'bg-purple-50 border-purple-500'
-                    : isDark
-                      ? 'bg-gray-700/50 border-gray-600 hover:border-purple-500'
-                      : 'bg-gray-50 border-gray-200 hover:border-purple-500'
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xl">{style.icon}</span>
-                  <span className="font-medium">{style.title}</span>
-                </div>
-                <p className={`text-sm mb-2 ${
-                  isDark ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {style.description}
-                </p>
-                <div className="flex gap-1">
-                  {style.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        isDark
-                          ? 'bg-gray-600 text-gray-300'
-                          : 'bg-gray-200 text-gray-600'
-                      }`}
-                    >
-                      {tag}
-                    </span>
-                  ))}
                 </div>
               </button>
             ))}

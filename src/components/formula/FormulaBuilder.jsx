@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, Calculator, DollarSign, CheckSquare, Type, Calendar, Search as SearchIcon, GripVertical } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useFormulaPreview } from '../../context/FormulaPreviewContext';
+import { useSpreadsheet } from '../../context/SpreadsheetContext';
 
 const formulaCategories = [
   { 
@@ -74,25 +75,32 @@ const formulaCategories = [
 const FormulaBuilder = ({ onWidthChange }) => {
   const { theme } = useTheme();
   const { setPreview, clearPreview } = useFormulaPreview();
+  const { updateCellWithFormula } = useSpreadsheet();
   const [activeCategory, setActiveCategory] = useState('math');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFunction, setSelectedFunction] = useState(null);
   const [formula, setFormula] = useState('');
   const [targetCell, setTargetCell] = useState('B4');
   const [targetRange, setTargetRange] = useState('');
-  const [previewResult, setPreviewResult] = useState('');
+  const [previewResult, setPreviewResult] = useState('0');
   const [width, setWidth] = useState(420);
   const [selectedTarget, setSelectedTarget] = useState('current'); // 'current', 'column', or 'row'
   const isResizing = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
   const formulaEditorRef = useRef(null);
+  const targetSelectorRef = useRef(null);
 
   const handleFunctionSelect = (func) => {
     setSelectedFunction(func);
     setFormula(func.syntax);
-    // Scroll to formula editor
-    formulaEditorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Scroll to the "Apply Formula To" section at the top
+    targetSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Also scroll the panel to the top
+    const panel = targetSelectorRef.current?.closest('.overflow-y-auto');
+    if (panel) {
+      panel.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleMouseDown = (e) => {
@@ -128,10 +136,39 @@ const FormulaBuilder = ({ onWidthChange }) => {
 
   const isDark = theme === 'dark';
 
-  const handleApplyFormula = () => {
-    // TODO: Implement formula application logic
-    console.log('Applying formula:', formula, 'to target:', targetRange || targetCell);
-    clearPreview();
+  const handleApplyFormula = async () => {
+    if (!formula.trim()) {
+      console.log('No formula to apply');
+      return;
+    }
+
+    try {
+      // Parse the target cell from the input
+      const target = targetRange || targetCell;
+      
+      // For now, handle single cell application
+      // TODO: Handle range application (B4:B10, etc.)
+      if (target && formula) {
+        // Extract column and row from target (e.g., "B4" -> col="B", row=4)
+        const col = target.match(/[A-Z]+/)?.[0];
+        const row = parseInt(target.match(/[0-9]+/)?.[0]);
+        
+        if (col && row) {
+          await updateCellWithFormula(col, row, formula, targetRange);
+          console.log('Applied formula:', formula, 'to target:', target);
+          
+          // Clear the formula builder
+          setFormula('');
+          setPreviewResult('');
+          setSelectedFunction(null);
+          clearPreview();
+        } else {
+          console.error('Invalid target cell format:', target);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to apply formula:', error);
+    }
   };
 
   const handlePreviewFormula = () => {
@@ -216,7 +253,7 @@ const FormulaBuilder = ({ onWidthChange }) => {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {/* Target Cell Selector */}
-        <div ref={formulaEditorRef} className={`mb-6 p-4 rounded-lg ${
+        <div ref={targetSelectorRef} className={`mb-6 p-4 rounded-lg ${
           isDark ? 'bg-gray-700' : 'bg-gray-50'
         }`}>
           <div className="flex items-center gap-2 mb-3">
@@ -383,29 +420,9 @@ Example: =SUM(A1:A10)"
       }`}>
         <button
           onClick={handleApplyFormula}
-          className="w-full mb-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
         >
           Apply Formula
-        </button>
-        <button
-          onClick={handlePreviewFormula}
-          className={`w-full mb-2 px-4 py-2 rounded-md ${
-            isDark 
-              ? 'bg-gray-700 text-white hover:bg-gray-600' 
-              : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-          }`}
-        >
-          Preview Result
-        </button>
-        <button
-          onClick={handleClearFormula}
-          className={`w-full px-4 py-2 rounded-md ${
-            isDark 
-              ? 'bg-gray-700 text-white hover:bg-gray-600' 
-              : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-          }`}
-        >
-          Clear
         </button>
       </div>
     </div>

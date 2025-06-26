@@ -24,6 +24,20 @@ const Cell = ({
   // Get cell data directly from the context each render to ensure we have the latest
   const cellData = getCell(col, row);
   const displayValue = cellData.value || cellData.formatted || '';
+  const isFormulaCell = cellData.type === 'formula' || cellData.formula;
+
+  // Debug logging for formula cells
+  useEffect(() => {
+    if (isFormulaCell) {
+      console.log(`Cell ${col}${row}:`, {
+        value: cellData.value,
+        formatted: cellData.formatted,
+        formula: cellData.formula,
+        type: cellData.type,
+        displayValue
+      });
+    }
+  }, [cellData, col, row, isFormulaCell, displayValue]);
 
   // Check if this cell is the current preview target
   const isPreviewTarget = previewTarget === `${col}${row}`;
@@ -38,25 +52,26 @@ const Cell = ({
 
   // Determine cell styling based on selected/highlighted state and type
   const getCellClasses = useCallback(() => {
-    let classes = 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-2 py-1 ';
+    let classes = 'px-2 py-1 ';
+    
+    // Base styling
+    classes += 'bg-white dark:bg-gray-900 ';
     
     // Active cell styling (the main selected cell)
     if (isActiveCell) {
-      classes += 'border-2 border-white bg-blue-50 ';
-      classes += 'dark:border-white dark:bg-gray-800 ';
+      classes += 'border-2 border-black bg-blue-50 dark:border-white dark:bg-gray-800 ';
     } 
     // Selected cells styling (part of multi-selection)
     else if (isSelected) {
-      classes += 'bg-blue-50 dark:bg-blue-900/20 border-white dark:border-white shadow-[0_0_0_1px_rgba(59,130,246,0.3)] ';
+      classes += 'bg-blue-50 dark:bg-blue-900/20 border border-black dark:border-white ';
     }
     // Highlighted column styling  
     else if (isHighlighted) {
-      classes += 'bg-gray-50 dark:bg-gray-800 ';
+      classes += 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 ';
     }
-
-    // Default border except when selected (to avoid double borders)
-    if (!isActiveCell && !isSelected) {
-      classes += 'border-gray-200 dark:border-gray-700 ';
+    // Default styling
+    else {
+      classes += 'border border-gray-200 dark:border-gray-700 ';
     }
 
     // Type-specific styles and value-based coloring
@@ -65,19 +80,26 @@ const Cell = ({
     } else {
       classes += 'text-left ';
     }
+    
     // Profit (green), Cost (red) - only for columns F and E
     if (col === 'F' && !isNaN(Number(displayValue))) {
       classes += 'text-green-600 dark:text-green-400 font-semibold ';
     } else if (col === 'E' && !isNaN(Number(displayValue))) {
       classes += 'text-red-500 dark:text-red-400 font-semibold ';
     }
+    
     // Header
     if (type === 'header') {
       classes += 'font-semibold ';
     }
 
+    // Formula cell styling
+    if (isFormulaCell) {
+      classes += 'text-blue-600 dark:text-blue-400 font-mono text-sm ';
+    }
+
     return classes;
-  }, [isActiveCell, isSelected, isHighlighted, type, displayValue, col]);
+  }, [isActiveCell, isSelected, isHighlighted, type, displayValue, col, isFormulaCell]);
 
   // Handle double click to start editing
   const handleDoubleClick = useCallback(() => {
@@ -165,19 +187,11 @@ const Cell = ({
           {isActiveCell && (
             <div className="absolute -inset-px pointer-events-none" />
           )}
-          {displayValue}
+          {displayValue || (isFormulaCell && cellData.formula ? cellData.formula : '')}
           
           {/* Formula Preview Overlay */}
           {isPreviewTarget && previewFormula && (
-            <div 
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                border: '2px dashed #10b981',
-                borderRadius: '2px',
-                zIndex: 10
-              }}
-            >
+            <div className="absolute inset-0 pointer-events-none bg-green-100/10 border-2 border-dashed border-green-500 rounded-sm z-10">
               <div className="absolute inset-0 flex items-center justify-center text-sm text-green-600 dark:text-green-400">
                 {previewFormula}
               </div>

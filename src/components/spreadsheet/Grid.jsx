@@ -23,7 +23,9 @@ const Grid = () => {
     zoom,
     addColumns,
     setColumnCount,
-    getTotalColumns
+    getTotalColumns,
+    getColumnWidth,
+    updateColumnWidth
   } = useSpreadsheet();
 
   const {
@@ -200,6 +202,12 @@ const Grid = () => {
   // Handler for mouse down on grid (to start tracking)
   const handleGridMouseDown = useCallback((e) => {
     if (e.button !== 0) return; // Only handle left clicks
+    
+    // Don't start selection if clicking on a resize handle
+    if (e.target.closest('.resize-handle')) {
+      return;
+    }
+    
     setIsMouseDown(true);
   }, []);
 
@@ -260,6 +268,11 @@ const Grid = () => {
     }
   }, [isMouseDown, updateSelection]);
 
+  // Handle column resize
+  const handleColumnResize = useCallback((col, newWidth) => {
+    updateColumnWidth(col, newWidth);
+  }, [updateColumnWidth]);
+
   // Add window-level event listeners for mouse up (in case mouse is released outside the grid)
   useEffect(() => {
     const handleWindowMouseUp = () => {
@@ -291,8 +304,8 @@ const Grid = () => {
       <table className="border-collapse w-full table-fixed bg-white dark:bg-gray-900">
         <colgroup>
           <col style={{ width: '48px' }} />
-          {columns.map((col, idx) => (
-            <col key={col} style={{ width: '112px' }} />
+          {columns.map((col) => (
+            <col key={col} style={{ width: `${getColumnWidth(col)}px` }} />
           ))}
         </colgroup>
         <thead>
@@ -306,6 +319,8 @@ const Grid = () => {
                 key={col}
                 label={col}
                 isHighlighted={isHighlighted(col)}
+                onResize={handleColumnResize}
+                width={getColumnWidth(col)}
               />
             ))}
             
