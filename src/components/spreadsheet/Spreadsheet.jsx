@@ -173,7 +173,7 @@ const Spreadsheet = ({ isPanelOpen, panelWidth = 420 }) => {
           ref={containerRef}
           className="flex flex-col h-full transition-all duration-300 ease-in-out"
           style={{
-            width: isPanelOpen ? `calc(100% - ${panelWidth}px)` : '100%',
+            width: isPanelOpen ? `calc(100% - ${Math.min(panelWidth, window.innerWidth * 0.8)}px)` : '100%',
             marginRight: 0
           }}
         >

@@ -56,9 +56,10 @@ const ColumnHeader = ({ label, isHighlighted, onResize, width }) => {
     relative
     bg-gray-50 dark:bg-gray-900
     border border-gray-200 dark:border-gray-700
-    text-center px-1 py-2
+    text-center px-1 py-1 sm:py-2
     font-semibold
     text-gray-700 dark:text-gray-200
+    text-xs sm:text-sm
     ${isHighlighted ? 'bg-blue-50 dark:bg-blue-900/20' : ''}
   `;
 

@@ -10,7 +10,6 @@ const Cell = ({
   isHighlighted, 
   onClick, 
   onMouseEnter,
-  onContextMenu,
   col, 
   row 
 }) => {
@@ -52,7 +51,7 @@ const Cell = ({
 
   // Determine cell styling based on selected/highlighted state and type
   const getCellClasses = useCallback(() => {
-    let classes = 'px-2 py-1 ';
+    let classes = 'px-1 sm:px-2 py-1 ';
     
     // Base styling
     classes += 'bg-white dark:bg-gray-900 ';
@@ -95,8 +94,11 @@ const Cell = ({
 
     // Formula cell styling
     if (isFormulaCell) {
-      classes += 'text-blue-600 dark:text-blue-400 font-mono text-sm ';
+      classes += 'text-blue-600 dark:text-blue-400 font-mono text-xs sm:text-sm ';
     }
+
+    // Text size for all cells
+    classes += 'text-xs sm:text-sm ';
 
     return classes;
   }, [isActiveCell, isSelected, isHighlighted, type, displayValue, col, isFormulaCell]);
@@ -166,9 +168,8 @@ const Cell = ({
       className={getCellClasses()}
       onClick={handleCellClick}
       onMouseEnter={onMouseEnter}
-      onContextMenu={onContextMenu}
       onDoubleClick={handleDoubleClick}
-      data-cell={`${col}${row}`} // Add data attribute for cell identification
+      data-cell={`${col}${row}`}
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
       {isEditing ? (

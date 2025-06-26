@@ -24,7 +24,9 @@ const colToNum = (col) => {
 
 // Generate columns array dynamically
 const generateColumns = (count) => {
-  return Array.from({ length: count }, (_, i) => numToCol(i));
+  const columns = Array.from({ length: count }, (_, i) => numToCol(i));
+  console.log('Generated columns:', { count, columns: columns.slice(-10) }); // Show last 10 columns
+  return columns;
 };
 
 // Calculate initial column count based on typical viewport
@@ -117,7 +119,12 @@ export const SpreadsheetProvider = ({ children }) => {
 
   // Add more columns when needed
   const addColumns = useCallback((count = 10) => {
-    setVisibleColumns(prev => prev + count);
+    console.log('addColumns called with count:', count);
+    setVisibleColumns(prev => {
+      const newCount = prev + count;
+      console.log('Column count updated:', { prev, count, newCount });
+      return newCount;
+    });
   }, []);
 
   // Set specific number of columns (useful for viewport-based calculations)

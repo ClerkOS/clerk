@@ -3,7 +3,6 @@ import Cell from './Cell';
 import ColumnHeader from './ColumnHeader';
 import { useSpreadsheet } from '../../context/SpreadsheetContext';
 import { useSelection } from './SelectionManager';
-import ContextMenu from '../ai/ContextMenu';
 
 // Number of rows to render initially and when loading more
 const ROW_BATCH_SIZE = 20;
@@ -169,13 +168,21 @@ const Grid = () => {
     const handleColumnIntersect = (entries) => {
       const [entry] = entries;
       if (entry.isIntersecting && !isLoadingColumns) {
+        console.log('Column loading trigger activated');
         setIsLoadingColumns(true);
         // Simulate loading delay
         setTimeout(() => {
           // Calculate how many more columns we need based on viewport
           const currentColumns = getTotalColumns();
           const neededColumns = calculateVisibleColumns();
-          const columnsToAdd = Math.max(10, neededColumns - currentColumns + 5); // Add buffer
+          const columnsToAdd = Math.max(20, neededColumns - currentColumns + 10); // Add more buffer
+          
+          console.log('Adding columns:', {
+            currentColumns,
+            neededColumns,
+            columnsToAdd,
+            newTotal: currentColumns + columnsToAdd
+          });
           
           addColumns(columnsToAdd);
           setIsLoadingColumns(false);
@@ -217,23 +224,6 @@ const Grid = () => {
     setIsMouseDown(false);
     endSelection();
   }, [endSelection]);
-
-  // Close context menu
-  const closeContextMenu = useCallback(() => {
-    setContextMenu(prev => ({ ...prev, visible: false }));
-  }, []);
-
-  // Handle right click
-  const handleContextMenu = useCallback((e, cellId) => {
-    e.preventDefault();
-    
-    setContextMenu({
-      visible: true,
-      position: { x: e.clientX, y: e.clientY },
-      cellId: cellId,
-      isCell: true
-    });
-  }, []);
 
   // Check if a cell is the currently selected "active" cell
   const isActiveCell = useCallback((col, row) => {
@@ -303,7 +293,7 @@ const Grid = () => {
     >
       <table className="border-collapse w-full table-fixed bg-white dark:bg-gray-900">
         <colgroup>
-          <col style={{ width: '48px' }} />
+          <col style={{ width: '40px' }} />
           {columns.map((col) => (
             <col key={col} style={{ width: `${getColumnWidth(col)}px` }} />
           ))}
@@ -311,7 +301,7 @@ const Grid = () => {
         <thead>
           <tr>
             {/* Empty top-left corner cell */}
-            <th className="w-12 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-center font-semibold text-gray-700 dark:text-gray-200"></th>
+            <th className="w-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-center font-semibold text-gray-700 dark:text-gray-200 text-xs sm:text-sm"></th>
             
             {/* Column headers */}
             {columns.map((col) => (
@@ -327,7 +317,7 @@ const Grid = () => {
             {/* Column loading trigger */}
             <th 
               ref={columnLoadingTriggerRef}
-              className="w-4 bg-transparent border-none"
+              className="w-6 sm:w-8 bg-transparent border-none"
             >
               {isLoadingColumns && (
                 <div className="flex justify-center items-center py-2">
@@ -341,7 +331,7 @@ const Grid = () => {
           {rows.map((row) => (
             <tr key={row}>
               {/* Row header */}
-              <td className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-center font-semibold text-gray-700 dark:text-gray-200">
+              <td className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-center font-semibold text-gray-700 dark:text-gray-200 text-xs sm:text-sm">
                 {row}
               </td>
 
@@ -360,7 +350,6 @@ const Grid = () => {
                     isHighlighted={isHighlighted(col)}
                     onClick={(e) => handleCellClick(col, row, e)}
                     onMouseEnter={() => handleCellHover(col, row)}
-                    onContextMenu={(e) => handleContextMenu(e, cellId)}
                     col={col}
                     row={row}
                   />
@@ -368,7 +357,7 @@ const Grid = () => {
               })}
               
               {/* Empty cell for column loading trigger alignment */}
-              <td className="w-4 bg-transparent border-none"></td>
+              <td className="w-6 sm:w-8 bg-transparent border-none"></td>
             </tr>
           ))}
           
@@ -384,17 +373,6 @@ const Grid = () => {
           </tr>
         </tbody>
       </table>
-
-      {/* Context Menu */}
-      {contextMenu.visible && (
-        <ContextMenu
-          position={contextMenu.position}
-          onClose={closeContextMenu}
-          isCell={contextMenu.isCell}
-          cellId={contextMenu.cellId}
-          selectedCells={selectedCells}
-        />
-      )}
     </div>
   );
 };

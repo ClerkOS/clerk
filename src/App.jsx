@@ -74,7 +74,7 @@ function App() {
       <SheetProvider>
         <SpreadsheetProvider>
           <FormulaPreviewProvider>
-            <div className="flex flex-col h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-200">
+            <div className="flex flex-col h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-200 overflow-hidden">
               <Header 
                 toggleCommandPalette={toggleCommandPalette} 
               />
@@ -85,7 +85,7 @@ function App() {
                 />
               )}
               
-              <div className="flex flex-1 overflow-hidden">
+              <div className="flex flex-1 overflow-hidden min-h-0">
                 <Sidebar 
                   onFormulaClick={toggleFormulaBuilder}
                   onChartClick={toggleChartBuilder}
@@ -93,39 +93,41 @@ function App() {
                   onAIClick={toggleAIPanel}
                 />
                 
-                <div className="flex-1 flex flex-col">
-                  <main 
-                    className="flex-1 overflow-auto"
-                    onContextMenu={handleContextMenu}
-                  >
-                    <Spreadsheet 
-                      isPanelOpen={isPanelOpen}
-                      panelWidth={panelWidth}
+                <div className="flex-1 flex min-w-0">
+                  <div className="flex-1 flex flex-col min-w-0">
+                    <main 
+                      className="flex-1 overflow-auto min-h-0"
+                      onContextMenu={handleContextMenu}
+                    >
+                      <Spreadsheet 
+                        isPanelOpen={isPanelOpen}
+                        panelWidth={panelWidth}
+                      />
+                    </main>
+                    <StatusBar />
+                  </div>
+                  
+                  {showFormulaBuilder && (
+                    <FormulaBuilder 
+                      onWidthChange={setPanelWidth}
                     />
-                  </main>
-                  <StatusBar />
+                  )}
+                  {showChartBuilder && (
+                    <ChartBuilder 
+                      onWidthChange={setPanelWidth}
+                    />
+                  )}
+                  {showTablesPanel && (
+                    <TablesPanel 
+                      onWidthChange={setPanelWidth}
+                    />
+                  )}
+                  {showAIPanel && (
+                    <AIPanel 
+                      onWidthChange={setPanelWidth}
+                    />
+                  )}
                 </div>
-                
-                {showFormulaBuilder && (
-                  <FormulaBuilder 
-                    onWidthChange={setPanelWidth}
-                  />
-                )}
-                {showChartBuilder && (
-                  <ChartBuilder 
-                    onWidthChange={setPanelWidth}
-                  />
-                )}
-                {showTablesPanel && (
-                  <TablesPanel 
-                    onWidthChange={setPanelWidth}
-                  />
-                )}
-                {showAIPanel && (
-                  <AIPanel 
-                    onWidthChange={setPanelWidth}
-                  />
-                )}
               </div>
             </div>
 

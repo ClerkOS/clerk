@@ -19,33 +19,39 @@ const StatusBar = () => {
   
   return (
     <div 
-      className="flex items-center justify-end px-6 py-2 text-xs bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200"
+      className="flex items-center justify-between px-4 sm:px-6 py-2 text-xs bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
-      <div className="flex items-center space-x-2">
+      {/* Left side - can be used for status info */}
+      <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
+        <span className="hidden sm:inline">Ready</span>
+      </div>
+      
+      {/* Right side - zoom controls */}
+      <div className="flex items-center space-x-1 sm:space-x-2">
         <button 
           onClick={handleZoomOut}
-          className="p-1 hover:bg-gray-100 rounded"
+          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors touch-target"
           title="Zoom Out"
         >
           <ZoomOut size={14} />
         </button>
         <button 
           onClick={handleResetZoom}
-          className="px-2 py-1 hover:bg-gray-100 rounded"
+          className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors min-w-[3rem] text-center touch-target"
         >
           {zoom}%
         </button>
         <button 
           onClick={handleZoomIn}
-          className="p-1 hover:bg-gray-100 rounded"
+          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors touch-target"
           title="Zoom In"
         >
           <ZoomIn size={14} />
         </button>
         <button 
           onClick={handleResetZoom}
-          className="p-1 hover:bg-gray-100 rounded"
+          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors touch-target"
           title="Reset Zoom"
         >
           <Maximize2 size={14} />
