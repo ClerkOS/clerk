@@ -4,7 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 
 const AIPanel = ({ onWidthChange }) => {
   const { theme } = useTheme();
-  const [width, setWidth] = useState(420);
+  const [width, setWidth] = useState(320);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -32,7 +32,7 @@ const AIPanel = ({ onWidthChange }) => {
   const handleMouseMove = (e) => {
     if (!isResizing.current) return;
     const delta = startX.current - e.clientX;
-    const newWidth = Math.min(Math.max(startWidth.current + delta, 320), 600);
+    const newWidth = Math.min(Math.max(startWidth.current + delta, 280), 500);
     setWidth(newWidth);
     onWidthChange(newWidth);
   };
@@ -103,7 +103,7 @@ const AIPanel = ({ onWidthChange }) => {
 
   return (
     <div 
-      className="relative border-l flex flex-col h-full bg-white border-gray-200 text-gray-900 shadow-lg"
+      className="relative border-l flex flex-col h-full max-w-[50%] bg-white border-gray-200 text-gray-900 shadow-lg"
       style={{ width: `${width}px`, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
       {/* Resize Handle */}

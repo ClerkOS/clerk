@@ -21,7 +21,7 @@ function App() {
   const [showTablesPanel, setShowTablesPanel] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
-  const [panelWidth, setPanelWidth] = useState(420);
+  const [panelWidth, setPanelWidth] = useState(320);
 
   const toggleCommandPalette = () => {
     setShowCommandPalette(!showCommandPalette);
@@ -96,7 +96,7 @@ function App() {
                 <div className="flex-1 flex min-w-0">
                   <div className="flex-1 flex flex-col min-w-0">
                     <main 
-                      className="flex-1 overflow-auto min-h-0"
+                      className="overflow-auto min-h-0"
                       onContextMenu={handleContextMenu}
                     >
                       <Spreadsheet 

@@ -162,7 +162,7 @@ const ModernEmptyState = () => {
   );
 };
 
-const Spreadsheet = ({ isPanelOpen, panelWidth = 420 }) => {
+const Spreadsheet = ({ isPanelOpen, panelWidth = 320 }) => {
   const { selectedCell, isEmpty } = useSpreadsheet();
   const containerRef = useRef(null);
 
@@ -173,8 +173,9 @@ const Spreadsheet = ({ isPanelOpen, panelWidth = 420 }) => {
           ref={containerRef}
           className="flex flex-col h-full transition-all duration-300 ease-in-out"
           style={{
-            width: isPanelOpen ? `calc(100% - ${Math.min(panelWidth, window.innerWidth * 0.8)}px)` : '100%',
-            marginRight: 0
+            // width: isPanelOpen ? `calc(100% - ${Math.min(panelWidth, window.innerWidth * 0.7)}px)` : '100%',
+            // width: '100%',
+            // marginRight: 0
           }}
         >
           <FormulaBar />

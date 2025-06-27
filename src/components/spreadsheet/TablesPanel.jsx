@@ -4,7 +4,7 @@ import { GripVertical, Table2, Filter, Settings, Save, Eye, Plus } from 'lucide-
 
 const TablesPanel = ({ onWidthChange }) => {
   const { theme } = useTheme();
-  const [width, setWidth] = useState(420);
+  const [width, setWidth] = useState(320);
   const [dataRange, setDataRange] = useState('');
   const [tableName, setTableName] = useState('New Table');
   const [showHeaders, setShowHeaders] = useState(true);
@@ -27,7 +27,7 @@ const TablesPanel = ({ onWidthChange }) => {
   const handleMouseMove = (e) => {
     if (!isResizing.current) return;
     const delta = startX.current - e.clientX;
-    const newWidth = Math.min(Math.max(startWidth.current + delta, 320), 600);
+    const newWidth = Math.min(Math.max(startWidth.current + delta, 280), 500);
     setWidth(newWidth);
     onWidthChange(newWidth);
   };

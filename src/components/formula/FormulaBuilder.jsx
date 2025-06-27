@@ -83,7 +83,7 @@ const FormulaBuilder = ({ onWidthChange }) => {
   const [targetCell, setTargetCell] = useState('B4');
   const [targetRange, setTargetRange] = useState('');
   const [previewResult, setPreviewResult] = useState('0');
-  const [width, setWidth] = useState(420);
+  const [width, setWidth] = useState(320);
   const [selectedTarget, setSelectedTarget] = useState('current'); // 'current', 'column', or 'row'
   const isResizing = useRef(false);
   const startX = useRef(0);
@@ -114,7 +114,7 @@ const FormulaBuilder = ({ onWidthChange }) => {
   const handleMouseMove = (e) => {
     if (!isResizing.current) return;
     const delta = startX.current - e.clientX;
-    const newWidth = Math.min(Math.max(startWidth.current + delta, 320), 600);
+    const newWidth = Math.min(Math.max(startWidth.current + delta, 280), 500);
     setWidth(newWidth);
     onWidthChange(newWidth);
   };
