@@ -25,7 +25,7 @@ const Sidebar = ({ onFormulaClick, onChartClick, onTableClick, onAIClick }) => {
               disabled={!tool.onClick}
             >
               <div className="w-4 h-4 sm:w-[18px] sm:h-[18px] flex items-center justify-center">
-                {tool.icon}
+              {tool.icon}
               </div>
             </button>
           </Tooltip>

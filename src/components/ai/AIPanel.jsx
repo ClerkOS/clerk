@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Trash2, Sparkles, GripVertical } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useAIOperations } from '../../hooks/useAIOperations';
 
 const AIPanel = ({ onWidthChange }) => {
   const { theme } = useTheme();
@@ -14,7 +15,7 @@ const AIPanel = ({ onWidthChange }) => {
     }
   ]);
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { convertToFormula, isConverting, conversionError, lastResult } = useAIOperations();
   const messagesEndRef = useRef(null);
   
   const isResizing = useRef(false);
@@ -73,19 +74,46 @@ const AIPanel = ({ onWidthChange }) => {
 
     setMessages(prev => [...prev, userMessage]);
     setInput('');
-    setIsLoading(true);
 
-    // TODO: Implement actual AI response logic here
-    setTimeout(() => {
-      const aiMessage = {
+    try {
+      // Check if the input looks like a formula request
+      const isFormulaRequest = input.toLowerCase().includes('sum') || 
+                              input.toLowerCase().includes('average') || 
+                              input.toLowerCase().includes('formula') ||
+                              input.toLowerCase().includes('calculate');
+
+      if (isFormulaRequest) {
+        // Use React Query for formula conversion
+        const result = await convertToFormula(input);
+        
+        const aiMessage = {
+          id: messages.length + 2,
+          role: 'assistant',
+          content: `I've converted your request to a formula: \`${result.formula}\`\n\n${result.explanation || 'This formula will help you with your calculation.'}`,
+          timestamp: new Date(),
+          formula: result.formula
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } else {
+        // General AI response
+        const aiMessage = {
+          id: messages.length + 2,
+          role: 'assistant',
+          content: 'I understand you want to work with your data. I can help you analyze it, create formulas, or generate visualizations. What specific task would you like to accomplish?',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      }
+    } catch (error) {
+      console.error('AI response failed:', error);
+      const errorMessage = {
         id: messages.length + 2,
         role: 'assistant',
-        content: 'I understand you want to work with your data. I can help you analyze it, create formulas, or generate visualizations. What specific task would you like to accomplish?',
+        content: 'Sorry, I encountered an error processing your request. Please try again.',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiMessage]);
-      setIsLoading(false);
-    }, 1000);
+      setMessages(prev => [...prev, errorMessage]);
+    }
   };
 
   const clearChat = () => {
@@ -158,7 +186,7 @@ const AIPanel = ({ onWidthChange }) => {
             </div>
           </div>
         ))}
-        {isLoading && (
+        {isConverting && (
           <div className="flex gap-3 items-start">
             <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
               <span className="font-bold text-blue-500">AI</span>
@@ -189,7 +217,7 @@ const AIPanel = ({ onWidthChange }) => {
           </div>
           <button
             type="submit"
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isConverting}
             className="send-btn p-2 rounded-full bg-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors ml-2"
             style={{ width: 40, height: 40 }}
           >

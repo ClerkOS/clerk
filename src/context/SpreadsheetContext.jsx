@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
-import api from '../services/api';
+import { useEditCell, useImportWorkbook, useExportWorkbook, useNl2Formula } from '../hooks/useSpreadsheetQueries';
 
 // Helper function to convert number to column letter (0 -> A, 1 -> B, etc.)
 const numToCol = (num) => {
@@ -64,6 +64,12 @@ export const SpreadsheetProvider = ({ children }) => {
   const [zoom, setZoom] = useState(100);
   const [visibleColumns, setVisibleColumns] = useState(calculateInitialColumns());
   const [columnWidths, setColumnWidths] = useState({});
+
+  // React Query hooks
+  const editCellMutation = useEditCell();
+  const importWorkbookMutation = useImportWorkbook();
+  const exportWorkbookMutation = useExportWorkbook();
+  const nl2formulaMutation = useNl2Formula();
 
   // Initialize default column widths
   useEffect(() => {
@@ -177,9 +183,9 @@ export const SpreadsheetProvider = ({ children }) => {
         };
       });
 
-      // Send to backend (or simulate API call if needed)
+      // Use React Query mutation for API call
       try {
-        const response = await api.editCell(cellId, newValue);
+        const response = await editCellMutation.mutateAsync({ cellId, value: newValue });
         
         // Update with server response if it's different
         if (response && (response.value !== newValue || response.formula)) {
@@ -218,7 +224,7 @@ export const SpreadsheetProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [editCellMutation]);
 
   // Update cell value (public method)
   const updateCell = useCallback(async (col, row, newValue) => {
@@ -325,8 +331,9 @@ export const SpreadsheetProvider = ({ children }) => {
         return localCell;
       }
       
-      // If not found locally or is empty, try API
-      const response = await api.getCell(cellId);
+      // If not found locally or is empty, try API using React Query
+      // Note: This is a fallback for direct API calls, but ideally components should use useCell hook
+      const response = await editCellMutation.mutateAsync({ cellId, value: '' });
       return response;
     } catch (err) {
       setError(err.message);
@@ -341,7 +348,7 @@ export const SpreadsheetProvider = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await api.importWorkbook(file);
+      const response = await importWorkbookMutation.mutateAsync(file);
       setSpreadsheetData(response);
     } catch (err) {
       setError(err.message);
@@ -355,7 +362,7 @@ export const SpreadsheetProvider = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const blob = await api.exportWorkbook();
+      const blob = await exportWorkbookMutation.mutateAsync();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -376,7 +383,7 @@ export const SpreadsheetProvider = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await api.nl2formula(query);
+      const response = await nl2formulaMutation.mutateAsync(query);
       setActiveFormula(response.formula);
       return response.formula;
     } catch (err) {

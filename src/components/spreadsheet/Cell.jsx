@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSpreadsheet } from '../../context/SpreadsheetContext';
 import { useFormulaPreview } from '../../context/FormulaPreviewContext';
+import { useCell, useEditCell } from '../../hooks/useSpreadsheetQueries';
 
 const Cell = ({ 
   value, 
@@ -17,22 +18,27 @@ const Cell = ({
   const [draftValue, setDraftValue] = useState('');
   const inputRef = useRef(null);
   const cellRef = useRef(null);
-  const { updateCell, getCell } = useSpreadsheet();
+  const { getCell } = useSpreadsheet();
   const { previewFormula, previewTarget, clearPreview } = useFormulaPreview();
 
-  // Get cell data directly from the context each render to ensure we have the latest
-  const cellData = getCell(col, row);
-  const displayValue = cellData.value || cellData.formatted || '';
-  const isFormulaCell = cellData.type === 'formula' || cellData.formula;
+  // React Query hooks
+  const cellId = `${col}${row}`;
+  const { data: cellDataFromQuery, isLoading, error } = useCell(cellId);
+  const editCellMutation = useEditCell();
+
+  // Get cell data - prioritize React Query data, fallback to context
+  const cellData = cellDataFromQuery || getCell(col, row);
+  const displayValue = cellData?.value || cellData?.formatted || '';
+  const isFormulaCell = cellData?.type === 'formula' || cellData?.formula;
 
   // Debug logging for formula cells
   useEffect(() => {
     if (isFormulaCell) {
       console.log(`Cell ${col}${row}:`, {
-        value: cellData.value,
-        formatted: cellData.formatted,
-        formula: cellData.formula,
-        type: cellData.type,
+        value: cellData?.value,
+        formatted: cellData?.formatted,
+        formula: cellData?.formula,
+        type: cellData?.type,
         displayValue
       });
     }
@@ -115,11 +121,11 @@ const Cell = ({
     setDraftValue(e.target.value);
   }, []);
 
-  // Handle cell update - this is the critical part for persistence
+  // Handle cell update - now using React Query mutation
   const handleCellUpdate = useCallback(async () => {
     if (draftValue !== displayValue) {
       try {
-        await updateCell(col, row, draftValue);
+        await editCellMutation.mutateAsync({ cellId, value: draftValue });
         // Clear any formula preview when cell is updated
         clearPreview();
       } catch (error) {
@@ -129,7 +135,7 @@ const Cell = ({
       }
     }
     setIsEditing(false);
-  }, [draftValue, displayValue, updateCell, col, row, clearPreview]);
+  }, [draftValue, displayValue, editCellMutation, cellId, clearPreview, col, row]);
 
   // Handle key press
   const handleKeyPress = useCallback((e) => {
@@ -162,6 +168,36 @@ const Cell = ({
     }
   }, [isEditing]);
 
+  // Show loading state if React Query is loading
+  if (isLoading) {
+    return (
+      <td 
+        className={getCellClasses()}
+        data-cell={cellId}
+        style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+      >
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
+        </div>
+      </td>
+    );
+  }
+
+  // Show error state if React Query has an error
+  if (error) {
+    return (
+      <td 
+        className={getCellClasses()}
+        data-cell={cellId}
+        style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+      >
+        <div className="w-full h-full flex items-center justify-center text-red-500 text-xs">
+          Error
+        </div>
+      </td>
+    );
+  }
+
   return (
     <td 
       ref={cellRef}
@@ -169,7 +205,7 @@ const Cell = ({
       onClick={handleCellClick}
       onMouseEnter={onMouseEnter}
       onDoubleClick={handleDoubleClick}
-      data-cell={`${col}${row}`}
+      data-cell={cellId}
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
       {isEditing ? (
@@ -188,7 +224,7 @@ const Cell = ({
           {isActiveCell && (
             <div className="absolute -inset-px pointer-events-none" />
           )}
-          {displayValue || (isFormulaCell && cellData.formula ? cellData.formula : '')}
+          {displayValue || (isFormulaCell && cellData?.formula ? cellData.formula : '')}
           
           {/* Formula Preview Overlay */}
           {isPreviewTarget && previewFormula && (

@@ -3,6 +3,7 @@ import { Search, Calculator, DollarSign, CheckSquare, Type, Calendar, Search as 
 import { useTheme } from '../../context/ThemeContext';
 import { useFormulaPreview } from '../../context/FormulaPreviewContext';
 import { useSpreadsheet } from '../../context/SpreadsheetContext';
+import { useEditCell } from '../../hooks/useSpreadsheetQueries';
 
 const formulaCategories = [
   { 
@@ -91,6 +92,9 @@ const FormulaBuilder = ({ onWidthChange }) => {
   const formulaEditorRef = useRef(null);
   const targetSelectorRef = useRef(null);
 
+  // React Query hooks
+  const editCellMutation = useEditCell();
+
   const handleFunctionSelect = (func) => {
     setSelectedFunction(func);
     setFormula(func.syntax);
@@ -154,7 +158,10 @@ const FormulaBuilder = ({ onWidthChange }) => {
         const row = parseInt(target.match(/[0-9]+/)?.[0]);
         
         if (col && row) {
-          await updateCellWithFormula(col, row, formula, targetRange);
+          // Use React Query mutation for better performance and error handling
+          const cellId = `${col}${row}`;
+          await editCellMutation.mutateAsync({ cellId, value: formula });
+          
           console.log('Applied formula:', formula, 'to target:', target);
           
           // Clear the formula builder

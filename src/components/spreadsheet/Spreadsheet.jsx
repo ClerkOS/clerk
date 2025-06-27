@@ -3,9 +3,11 @@ import Grid from './Grid';
 import FormulaBar from './FormulaBar';
 import { useSpreadsheet } from '../../context/SpreadsheetContext';
 import { SelectionProvider } from './SelectionManager';
-import { Upload, Plus, FileText } from 'lucide-react';
+import { Upload, Plus, FileText, FileUp, FileDown, AlertCircle, CheckCircle } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { handleFileUpload, validateFile } from '../../services/fileService';
+import { useWorkbookOperations } from '../../hooks/useWorkbookOperations';
+import TablesPanel from './TablesPanel';
 
 const ModernEmptyState = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -163,8 +165,84 @@ const ModernEmptyState = () => {
 };
 
 const Spreadsheet = ({ isPanelOpen, panelWidth = 320 }) => {
-  const { selectedCell, isEmpty } = useSpreadsheet();
-  const containerRef = useRef(null);
+  const { 
+    selectedCell, 
+    setSelectedCell, 
+    activeFormula, 
+    setActiveFormula,
+    getActiveSheet,
+    zoom,
+    setZoom,
+    visibleColumns,
+    addColumns,
+    getTotalColumns,
+    isColumnVisible,
+    getColumnWidth,
+    updateColumnWidth
+  } = useSpreadsheet();
+
+  // React Query hooks for workbook operations
+  const { importWorkbook, exportWorkbook, isImporting, isExporting, importError, exportError } = useWorkbookOperations();
+
+  const [showTablesPanel, setShowTablesPanel] = useState(false);
+  const [tablesPanelWidth, setTablesPanelWidth] = useState(300);
+  const [notification, setNotification] = useState(null);
+  const fileInputRef = useRef(null);
+
+  // Handle file import
+  const handleFileImport = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        await importWorkbook(file);
+        setNotification({
+          type: 'success',
+          message: 'Workbook imported successfully!',
+          icon: <CheckCircle size={16} />
+        });
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } catch (error) {
+        setNotification({
+          type: 'error',
+          message: 'Failed to import workbook',
+          icon: <AlertCircle size={16} />
+        });
+      }
+    }
+  };
+
+  // Handle file export
+  const handleFileExport = async () => {
+    try {
+      await exportWorkbook();
+      setNotification({
+        type: 'success',
+        message: 'Workbook exported successfully!',
+        icon: <CheckCircle size={16} />
+      });
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: 'Failed to export workbook',
+        icon: <AlertCircle size={16} />
+      });
+    }
+  };
+
+  // Clear notification after 3 seconds
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  const activeSheet = getActiveSheet();
 
   return (
     <SelectionProvider>
