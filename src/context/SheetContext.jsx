@@ -21,12 +21,32 @@ export const SheetProvider = ({ children }) => {
     ));
   };
 
+  const deleteSheet = (id) => {
+    if (sheets.length <= 1) return; // Don't delete the last sheet
+    
+    setSheets(sheets => {
+      const newSheets = sheets.filter(sheet => sheet.id !== id);
+      // If we're deleting the current sheet, switch to the first available sheet
+      if (currentSheetId === id) {
+        setCurrentSheetId(newSheets[0].id);
+      }
+      return newSheets;
+    });
+  };
+
   const setCurrentSheet = (id) => {
     setCurrentSheetId(id);
   };
 
   return (
-    <SheetContext.Provider value={{ sheets, currentSheetId, addSheet, renameSheet, setCurrentSheet }}>
+    <SheetContext.Provider value={{ 
+      sheets, 
+      currentSheetId, 
+      addSheet, 
+      renameSheet, 
+      deleteSheet,
+      setCurrentSheet 
+    }}>
       {children}
     </SheetContext.Provider>
   );

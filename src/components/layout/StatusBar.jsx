@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSpreadsheet } from '../../context/SpreadsheetContext';
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import SheetSwitcher from './SheetSwitcher';
 
 const StatusBar = () => {
   const { zoom, setZoom } = useSpreadsheet();
@@ -22,9 +23,9 @@ const StatusBar = () => {
       className="flex items-center justify-between px-4 sm:px-6 py-2 text-xs bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
-      {/* Left side - can be used for status info */}
-      <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
-        <span className="hidden sm:inline">Ready</span>
+      {/* Left side - Sheet Switcher */}
+      <div className="flex items-center space-x-4">
+        <SheetSwitcher />
       </div>
       
       {/* Right side - zoom controls */}

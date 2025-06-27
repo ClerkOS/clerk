@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Grid from './Grid';
 import FormulaBar from './FormulaBar';
+import TablesPanel from './TablesPanel';
 import { useSpreadsheet } from '../../context/SpreadsheetContext';
 import { SelectionProvider } from './SelectionManager';
 import { Upload, Plus, FileText, FileUp, FileDown, AlertCircle, CheckCircle } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { handleFileUpload, validateFile } from '../../services/fileService';
 import { useWorkbookOperations } from '../../hooks/useWorkbookOperations';
-import TablesPanel from './TablesPanel';
 
 const ModernEmptyState = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -243,17 +243,17 @@ const Spreadsheet = ({ isPanelOpen, panelWidth = 320 }) => {
   }, [notification]);
 
   const activeSheet = getActiveSheet();
+  const isEmpty = !activeSheet;
 
   return (
     <SelectionProvider>
       <div className="flex h-full">
         <div 
-          ref={containerRef}
           className="flex flex-col h-full transition-all duration-300 ease-in-out"
           style={{
-            // width: isPanelOpen ? `calc(100% - ${Math.min(panelWidth, window.innerWidth * 0.7)}px)` : '100%',
-            // width: '100%',
-            // marginRight: 0
+            width: isPanelOpen ? `calc(100% - ${Math.min(panelWidth, window.innerWidth * 0.7)}px)` : '100%',
+            width: '100%',
+            marginRight: 0
           }}
         >
           <FormulaBar />
