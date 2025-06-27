@@ -10,11 +10,13 @@ import StatusBar from './components/layout/StatusBar';
 import CommandPalette from './components/ui/CommandPalette';
 import FormulaBuilder from './components/formula/FormulaBuilder';
 import ChartBuilder from './components/charts/ChartBuilder';
+import ChartEditor from './components/charts/ChartEditor';
 import TablesPanel from './components/spreadsheet/TablesPanel';
 import AIPanel from './components/ai/AIPanel';
 import ContextMenu from './components/ai/ContextMenu';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 
-function App() {
+function MainApp() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showFormulaBuilder, setShowFormulaBuilder] = useState(false);
   const [showChartBuilder, setShowChartBuilder] = useState(false);
@@ -74,69 +76,71 @@ function App() {
       <SheetProvider>
         <SpreadsheetProvider>
           <FormulaPreviewProvider>
-            <div className="flex flex-col h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-200 overflow-hidden">
-              <Header 
-                toggleCommandPalette={toggleCommandPalette} 
-              />
-              
-              {showCommandPalette && (
-                <CommandPalette 
-                  onClose={() => setShowCommandPalette(false)} 
-                />
-              )}
-              
-              <div className="flex flex-1 overflow-hidden min-h-0">
-                <Sidebar 
-                  onFormulaClick={toggleFormulaBuilder}
-                  onChartClick={toggleChartBuilder}
-                  onTableClick={toggleTablesPanel}
-                  onAIClick={toggleAIPanel}
-                />
-                
-                <div className="flex-1 flex min-w-0">
-                  <div className="flex-1 flex flex-col min-w-0">
-                    <main 
-                      className="overflow-auto min-h-0"
-                      onContextMenu={handleContextMenu}
-                    >
-                      <Spreadsheet 
-                        isPanelOpen={isPanelOpen}
-                        panelWidth={panelWidth}
+            <Router>
+              <Routes>
+                <Route path="/" element={
+                  <div className="flex flex-col h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-200 overflow-hidden">
+                    <Header 
+                      toggleCommandPalette={toggleCommandPalette} 
+                    />
+                    {showCommandPalette && (
+                      <CommandPalette 
+                        onClose={() => setShowCommandPalette(false)} 
                       />
-                    </main>
-                    <StatusBar />
+                    )}
+                    <div className="flex flex-1 overflow-hidden min-h-0">
+                      <Sidebar 
+                        onFormulaClick={toggleFormulaBuilder}
+                        onChartClick={toggleChartBuilder}
+                        onTableClick={toggleTablesPanel}
+                        onAIClick={toggleAIPanel}
+                      />
+                      <div className="flex-1 flex min-w-0">
+                        <div className="flex-1 flex flex-col min-w-0">
+                          <main 
+                            className="overflow-auto min-h-0"
+                            onContextMenu={handleContextMenu}
+                          >
+                            <Spreadsheet 
+                              isPanelOpen={isPanelOpen}
+                              panelWidth={panelWidth}
+                            />
+                          </main>
+                          <StatusBar />
+                        </div>
+                        {showFormulaBuilder && (
+                          <FormulaBuilder 
+                            onWidthChange={setPanelWidth}
+                          />
+                        )}
+                        {showChartBuilder && (
+                          <ChartBuilder 
+                            onWidthChange={setPanelWidth}
+                          />
+                        )}
+                        {showTablesPanel && (
+                          <TablesPanel 
+                            onWidthChange={setPanelWidth}
+                          />
+                        )}
+                        {showAIPanel && (
+                          <AIPanel 
+                            onWidthChange={setPanelWidth}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    {contextMenu && (
+                      <ContextMenu
+                        position={contextMenu}
+                        onClose={handleCloseContextMenu}
+                      />
+                    )}
                   </div>
-                  
-                  {showFormulaBuilder && (
-                    <FormulaBuilder 
-                      onWidthChange={setPanelWidth}
-                    />
-                  )}
-                  {showChartBuilder && (
-                    <ChartBuilder 
-                      onWidthChange={setPanelWidth}
-                    />
-                  )}
-                  {showTablesPanel && (
-                    <TablesPanel 
-                      onWidthChange={setPanelWidth}
-                    />
-                  )}
-                  {showAIPanel && (
-                    <AIPanel 
-                      onWidthChange={setPanelWidth}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {contextMenu && (
-              <ContextMenu
-                position={contextMenu}
-                onClose={handleCloseContextMenu}
-              />
-            )}
+                } />
+                <Route path="/chart-editor" element={<ChartEditor />} />
+              </Routes>
+            </Router>
           </FormulaPreviewProvider>
         </SpreadsheetProvider>
       </SheetProvider>
@@ -144,4 +148,4 @@ function App() {
   );
 }
 
-export default App;
+export default MainApp;

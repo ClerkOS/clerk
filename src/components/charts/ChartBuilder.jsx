@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { BarChart3, LineChart, PieChart, BarChart, Mountain, ScatterChart, GripVertical } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const chartTypes = [
   {
@@ -43,6 +44,7 @@ const chartTypes = [
 
 const ChartBuilder = ({ onWidthChange }) => {
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const [width, setWidth] = useState(320);
   const [dataMode, setDataMode] = useState('range');
   const [selectedChart, setSelectedChart] = useState('column');
@@ -94,16 +96,8 @@ const ChartBuilder = ({ onWidthChange }) => {
 
   const handleCreateChart = () => {
     // TODO: Implement chart creation logic
-    console.log('Creating chart:', {
-      type: selectedChart,
-      dataRange,
-      labelRange,
-      title: chartTitle,
-      xAxisLabel,
-      yAxisLabel,
-      showLegend,
-      showGrid
-    });
+    // For now, just navigate to the chart editor page
+    navigate('/chart-editor');
   };
 
   const handlePreviewChart = () => {
@@ -243,7 +237,7 @@ const ChartBuilder = ({ onWidthChange }) => {
       }`}>
         <button
           onClick={handleCreateChart}
-          className="w-full mb-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+          className="w-full mb-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-semibold shadow text-sm"
         >
           Create Chart
         </button>
@@ -253,7 +247,7 @@ const ChartBuilder = ({ onWidthChange }) => {
             isDark 
               ? 'bg-gray-700 text-white hover:bg-gray-600' 
               : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-          }`}
+          } text-sm`}
         >
           Preview
         </button>
@@ -263,7 +257,7 @@ const ChartBuilder = ({ onWidthChange }) => {
             isDark 
               ? 'bg-gray-700 text-white hover:bg-gray-600' 
               : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-          }`}
+          } text-sm`}
         >
           Save as Template
         </button>
