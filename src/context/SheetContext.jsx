@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useSheets as useSheetsQuery, useDeleteSheet } from '../hooks/useSpreadsheetQueries';
 import { useSpreadsheet } from './SpreadsheetContext';
 
@@ -15,6 +15,7 @@ export const SheetProvider = ({ children }) => {
   const deleteSheetMutation = useDeleteSheet();
   
   const [currentSheetId, setCurrentSheetId] = useState('sheet1');
+  const prevSheetCountRef = useRef(0);
 
   // Convert backend sheet names to frontend format
   const sheets = sheetsData?.data?.sheets?.map((sheetName, index) => ({
@@ -27,6 +28,7 @@ export const SheetProvider = ({ children }) => {
     sheetsData,
     sheets,
     currentSheetId,
+    prevSheetCount: prevSheetCountRef.current,
     isLoading,
     error
   });
@@ -41,12 +43,23 @@ export const SheetProvider = ({ children }) => {
     }
   }, [sheets, currentSheetId, switchSheet]);
 
+  // Auto-switch to the newest sheet when sheets are added
+  useEffect(() => {
+    if (sheets.length > 0 && sheets.length > prevSheetCountRef.current) {
+      // A new sheet was added, switch to the newest one
+      const newestSheet = sheets[sheets.length - 1];
+      console.log('Auto-switching to newest sheet:', newestSheet.id, 'from:', currentSheetId);
+      setCurrentSheetId(newestSheet.id);
+      switchSheet(newestSheet.id);
+    }
+    // Update the previous sheet count
+    prevSheetCountRef.current = sheets.length;
+  }, [sheets.length, switchSheet]); // Don't include currentSheetId to avoid infinite loops
+
   const addSheetToContext = async (sheetName = null) => {
     try {
       const newSheet = await addSheet(sheetName);
-      if (newSheet) {
-        setCurrentSheetId(newSheet.id);
-      }
+      // The auto-switching effect will handle switching to the new sheet
       return newSheet;
     } catch (error) {
       console.error('Failed to add sheet in context:', error);

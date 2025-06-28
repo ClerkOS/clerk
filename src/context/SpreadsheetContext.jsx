@@ -548,8 +548,8 @@ export const SpreadsheetProvider = ({ children }) => {
         // Add the new sheet to the frontend state
         setSpreadsheetData(prevData => ({
           ...prevData,
-          sheets: [...prevData.sheets, newSheet],
-          activeSheet: newSheet.id // Switch to the new sheet
+          sheets: [...prevData.sheets, newSheet]
+          // Don't set activeSheet here - let SheetContext handle it
         }));
 
         console.log('Sheet added successfully:', {
