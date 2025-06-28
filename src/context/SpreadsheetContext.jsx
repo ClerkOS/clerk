@@ -1,8 +1,8 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
-import { useEditCell, useImportWorkbook, useExportWorkbook, useNl2Formula, useSheets, useSheet } from '../hooks/useSpreadsheetQueries';
+import { useEditCell, useImportWorkbook, useExportWorkbook, useNl2Formula, useSheets, useSheet, useAddSheet } from '../hooks/useSpreadsheetQueries';
 import { importWorkbookFromAPI, fetchWorkbookById } from '../services/workbookService';
 import { useQueryClient } from '@tanstack/react-query';
-import { api } from '../services/api';
+import api from '../services/api';
 
 // Helper function to convert number to column letter (0 -> A, 1 -> B, etc.)
 const numToCol = (num) => {
@@ -73,6 +73,7 @@ export const SpreadsheetProvider = ({ children }) => {
   const importWorkbookMutation = useImportWorkbook();
   const exportWorkbookMutation = useExportWorkbook();
   const nl2formulaMutation = useNl2Formula();
+  const addSheetMutation = useAddSheet();
   const queryClient = useQueryClient();
 
   // Initialize default column widths
@@ -510,6 +511,60 @@ export const SpreadsheetProvider = ({ children }) => {
     }
   }, [spreadsheetData.workbook_id, spreadsheetData.sheets]);
 
+  // Add a new sheet
+  const addSheet = useCallback(async (sheetName = null) => {
+    console.log('addSheet called with:', { sheetName, workbookId: spreadsheetData.workbook_id, sheets: spreadsheetData.sheets });
+    
+    if (!spreadsheetData.workbook_id) {
+      console.error('No workbook ID available');
+      console.log('Current spreadsheet data:', spreadsheetData);
+      return;
+    }
+
+    try {
+      // Generate a default name if none provided
+      const newSheetName = sheetName || `Sheet${spreadsheetData.sheets.length + 1}`;
+      
+      console.log('Adding sheet with name:', newSheetName, 'to workbook:', spreadsheetData.workbook_id);
+      
+      const response = await addSheetMutation.mutateAsync({
+        workbookId: spreadsheetData.workbook_id,
+        sheetName: newSheetName
+      });
+
+      console.log('Add sheet response:', response);
+
+      if (response && response.success) {
+        // Create a new sheet object for the frontend
+        const newSheet = {
+          id: `sheet${spreadsheetData.sheets.length + 1}`,
+          name: response.data.name,
+          cells: {},
+          columns: generateColumns(visibleColumns),
+          rows: 100,
+          activeCell: 'A1',
+        };
+
+        // Add the new sheet to the frontend state
+        setSpreadsheetData(prevData => ({
+          ...prevData,
+          sheets: [...prevData.sheets, newSheet],
+          activeSheet: newSheet.id // Switch to the new sheet
+        }));
+
+        console.log('Sheet added successfully:', {
+          sheetName: response.data.name,
+          sheetId: newSheet.id
+        });
+
+        return newSheet;
+      }
+    } catch (error) {
+      console.error('Failed to add sheet:', error);
+      throw error;
+    }
+  }, [spreadsheetData.workbook_id, spreadsheetData.sheets.length, visibleColumns, addSheetMutation]);
+
   const value = {
     spreadsheetData,
     selectedCell,
@@ -536,6 +591,7 @@ export const SpreadsheetProvider = ({ children }) => {
     updateColumnWidth,
     fetchWorkbook,
     switchSheet,
+    addSheet,
   };
 
   return (

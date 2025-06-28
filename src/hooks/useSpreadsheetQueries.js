@@ -133,4 +133,36 @@ export const useSheet = (workbookId, sheetName) => {
     enabled: !!workbookId && !!sheetName,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
+};
+
+// Hook for adding a new sheet
+export const useAddSheet = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ workbookId, sheetName }) => api.addSheet(workbookId, sheetName),
+    onSuccess: (data, { workbookId }) => {
+      // Invalidate sheets list to refresh the sheet list
+      queryClient.invalidateQueries({ queryKey: queryKeys.sheets(workbookId) });
+    },
+    onError: (error) => {
+      console.error('Error adding sheet:', error);
+    },
+  });
+};
+
+// Hook for deleting a sheet
+export const useDeleteSheet = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ workbookId, sheetName }) => api.deleteSheet(workbookId, sheetName),
+    onSuccess: (data, { workbookId }) => {
+      // Invalidate sheets list to refresh the sheet list
+      queryClient.invalidateQueries({ queryKey: queryKeys.sheets(workbookId) });
+    },
+    onError: (error) => {
+      console.error('Error deleting sheet:', error);
+    },
+  });
 }; 

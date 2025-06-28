@@ -89,6 +89,44 @@ const api = {
       console.error('Error getting sheet:', error);
       throw error;
     }
+  },
+
+  addSheet: async (workbookId, sheetName) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/sheet/${workbookId}`, {
+        name: sheetName
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error adding sheet:', error);
+      throw error;
+    }
+  },
+
+  deleteSheet: async (workbookId, sheetName) => {
+    try {
+      const encodedSheetName = encodeURIComponent(sheetName);
+      const url = `${API_BASE_URL}/sheet/${workbookId}/${encodedSheetName}`;
+      console.log('deleteSheet API call:', {
+        workbookId,
+        sheetName,
+        encodedSheetName,
+        url
+      });
+      const response = await axios.delete(url);
+      console.log('deleteSheet response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting sheet:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: error.config
+      });
+      throw error;
+    }
   }
 };
 

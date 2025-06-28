@@ -4,14 +4,18 @@ import { useSheets } from '../../context/SheetContext';
 
 const SheetSwitcher = () => {
   const { sheets, currentSheetId, setCurrentSheet, addSheet, renameSheet, deleteSheet, isLoading, error } = useSheets();
+  
   const currentSheet = sheets.find(s => s.id === currentSheetId);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [nameInput, setNameInput] = useState(currentSheet?.name || '');
   const [dropdownPosition, setDropdownPosition] = useState('bottom'); // 'top' or 'bottom'
+  const [isAddingSheet, setIsAddingSheet] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState(null); // { sheetId, sheetName }
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
+  const quickAddButtonRef = useRef(null);
 
   useEffect(() => {
     setNameInput(currentSheet?.name || '');
@@ -23,6 +27,19 @@ const SheetSwitcher = () => {
       inputRef.current.select();
     }
   }, [renaming]);
+
+  // Debug: Log when quick add button is rendered
+  useEffect(() => {
+    if (quickAddButtonRef.current) {
+      console.log('Quick add button rendered:', quickAddButtonRef.current);
+      console.log('isAddingSheet state:', isAddingSheet);
+    }
+  });
+
+  // Debug: Log when isAddingSheet changes
+  useEffect(() => {
+    console.log('isAddingSheet changed to:', isAddingSheet);
+  }, [isAddingSheet]);
 
   // Calculate dropdown position when opening
   const calculateDropdownPosition = () => {
@@ -44,6 +61,10 @@ const SheetSwitcher = () => {
   useEffect(() => {
     if (!dropdownOpen) return;
     function handleClick(e) {
+      // Don't close dropdown if clicking on the plus button
+      if (e.target.closest('[title="Add new sheet"]')) {
+        return;
+      }
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
       }
@@ -67,10 +88,65 @@ const SheetSwitcher = () => {
     setRenaming(false);
   };
 
-  const handleDeleteSheet = (e, sheetId) => {
+  const handleDeleteSheet = async (e, sheetId) => {
     e.stopPropagation();
+    console.log('handleDeleteSheet called with:', { sheetId, sheetsLength: sheets.length });
     if (sheets.length > 1) {
-      deleteSheet(sheetId);
+      const sheetToDelete = sheets.find(s => s.id === sheetId);
+      console.log('Sheet to delete:', sheetToDelete);
+      if (sheetToDelete) {
+        setDeleteConfirmation({ sheetId, sheetName: sheetToDelete.name });
+      }
+    }
+  };
+
+  const confirmDelete = async () => {
+    console.log('confirmDelete called with:', deleteConfirmation);
+    if (!deleteConfirmation) return;
+    
+    try {
+      console.log('Calling deleteSheet with:', deleteConfirmation.sheetId);
+      await deleteSheet(deleteConfirmation.sheetId);
+      console.log('deleteSheet completed successfully');
+      setDropdownOpen(false);
+    } catch (error) {
+      console.error('Failed to delete sheet:', error);
+      // You could show a toast notification here
+    } finally {
+      setDeleteConfirmation(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmation(null);
+  };
+
+  const handleAddSheet = async () => {
+    console.log('handleAddSheet called');
+    try {
+      setIsAddingSheet(true);
+      console.log('Calling addSheet function...');
+      await addSheet();
+      console.log('addSheet completed successfully');
+      setDropdownOpen(false);
+    } catch (error) {
+      console.error('Failed to add sheet:', error);
+      // You could show a toast notification here
+    } finally {
+      setIsAddingSheet(false);
+    }
+  };
+
+  const handleAddSheetFromDropdown = async () => {
+    try {
+      setIsAddingSheet(true);
+      await addSheet();
+      setDropdownOpen(false);
+    } catch (error) {
+      console.error('Failed to add sheet:', error);
+      // You could show a toast notification here
+    } finally {
+      setIsAddingSheet(false);
     }
   };
 
@@ -95,6 +171,34 @@ const SheetSwitcher = () => {
 
   return (
     <div className="flex items-center space-x-1">
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+              Delete Sheet
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to delete "{deleteConfirmation.sheetName}"? This action cannot be undone.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={cancelDelete}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Current Sheet Display */}
       <div className="relative">
         <button
@@ -167,7 +271,7 @@ const SheetSwitcher = () => {
                 </button>
                 {sheets.length > 1 && (
                   <button
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 transition-all duration-200"
+                    className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 transition-all duration-200"
                     onClick={(e) => handleDeleteSheet(e, sheet.id)}
                     title="Delete sheet"
                   >
@@ -180,11 +284,16 @@ const SheetSwitcher = () => {
             {/* Add Sheet Button */}
             <div className="border-t border-gray-200 dark:border-gray-700 mt-1 pt-1">
               <button
-                className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors"
-                onClick={() => { addSheet(); setDropdownOpen(false); }}
+                className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-50"
+                onClick={handleAddSheetFromDropdown}
+                disabled={isAddingSheet}
               >
-                <Plus size={14} />
-                <span>Add sheet</span>
+                {isAddingSheet ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Plus size={14} />
+                )}
+                <span>{isAddingSheet ? 'Adding...' : 'Add sheet'}</span>
               </button>
             </div>
           </div>
@@ -193,11 +302,22 @@ const SheetSwitcher = () => {
 
       {/* Quick Add Sheet Button */}
       <button
-        className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-        onClick={addSheet}
+        className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
+        onClick={() => {
+          try {
+            handleAddSheet();
+          } catch (error) {
+            console.error('Error in handleAddSheet:', error);
+          }
+        }}
         title="Add new sheet"
+        disabled={isAddingSheet}
       >
-        <Plus size={16} />
+        {isAddingSheet ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : (
+          <Plus size={16} />
+        )}
       </button>
     </div>
   );
