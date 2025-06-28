@@ -79,6 +79,16 @@ const api = {
       console.error('Error listing sheets:', error);
       throw error;
     }
+  },
+
+  getSheet: async (workbookId, sheetName) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/sheet/get/${workbookId}/${sheetName}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error getting sheet:', error);
+      throw error;
+    }
   }
 };
 

@@ -8,6 +8,7 @@ export const queryKeys = {
   workbook: () => ['workbook'],
   formulas: () => ['formulas'],
   sheets: (workbookId) => ['sheets', workbookId],
+  sheet: (workbookId, sheetName) => ['sheet', workbookId, sheetName],
 };
 
 // Hook for fetching a single cell
@@ -121,5 +122,15 @@ export const useSheets = (workbookId) => {
     queryFn: () => api.listSheets(workbookId),
     enabled: !!workbookId,
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Hook for fetching a specific sheet
+export const useSheet = (workbookId, sheetName) => {
+  return useQuery({
+    queryKey: queryKeys.sheet(workbookId, sheetName),
+    queryFn: () => api.getSheet(workbookId, sheetName),
+    enabled: !!workbookId && !!sheetName,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }; 

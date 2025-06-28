@@ -1,7 +1,8 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
-import { useEditCell, useImportWorkbook, useExportWorkbook, useNl2Formula, useSheets } from '../hooks/useSpreadsheetQueries';
+import { useEditCell, useImportWorkbook, useExportWorkbook, useNl2Formula, useSheets, useSheet } from '../hooks/useSpreadsheetQueries';
 import { importWorkbookFromAPI, fetchWorkbookById } from '../services/workbookService';
 import { useQueryClient } from '@tanstack/react-query';
+import { api } from '../services/api';
 
 // Helper function to convert number to column letter (0 -> A, 1 -> B, etc.)
 const numToCol = (num) => {
@@ -456,12 +457,58 @@ export const SpreadsheetProvider = ({ children }) => {
   };
 
   // Switch to a different sheet
-  const switchSheet = useCallback((sheetId) => {
+  const switchSheet = useCallback(async (sheetId) => {
+    const activeSheet = spreadsheetData.sheets.find(s => s.id === sheetId);
+    if (!activeSheet) return;
+
     setSpreadsheetData(prevData => ({
       ...prevData,
       activeSheet: sheetId
     }));
-  }, []);
+
+    // Load sheet data from backend
+    try {
+      const response = await api.getSheet(spreadsheetData.workbook_id, activeSheet.name);
+      if (response && response.success) {
+        const sheetData = response.data.sheet;
+        // Convert backend cell format to frontend format
+        const frontendCells = {};
+        if (sheetData.cells) {
+          Object.entries(sheetData.cells).forEach(([cellId, cellData]) => {
+            frontendCells[cellId] = {
+              value: cellData.value || '',
+              formula: cellData.formula || '',
+              type: cellData.formula ? 'formula' : 'text',
+              formatted: cellData.value || ''
+            };
+          });
+        }
+        // Update the sheet with loaded data
+        setSpreadsheetData(prevData => {
+          const updatedSheets = prevData.sheets.map(sheet => {
+            if (sheet.id === sheetId) {
+              return {
+                ...sheet,
+                cells: frontendCells
+              };
+            }
+            return sheet;
+          });
+          return {
+            ...prevData,
+            sheets: updatedSheets
+          };
+        });
+        console.log('Sheet loaded successfully:', {
+          sheetName: activeSheet.name,
+          cellCount: Object.keys(frontendCells).length
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load sheet data:', error);
+      // Continue with the sheet switch even if loading fails
+    }
+  }, [spreadsheetData.workbook_id, spreadsheetData.sheets]);
 
   const value = {
     spreadsheetData,
