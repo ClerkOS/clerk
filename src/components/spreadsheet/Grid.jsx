@@ -161,32 +161,39 @@ const Grid = () => {
   useEffect(() => {
     const options = {
       root: null,
-      rootMargin: '0px',
+      rootMargin: '200px', // Trigger earlier for smoother horizontal scroll
       threshold: 0.1
     };
 
     const handleColumnIntersect = (entries) => {
       const [entry] = entries;
       if (entry.isIntersecting && !isLoadingColumns) {
-        console.log('Column loading trigger activated');
-        setIsLoadingColumns(true);
-        // Simulate loading delay
-        setTimeout(() => {
-          // Calculate how many more columns we need based on viewport
-          const currentColumns = getTotalColumns();
-          const neededColumns = calculateVisibleColumns();
-          const columnsToAdd = Math.max(20, neededColumns - currentColumns + 10); // Add more buffer
-          
-          console.log('Adding columns:', {
-            currentColumns,
-            neededColumns,
-            columnsToAdd,
-            newTotal: currentColumns + columnsToAdd
-          });
-          
-          addColumns(columnsToAdd);
-          setIsLoadingColumns(false);
-        }, 100);
+        // Only load more columns if user is scrolled to the far right
+        if (gridRef.current) {
+          const { scrollLeft, clientWidth, scrollWidth } = gridRef.current;
+          // Allow a small buffer (32px) for floating point rounding
+          if (scrollLeft + clientWidth >= scrollWidth - 32) {
+            console.log('Column loading trigger activated');
+            setIsLoadingColumns(true);
+            // Simulate loading delay
+            setTimeout(() => {
+              // Calculate how many more columns we need based on viewport
+              const currentColumns = getTotalColumns();
+              const neededColumns = calculateVisibleColumns();
+              const columnsToAdd = Math.max(30, neededColumns - currentColumns + 15); // Add more buffer and batch size
+              
+              console.log('Adding columns:', {
+                currentColumns,
+                neededColumns,
+                columnsToAdd,
+                newTotal: currentColumns + columnsToAdd
+              });
+              
+              addColumns(columnsToAdd);
+              setIsLoadingColumns(false);
+            }, 100);
+          }
+        }
       }
     };
 

@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
-import { useEditCell, useImportWorkbook, useExportWorkbook, useNl2Formula } from '../hooks/useSpreadsheetQueries';
+import { useEditCell, useImportWorkbook, useExportWorkbook, useNl2Formula, useSheets } from '../hooks/useSpreadsheetQueries';
+import { importWorkbookFromAPI, fetchWorkbookById } from '../services/workbookService';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Helper function to convert number to column letter (0 -> A, 1 -> B, etc.)
 const numToCol = (num) => {
@@ -34,7 +36,7 @@ const calculateInitialColumns = () => {
   // For a typical desktop screen (1200px wide), we can fit about 8-10 columns
   // For mobile (375px wide), we can fit about 2-3 columns
   // We'll start with a reasonable default and let the Grid component adjust
-  return 12; // Start with 12 columns (A-L) as a good default
+  return 20; // Start with 20 columns for faster horizontal scroll
 };
 
 // Initial spreadsheet data
@@ -70,6 +72,7 @@ export const SpreadsheetProvider = ({ children }) => {
   const importWorkbookMutation = useImportWorkbook();
   const exportWorkbookMutation = useExportWorkbook();
   const nl2formulaMutation = useNl2Formula();
+  const queryClient = useQueryClient();
 
   // Initialize default column widths
   useEffect(() => {
@@ -185,7 +188,13 @@ export const SpreadsheetProvider = ({ children }) => {
 
       // Use React Query mutation for API call
       try {
-        const response = await editCellMutation.mutateAsync({ cellId, value: newValue });
+        const activeSheet = getActiveSheet();
+        const response = await editCellMutation.mutateAsync({ 
+          workbookId: spreadsheetData.workbook_id,
+          sheet: activeSheet.name,
+          address: cellId,
+          value: newValue 
+        });
         
         // Update with server response if it's different
         if (response && (response.value !== newValue || response.formula)) {
@@ -224,7 +233,7 @@ export const SpreadsheetProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [editCellMutation]);
+  }, [editCellMutation, getActiveSheet, spreadsheetData.workbook_id]);
 
   // Update cell value (public method)
   const updateCell = useCallback(async (col, row, newValue) => {
@@ -316,42 +325,38 @@ export const SpreadsheetProvider = ({ children }) => {
     return activeSheet.cells[cellId] || { value: '', formula: '', type: 'text', formatted: '' };
   }, [getActiveSheet]);
 
-  // Get cell by ID
-  const getCellById = async (cellId) => {
+  // Import workbook
+  const importWorkbook = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      // First check if we have it locally
-      const [col, ...rowParts] = cellId.split('');
-      const row = parseInt(rowParts.join(''));
-      const localCell = getCell(col, row);
-      
-      if (localCell.value || localCell.formatted) {
-        return localCell;
+      const response = await importWorkbookFromAPI();
+      if (response && response.success) {
+        // Build new sheets array for frontend state
+        const newSheets = response.data.sheets.map((name, idx) => ({
+          id: `sheet${idx + 1}`,
+          name,
+          cells: {},
+          columns: generateColumns(visibleColumns),
+          rows: 100,
+          activeCell: 'A1',
+        }));
+        setSpreadsheetData({
+          sheets: newSheets,
+          activeSheet: newSheets[0]?.id || '',
+          workbook_id: response.data.workbook_id,
+        });
+        
+        // Invalidate sheets query to refresh the sheet list
+        queryClient.invalidateQueries({ queryKey: ['sheets', response.data.workbook_id] });
+        
+        // Optionally, show a notification here if you have setNotification
+        // setNotification && setNotification({ type: 'success', message: response.message });
       }
-      
-      // If not found locally or is empty, try API using React Query
-      // Note: This is a fallback for direct API calls, but ideally components should use useCell hook
-      const response = await editCellMutation.mutateAsync({ cellId, value: '' });
       return response;
     } catch (err) {
       setError(err.message);
-      return { value: '', type: 'text', formatted: '' };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Import workbook
-  const importWorkbook = async (file) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const response = await importWorkbookMutation.mutateAsync(file);
-      setSpreadsheetData(response);
-    } catch (err) {
-      setError(err.message);
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -394,6 +399,70 @@ export const SpreadsheetProvider = ({ children }) => {
     }
   };
 
+  // Fetch workbook by ID
+  const fetchWorkbook = async (workbookId) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetchWorkbookById(workbookId);
+      if (response && response.success) {
+        // Convert API sheets to frontend format
+        const newSheets = response.data.sheets.map((sheet, idx) => {
+          // Convert backend cell format to frontend format
+          const frontendCells = {};
+          if (sheet.cells) {
+            Object.entries(sheet.cells).forEach(([cellId, cellData]) => {
+              frontendCells[cellId] = {
+                value: cellData.value || '',
+                formula: cellData.formula || '',
+                type: 'text',
+                formatted: cellData.value || ''
+              };
+            });
+          }
+          
+          return {
+            id: `sheet${idx + 1}`,
+            name: sheet.name,
+            cells: frontendCells,
+            columns: generateColumns(visibleColumns),
+            rows: 100,
+            activeCell: 'A1',
+          };
+        });
+        
+        setSpreadsheetData({
+          sheets: newSheets,
+          activeSheet: newSheets[0]?.id || '',
+          workbook_id: response.data.workbook_id,
+        });
+        
+        // Invalidate sheets query to refresh the sheet list
+        queryClient.invalidateQueries({ queryKey: ['sheets', response.data.workbook_id] });
+        
+        console.log('Workbook loaded successfully:', {
+          workbookId: response.data.workbook_id,
+          sheets: newSheets.map(s => ({ name: s.name, cellCount: Object.keys(s.cells).length }))
+        });
+      }
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Failed to fetch workbook:', err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Switch to a different sheet
+  const switchSheet = useCallback((sheetId) => {
+    setSpreadsheetData(prevData => ({
+      ...prevData,
+      activeSheet: sheetId
+    }));
+  }, []);
+
   const value = {
     spreadsheetData,
     selectedCell,
@@ -404,7 +473,6 @@ export const SpreadsheetProvider = ({ children }) => {
     error,
     getActiveSheet,
     getCell,
-    getCellById,
     updateCell,
     updateCellWithFormula,
     importWorkbook,
@@ -419,6 +487,8 @@ export const SpreadsheetProvider = ({ children }) => {
     isColumnVisible,
     getColumnWidth,
     updateColumnWidth,
+    fetchWorkbook,
+    switchSheet,
   };
 
   return (

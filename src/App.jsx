@@ -73,8 +73,8 @@ function MainApp() {
 
   return (
     <ThemeProvider>
-      <SheetProvider>
-        <SpreadsheetProvider>
+      <SpreadsheetProvider>
+        <SheetProvider>
           <FormulaPreviewProvider>
             <Router>
               <Routes>
@@ -142,8 +142,8 @@ function MainApp() {
               </Routes>
             </Router>
           </FormulaPreviewProvider>
-        </SpreadsheetProvider>
-      </SheetProvider>
+        </SheetProvider>
+      </SpreadsheetProvider>
     </ThemeProvider>
   );
 }

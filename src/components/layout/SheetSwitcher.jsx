@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Plus, X } from 'lucide-react';
+import { ChevronDown, Plus, X, Loader2 } from 'lucide-react';
 import { useSheets } from '../../context/SheetContext';
 
 const SheetSwitcher = () => {
-  const { sheets, currentSheetId, setCurrentSheet, addSheet, renameSheet, deleteSheet } = useSheets();
+  const { sheets, currentSheetId, setCurrentSheet, addSheet, renameSheet, deleteSheet, isLoading, error } = useSheets();
   const currentSheet = sheets.find(s => s.id === currentSheetId);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
@@ -61,7 +61,7 @@ const SheetSwitcher = () => {
   };
 
   const handleRename = () => {
-    if (nameInput.trim() && nameInput !== currentSheet.name) {
+    if (nameInput.trim() && nameInput !== currentSheet?.name) {
       renameSheet(currentSheetId, nameInput.trim());
     }
     setRenaming(false);
@@ -73,6 +73,25 @@ const SheetSwitcher = () => {
       deleteSheet(sheetId);
     }
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <Loader2 size={14} className="animate-spin text-gray-500 dark:text-gray-400" />
+        <span className="text-gray-500 dark:text-gray-400">Loading sheets...</span>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+        <span className="text-red-600 dark:text-red-400">Failed to load sheets</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center space-x-1">
@@ -89,6 +108,7 @@ const SheetSwitcher = () => {
           `}
           onClick={handleDropdownToggle}
           onDoubleClick={(e) => { e.stopPropagation(); setRenaming(true); }}
+          disabled={sheets.length === 0}
         >
           {renaming ? (
             <input
@@ -99,27 +119,29 @@ const SheetSwitcher = () => {
               onBlur={handleRename}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleRename();
-                if (e.key === 'Escape') { setRenaming(false); setNameInput(currentSheet.name); }
+                if (e.key === 'Escape') { setRenaming(false); setNameInput(currentSheet?.name || ''); }
               }}
               maxLength={20}
             />
           ) : (
             <>
               <span className="text-gray-900 dark:text-white truncate max-w-[100px]" title={currentSheet?.name}>
-                {currentSheet?.name || 'Sheet1'}
+                {currentSheet?.name || 'No sheets'}
               </span>
-              <ChevronDown 
-                size={14} 
-                className={`text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
-                  dropdownOpen ? 'rotate-180' : ''
-                }`} 
-              />
+              {sheets.length > 0 && (
+                <ChevronDown 
+                  size={14} 
+                  className={`text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                    dropdownOpen ? 'rotate-180' : ''
+                  }`} 
+                />
+              )}
             </>
           )}
         </button>
 
         {/* Dropdown Menu */}
-        {dropdownOpen && (
+        {dropdownOpen && sheets.length > 0 && (
           <div 
             ref={dropdownRef} 
             className={`absolute z-50 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 ${
