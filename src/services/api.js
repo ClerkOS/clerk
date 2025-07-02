@@ -1,12 +1,12 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = 'http://localhost:8080';
 
 const api = {
   // Cell operations
   editCell: async (workbookId, sheet, address, value) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/cell/${workbookId}`, {
+      const response = await axios.post(`${API_BASE_URL}/edit-cell`, {
         sheet: sheet,
         address: address,
         value: value
@@ -20,37 +20,10 @@ const api = {
 
   getCell: async (workbookId, sheet, address) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/cell/${workbookId}/${sheet}/${address}`);
+      const response = await axios.get(`${API_BASE_URL}/get-cell?sheet=${sheet}&address=${address}`);
       return response.data;
     } catch (error) {
       console.error('Error getting cell:', error);
-      throw error;
-    }
-  },
-
-  batchEditCells: async (workbookId, sheet, edits) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/cell/batch/${workbookId}`, {
-        sheet: sheet,
-        edits: edits
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error batch editing cells:', error);
-      throw error;
-    }
-  },
-
-  addNamedRange: async (workbookId, sheet, name, refersTo, scope) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/cell/add/named-range/${workbookId}/${sheet}`, {
-        name: name,
-        refersTo: refersTo,
-        scope: scope
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error adding named range:', error);
       throw error;
     }
   },
@@ -60,7 +33,7 @@ const api = {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await axios.post(`${API_BASE_URL}/workbook/import`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/import`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -74,7 +47,7 @@ const api = {
 
   exportWorkbook: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/workbook/export`, {
+      const response = await axios.get(`${API_BASE_URL}/export`, {
         responseType: 'blob'
       });
       return response.data;
@@ -84,102 +57,16 @@ const api = {
     }
   },
 
-  // AI operations
-  nl2formula: async (workbookId, naturalLanguage) => {
+  // Code generation
+  generateCode: async (prompt, sheet) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/natlang/nl2f/${workbookId}`, {
-        prompt: naturalLanguage,
-        sheet: "Sheet1"
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error converting natural language to formula:', error);
-      throw error;
-    }
-  },
-
-  nl2summary: async (workbookId, prompt, range) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/natlang/summary/${workbookId}`, {
+      const response = await axios.post(`${API_BASE_URL}/generate-code`, {
         prompt: prompt,
-        sheet: "Sheet1",
-        range: range
+        sheet: sheet || 'Sheet1'
       });
       return response.data;
     } catch (error) {
-      console.error('Error generating summary:', error);
-      throw error;
-    }
-  },
-
-  f2nl: async (workbookId, prompt) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/natlang/f2nl/${workbookId}`, {
-        prompt: prompt,
-        sheet: "Sheet1"
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error explaining formula:', error);
-      throw error;
-    }
-  },
-
-  // Sheet operations
-  listSheets: async (workbookId) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/sheet/list/${workbookId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error listing sheets:', error);
-      throw error;
-    }
-  },
-
-  getSheet: async (workbookId, sheetName) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/sheet/get/${workbookId}/${sheetName}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error getting sheet:', error);
-      throw error;
-    }
-  },
-
-  addSheet: async (workbookId, sheetName) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/sheet/${workbookId}`, {
-        name: sheetName
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error adding sheet:', error);
-      throw error;
-    }
-  },
-
-  deleteSheet: async (workbookId, sheetName) => {
-    try {
-      const encodedSheetName = encodeURIComponent(sheetName);
-      const url = `${API_BASE_URL}/sheet/${workbookId}/${encodedSheetName}`;
-      console.log('deleteSheet API call:', {
-        workbookId,
-        sheetName,
-        encodedSheetName,
-        url
-      });
-      const response = await axios.delete(url);
-      console.log('deleteSheet response:', response);
-      return response.data;
-    } catch (error) {
-      console.error('Error deleting sheet:', error);
-      console.error('Error details:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        config: error.config
-      });
+      console.error('Error generating code:', error);
       throw error;
     }
   }
