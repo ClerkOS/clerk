@@ -418,8 +418,14 @@ export const SpreadsheetProvider = ({ children }) => {
                 value: cellData.value || '',
                 formula: cellData.formula || '',
                 type: 'text',
-                formatted: cellData.value || ''
+                formatted: cellData.value || '',
+                style: cellData.style || null
               };
+              
+              // Debug: log styling data
+              if (cellData.style) {
+                console.log(`Received styling for cell ${cellId}:`, cellData.style);
+              }
             });
           }
           
@@ -480,7 +486,8 @@ export const SpreadsheetProvider = ({ children }) => {
               value: cellData.value || '',
               formula: cellData.formula || '',
               type: cellData.formula ? 'formula' : 'text',
-              formatted: cellData.value || ''
+              formatted: cellData.value || '',
+              style: cellData.style || null
             };
           });
         }

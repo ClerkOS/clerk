@@ -28,6 +28,33 @@ const api = {
     }
   },
 
+  batchEditCells: async (workbookId, sheet, edits) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/cell/batch/${workbookId}`, {
+        sheet: sheet,
+        edits: edits
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error batch editing cells:', error);
+      throw error;
+    }
+  },
+
+  addNamedRange: async (workbookId, sheet, name, refersTo, scope) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/cell/add/named-range/${workbookId}/${sheet}`, {
+        name: name,
+        refersTo: refersTo,
+        scope: scope
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error adding named range:', error);
+      throw error;
+    }
+  },
+
   // Workbook operations
   importWorkbook: async (file) => {
     try {
@@ -61,11 +88,39 @@ const api = {
   nl2formula: async (workbookId, naturalLanguage) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/natlang/nl2f/${workbookId}`, {
-        prompt: naturalLanguage
+        prompt: naturalLanguage,
+        sheet: "Sheet1"
       });
       return response.data;
     } catch (error) {
       console.error('Error converting natural language to formula:', error);
+      throw error;
+    }
+  },
+
+  nl2summary: async (workbookId, prompt, range) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/natlang/summary/${workbookId}`, {
+        prompt: prompt,
+        sheet: "Sheet1",
+        range: range
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      throw error;
+    }
+  },
+
+  f2nl: async (workbookId, prompt) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/natlang/f2nl/${workbookId}`, {
+        prompt: prompt,
+        sheet: "Sheet1"
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error explaining formula:', error);
       throw error;
     }
   },

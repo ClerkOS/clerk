@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Copy, ClipboardPaste, Scissors, Trash2, Sparkles } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import AIContextMenu from './AIContextMenu';
 import { useSpreadsheet } from '../../context/SpreadsheetContext';
 
-const ContextMenu = ({ position, onClose, isCell = false, cellId = null, selectedCells = [] }) => {
+const ContextMenu = ({ position, onClose, isCell = false, cellId = null, selectedCells = [], onOpenAIWithRange }) => {
   const { theme } = useTheme();
-  const [showAIDialog, setShowAIDialog] = useState(false);
   const menuRef = useRef(null);
   const isDark = theme === 'dark';
   const { getCell } = useSpreadsheet();
@@ -68,26 +66,18 @@ const ContextMenu = ({ position, onClose, isCell = false, cellId = null, selecte
   }, [onClose]);
 
   const handleAIClick = () => {
-    setShowAIDialog(true);
-  };
-
-  const handleAIClose = () => {
-    setShowAIDialog(false);
-    onClose();
-  };
-
-  const handleAIApply = (suggestion) => {
-    // Handle AI suggestion application
-    console.log("Applying AI suggestion:", suggestion);
-    // TODO: Apply the suggestion to selected cells
-    handleAIClose();
-  };
-
-  const handleAIModify = (suggestion) => {
-    // Handle AI suggestion modification
-    console.log("Modifying AI suggestion:", suggestion);
-    // TODO: Open a dialog to modify the suggestion
-    handleAIClose();
+    // Create a range string from selected cells
+    if (selectedCells.length > 0) {
+      const range = selectedCells.length === 1 
+        ? selectedCells[0] 
+        : `${selectedCells[0]}:${selectedCells[selectedCells.length - 1]}`;
+      
+      onOpenAIWithRange({
+        range: range,
+        cells: selectedCells,
+        content: cellsContent
+      });
+    }
   };
 
   // Format the selected cells for display in the AI menu
@@ -111,8 +101,8 @@ const ContextMenu = ({ position, onClose, isCell = false, cellId = null, selecte
           left: position.x,
         }}
       >
-        {/* AI Option - only show if cells have content */}
-        {hasSelectedContent && cellsContent.some(cell => cell.value) && (
+        {/* AI Option - show for any selection */}
+        {hasSelectedContent && (
           <>
             <button
               onClick={handleAIClick}
@@ -153,21 +143,6 @@ const ContextMenu = ({ position, onClose, isCell = false, cellId = null, selecte
           </button>
         ))}
       </div>
-
-      {/* AI Dialog */}
-      {showAIDialog && (
-        <AIContextMenu
-          position={{ x: position.x + 220, y: position.y }}
-          onClose={handleAIClose}
-          onApply={handleAIApply}
-          onModify={handleAIModify}
-          selectedData={{ 
-            cells: selectedCells, 
-            content: cellsContent,
-            selectionType: selectedCells.length > 1 ? 'range' : 'single',
-          }}
-        />
-      )}
     </>
   );
 };

@@ -16,7 +16,7 @@ const FormulaBar = () => {
       </span>
       <input
         type="text"
-        className="flex-1 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs sm:text-sm"
+        className="flex-1 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-xs sm:text-sm"
         value={activeFormula}
         onChange={(e) => setActiveFormula(e.target.value)}
         style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}

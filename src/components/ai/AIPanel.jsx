@@ -1,21 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Trash2, Sparkles, GripVertical } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useSpreadsheet } from '../../context/SpreadsheetContext';
 import { useAIOperations } from '../../hooks/useAIOperations';
 
-const AIPanel = ({ onWidthChange }) => {
+const AIPanel = ({ onWidthChange, selectedRange, setSelectedRange }) => {
   const { theme } = useTheme();
+  const { spreadsheetData } = useSpreadsheet();
   const [width, setWidth] = useState(320);
   const [messages, setMessages] = useState([
     {
       id: 1,
       role: 'assistant',
-      content: 'Hello! I\'m your AI assistant. I can help you with data analysis, formulas, and more. What would you like to do?',
+      content: 'Hello! I\'m your AI assistant. I can help you with data analysis, formulas, and more. Please import a spreadsheet file first to get started!',
       timestamp: new Date()
     }
   ]);
   const [input, setInput] = useState('');
-  const { convertToFormula, isConverting, conversionError, lastResult } = useAIOperations();
+  const { convertToFormula, generateSummary, explainFormula, isConverting, conversionError, lastResult } = useAIOperations(spreadsheetData.workbook_id);
   const messagesEndRef = useRef(null);
   
   const isResizing = useRef(false);
@@ -61,9 +63,51 @@ const AIPanel = ({ onWidthChange }) => {
     scrollToBottom();
   }, [messages]);
 
+  // Add effect to handle selected range
+  useEffect(() => {
+    if (selectedRange && spreadsheetData.workbook_id) {
+      const rangeMessage = {
+        id: messages.length + 1,
+        role: 'assistant',
+        content: `I can see you've selected range: **${selectedRange.range}**\n\nWhat would you like to know about this data? I can help you:\n• Analyze the values\n• Create formulas\n• Generate summaries\n• Suggest visualizations`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, rangeMessage]);
+      
+      // Pre-fill input with a helpful suggestion
+      setInput(`Tell me about the data in ${selectedRange.range}`);
+    } else if (selectedRange && !spreadsheetData.workbook_id) {
+      const rangeMessage = {
+        id: messages.length + 1,
+        role: 'assistant',
+        content: `I can see you've selected range: **${selectedRange.range}**, but I need a workbook to work with this data. Please import a spreadsheet file first!`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, rangeMessage]);
+    }
+  }, [selectedRange, spreadsheetData.workbook_id]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
+
+    // Check if we have a workbook loaded
+    if (!spreadsheetData.workbook_id) {
+      const errorMessage = {
+        id: messages.length + 2,
+        role: 'assistant',
+        content: 'I need a workbook to work with! Please import a spreadsheet file first using the import button in the sidebar.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, {
+        id: messages.length + 1,
+        role: 'user',
+        content: input,
+        timestamp: new Date()
+      }, errorMessage]);
+      setInput('');
+      return;
+    }
 
     const userMessage = {
       id: messages.length + 1,
@@ -76,40 +120,126 @@ const AIPanel = ({ onWidthChange }) => {
     setInput('');
 
     try {
-      // Check if the input looks like a formula request
-      const isFormulaRequest = input.toLowerCase().includes('sum') || 
-                              input.toLowerCase().includes('average') || 
-                              input.toLowerCase().includes('formula') ||
-                              input.toLowerCase().includes('calculate');
+      const userInput = input.toLowerCase();
+      
+      // Determine the type of request and route to appropriate AI endpoint
+      let aiResponse = '';
+      
+      // Check for formula-related requests
+      const isFormulaRequest = userInput.includes('sum') || 
+                              userInput.includes('average') || 
+                              userInput.includes('formula') ||
+                              userInput.includes('calculate') ||
+                              userInput.includes('total') ||
+                              userInput.includes('count') ||
+                              userInput.includes('max') ||
+                              userInput.includes('min') ||
+                              userInput.includes('vlookup') ||
+                              userInput.includes('if') ||
+                              userInput.includes('round');
+
+      // Check for analysis/summary requests
+      const isAnalysisRequest = userInput.includes('analyze') || 
+                               userInput.includes('summary') || 
+                               userInput.includes('insight') ||
+                               userInput.includes('pattern') ||
+                               userInput.includes('trend') ||
+                               userInput.includes('observation') ||
+                               userInput.includes('recommendation') ||
+                               userInput.includes('tell me about') ||
+                               userInput.includes('what does this data') ||
+                               userInput.includes('explain this data');
+
+      // Check for formula explanation requests
+      const isExplanationRequest = userInput.includes('explain') || 
+                                  userInput.includes('what does') ||
+                                  userInput.includes('how does') ||
+                                  userInput.includes('break down') ||
+                                  userInput.includes('describe') ||
+                                  userInput.startsWith('=') ||
+                                  userInput.includes('formula');
 
       if (isFormulaRequest) {
-        // Use React Query for formula conversion
+        // Route to formula generation
         const result = await convertToFormula(input);
-        
-        const aiMessage = {
-          id: messages.length + 2,
-          role: 'assistant',
-          content: `I've converted your request to a formula: \`${result.formula}\`\n\n${result.explanation || 'This formula will help you with your calculation.'}`,
-          timestamp: new Date(),
-          formula: result.formula
-        };
-        setMessages(prev => [...prev, aiMessage]);
+        if (result.data && result.data.target_cells) {
+          const formulas = result.data.target_cells.map(cell => 
+            `${cell.address}: ${cell.formula}`
+          ).join('\n');
+          
+          aiResponse = `I've generated these formulas for you:\n\n${formulas}\n\n${result.data.description || 'These formulas will help with your calculation.'}`;
+        } else {
+          aiResponse = 'I generated a formula for you, but there was an issue with the response format.';
+        }
+      } else if (isAnalysisRequest && selectedRange) {
+        // Route to data analysis/summary
+        const result = await generateSummary(input, selectedRange.range);
+        if (result.data) {
+          const data = result.data;
+          aiResponse = `**Analysis of ${selectedRange.range}:**\n\n`;
+          
+          if (data.summary) {
+            aiResponse += `**Summary:** ${data.summary}\n\n`;
+          }
+          
+          if (data.observations && data.observations.length > 0) {
+            aiResponse += `**Key Observations:**\n${data.observations.map(obs => `• ${obs}`).join('\n')}\n\n`;
+          }
+          
+          if (data.insights && data.insights.length > 0) {
+            aiResponse += `**Insights:**\n${data.insights.map(insight => `• ${insight}`).join('\n')}\n\n`;
+          }
+          
+          if (data.recommendations && data.recommendations.length > 0) {
+            aiResponse += `**Recommendations:**\n${data.recommendations.map(rec => `• ${rec}`).join('\n')}`;
+          }
+        } else {
+          aiResponse = 'I analyzed your data, but there was an issue with the response format.';
+        }
+      } else if (isExplanationRequest) {
+        // Route to formula explanation
+        const result = await explainFormula(input);
+        if (result.data) {
+          if (result.data.type === 'formula') {
+            aiResponse = `Here's the formula: \`${result.data.text}\``;
+          } else {
+            aiResponse = `**Explanation:** ${result.data.text}`;
+          }
+        } else {
+          aiResponse = 'I explained the formula, but there was an issue with the response format.';
+        }
       } else {
-        // General AI response
-        const aiMessage = {
-          id: messages.length + 2,
-          role: 'assistant',
-          content: 'I understand you want to work with your data. I can help you analyze it, create formulas, or generate visualizations. What specific task would you like to accomplish?',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiMessage]);
+        // Default to formula generation for general requests
+        try {
+          const result = await convertToFormula(input);
+          if (result.data && result.data.target_cells) {
+            const formulas = result.data.target_cells.map(cell => 
+              `${cell.address}: ${cell.formula}`
+            ).join('\n');
+            
+            aiResponse = `I've generated these formulas for you:\n\n${formulas}\n\n${result.data.description || 'These formulas will help with your request.'}`;
+          } else {
+            aiResponse = 'I tried to help with your request, but there was an issue with the response format.';
+          }
+        } catch (error) {
+          aiResponse = `I understand you want to work with ${selectedRange ? `the data in ${selectedRange.range}` : 'your data'}. I can help you analyze it, create formulas, or generate visualizations. What specific task would you like to accomplish?`;
+        }
       }
+
+      const aiMessage = {
+        id: messages.length + 2,
+        role: 'assistant',
+        content: aiResponse,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
+      
     } catch (error) {
       console.error('AI response failed:', error);
       const errorMessage = {
         id: messages.length + 2,
         role: 'assistant',
-        content: 'Sorry, I encountered an error processing your request. Please try again.',
+        content: `Sorry, I encountered an error processing your request: ${error.message}. Please try again with a different question.`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -121,10 +251,18 @@ const AIPanel = ({ onWidthChange }) => {
       {
         id: 1,
         role: 'assistant',
-        content: 'Hello! I\'m your AI assistant. I can help you with data analysis, formulas, and more. What would you like to do?',
+        content: spreadsheetData.workbook_id 
+          ? 'Hello! I\'m your AI assistant. I can help you with data analysis, formulas, and more. What would you like to do?'
+          : 'Hello! I\'m your AI assistant. I can help you with data analysis, formulas, and more. Please import a spreadsheet file first to get started!',
         timestamp: new Date()
       }
     ]);
+  };
+
+  const clearSelectedRange = () => {
+    // This will be handled by the parent component
+    // For now, we'll just clear the local state
+    setSelectedRange(null);
   };
 
   const isDark = false; // Force light mode for this style
@@ -152,6 +290,31 @@ const AIPanel = ({ onWidthChange }) => {
           <h3 className="font-bold text-lg text-gray-900 dark:text-white">AI Assistant</h3>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Get help with data analysis and formulas</p>
+        
+        {/* Selected Range Indicator */}
+        {selectedRange && (
+          <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles size={14} className="text-blue-500" />
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                  Selected: {selectedRange.range}
+                </span>
+              </div>
+              <button
+                onClick={clearSelectedRange}
+                className="text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              >
+                Clear
+              </button>
+            </div>
+            {selectedRange.content && selectedRange.content.length > 0 && (
+              <div className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                {selectedRange.content.length} cell{selectedRange.content.length !== 1 ? 's' : ''} with data
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Messages */}

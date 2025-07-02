@@ -13,7 +13,7 @@ const COLUMN_WIDTH = 128; // w-32 = 128px
 // Row header width
 const ROW_HEADER_WIDTH = 40; // w-10 = 40px
 
-const Grid = () => {
+const Grid = ({ isEditing, onEditingChange }) => {
   const {
     selectedCell,
     setSelectedCell,
@@ -359,6 +359,8 @@ const Grid = () => {
                     onMouseEnter={() => handleCellHover(col, row)}
                     col={col}
                     row={row}
+                    isEditing={isEditing}
+                    onEditingChange={onEditingChange}
                   />
                 );
               })}

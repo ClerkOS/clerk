@@ -13,7 +13,6 @@ import ChartBuilder from './components/charts/ChartBuilder';
 import ChartEditor from './components/charts/ChartEditor';
 import TablesPanel from './components/spreadsheet/TablesPanel';
 import AIPanel from './components/ai/AIPanel';
-import ContextMenu from './components/ai/ContextMenu';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 
 function MainApp() {
@@ -22,8 +21,8 @@ function MainApp() {
   const [showChartBuilder, setShowChartBuilder] = useState(false);
   const [showTablesPanel, setShowTablesPanel] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
-  const [contextMenu, setContextMenu] = useState(null);
   const [panelWidth, setPanelWidth] = useState(320);
+  const [selectedRangeForAI, setSelectedRangeForAI] = useState(null);
 
   const toggleCommandPalette = () => {
     setShowCommandPalette(!showCommandPalette);
@@ -57,16 +56,15 @@ function MainApp() {
     if (showTablesPanel) setShowTablesPanel(false);
   };
 
-  const handleContextMenu = (e) => {
-    e.preventDefault();
-    setContextMenu({
-      x: e.clientX,
-      y: e.clientY
-    });
-  };
-
-  const handleCloseContextMenu = () => {
-    setContextMenu(null);
+  const handleOpenAIWithRange = (selectedRange) => {
+    // Open AI panel with the selected range
+    setShowAIPanel(true);
+    // Close other panels
+    setShowFormulaBuilder(false);
+    setShowChartBuilder(false);
+    setShowTablesPanel(false);
+    // Store the selected range for the AI panel
+    setSelectedRangeForAI(selectedRange);
   };
 
   const isPanelOpen = showFormulaBuilder || showChartBuilder || showTablesPanel || showAIPanel;
@@ -97,13 +95,11 @@ function MainApp() {
                       />
                       <div className="flex-1 flex min-w-0">
                         <div className="flex-1 flex flex-col min-w-0">
-                          <main 
-                            className="overflow-auto min-h-0"
-                            onContextMenu={handleContextMenu}
-                          >
+                          <main className="overflow-auto min-h-0">
                             <Spreadsheet 
                               isPanelOpen={isPanelOpen}
                               panelWidth={panelWidth}
+                              onOpenAIWithRange={handleOpenAIWithRange}
                             />
                           </main>
                           <StatusBar />
@@ -126,16 +122,12 @@ function MainApp() {
                         {showAIPanel && (
                           <AIPanel 
                             onWidthChange={setPanelWidth}
+                            selectedRange={selectedRangeForAI}
+                            setSelectedRange={setSelectedRangeForAI}
                           />
                         )}
                       </div>
                     </div>
-                    {contextMenu && (
-                      <ContextMenu
-                        position={contextMenu}
-                        onClose={handleCloseContextMenu}
-                      />
-                    )}
                   </div>
                 } />
                 <Route path="/chart-editor" element={<ChartEditor />} />

@@ -1,13 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Grid from './Grid';
 import FormulaBar from './FormulaBar';
 import TablesPanel from './TablesPanel';
 import { useSpreadsheet } from '../../context/SpreadsheetContext';
-import { SelectionProvider } from './SelectionManager';
+import { SelectionProvider, useSelection } from './SelectionManager';
 import { Upload, Plus, FileText, FileUp, FileDown, AlertCircle, CheckCircle } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { handleFileUpload, validateFile } from '../../services/fileService';
 import { useWorkbookOperations } from '../../hooks/useWorkbookOperations';
+import ContextMenu from '../ai/ContextMenu';
 
 const ModernEmptyState = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -164,7 +165,7 @@ const ModernEmptyState = () => {
   );
 };
 
-const Spreadsheet = ({ isPanelOpen, panelWidth = 320 }) => {
+const SpreadsheetContent = ({ isPanelOpen, panelWidth, onOpenAIWithRange }) => {
   const { 
     selectedCell, 
     setSelectedCell, 
@@ -181,13 +182,149 @@ const Spreadsheet = ({ isPanelOpen, panelWidth = 320 }) => {
     updateColumnWidth
   } = useSpreadsheet();
 
+  // Get selection state
+  const { selectedCells, clearSelection, startSelection } = useSelection();
+
   // React Query hooks for workbook operations
   const { importWorkbook, exportWorkbook, isImporting, isExporting, importError, exportError } = useWorkbookOperations();
 
   const [showTablesPanel, setShowTablesPanel] = useState(false);
   const [tablesPanelWidth, setTablesPanelWidth] = useState(300);
   const [notification, setNotification] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Helper functions for column navigation
+  const colToNum = (col) => {
+    let result = 0;
+    for (let i = 0; i < col.length; i++) {
+      result = result * 26 + (col.charCodeAt(i) - 64);
+    }
+    return result - 1; // 0-based index
+  };
+
+  const numToCol = (num) => {
+    let result = '';
+    num = num + 1; // 1-based index
+    while (num > 0) {
+      const remainder = (num - 1) % 26;
+      result = String.fromCharCode(65 + remainder) + result;
+      num = Math.floor((num - 1) / 26);
+    }
+    return result;
+  };
+
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback((e) => {
+    // Only handle arrow keys when not editing a cell
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || isEditing) {
+      return;
+    }
+
+    const { col, row } = selectedCell;
+    let newCol = col;
+    let newRow = row;
+
+    switch (e.key) {
+      case 'ArrowUp':
+        e.preventDefault();
+        newRow = Math.max(1, row - 1);
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        newRow = row + 1;
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        const colNum = colToNum(col);
+        if (colNum > 0) {
+          newCol = numToCol(colNum - 1);
+        }
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        const nextColNum = colToNum(col);
+        newCol = numToCol(nextColNum + 1);
+        break;
+      case 'Tab':
+        e.preventDefault();
+        if (e.shiftKey) {
+          // Shift+Tab: move left
+          const colNum = colToNum(col);
+          if (colNum > 0) {
+            newCol = numToCol(colNum - 1);
+          } else {
+            // Wrap to previous row, last column
+            newRow = Math.max(1, row - 1);
+            newCol = numToCol(visibleColumns - 1);
+          }
+        } else {
+          // Tab: move right
+          const nextColNum = colToNum(col);
+          if (nextColNum < visibleColumns - 1) {
+            newCol = numToCol(nextColNum + 1);
+          } else {
+            // Wrap to next row, first column
+            newRow = row + 1;
+            newCol = 'A';
+          }
+        }
+        break;
+      case 'Enter':
+        e.preventDefault();
+        // Start editing the current cell
+        setIsEditing(true);
+        return; // Don't move the cell, just start editing
+      case 'Home':
+        e.preventDefault();
+        newCol = 'A';
+        break;
+      case 'End':
+        e.preventDefault();
+        // Move to the last visible column
+        const lastColNum = visibleColumns - 1;
+        newCol = numToCol(lastColNum);
+        break;
+      case 'PageUp':
+        e.preventDefault();
+        newRow = Math.max(1, row - 20); // Move up 20 rows
+        break;
+      case 'PageDown':
+        e.preventDefault();
+        newRow = row + 20; // Move down 20 rows
+        break;
+      default:
+        return; // Don't handle other keys
+    }
+
+    // Update the selected cell
+    if (newCol !== col || newRow !== row) {
+      setSelectedCell({ col: newCol, row: newRow });
+      clearSelection();
+      startSelection(newCol, newRow);
+    }
+  }, [selectedCell, visibleColumns, setSelectedCell, clearSelection, startSelection, isEditing]);
+
+  // Add keyboard event listener
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      handleKeyDown(e);
+    };
+
+    // Add event listener to document
+    document.addEventListener('keydown', handleGlobalKeyDown);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [handleKeyDown]);
+
+  // Handle editing state changes
+  const handleEditingChange = useCallback((editing) => {
+    setIsEditing(editing);
+  }, []);
 
   // Handle file import
   const handleFileImport = async (event) => {
@@ -242,26 +379,70 @@ const Spreadsheet = ({ isPanelOpen, panelWidth = 320 }) => {
     }
   }, [notification]);
 
+  // Handle context menu
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  const handleOpenAIWithRange = (selectedRange) => {
+    setContextMenu(null);
+    onOpenAIWithRange(selectedRange);
+  };
+
   const activeSheet = getActiveSheet();
   const isEmpty = !activeSheet;
 
   return (
-    <SelectionProvider>
+    <>
       <div className="flex h-full">
         <div 
           className="flex flex-col h-full transition-all duration-300 ease-in-out"
-          style={{
-            width: isPanelOpen ? `calc(100% - ${Math.min(panelWidth, window.innerWidth * 0.7)}px)` : '100%',
-            width: '100%',
-            marginRight: 0
-          }}
+          // style={{
+          //   width: isPanelOpen ? `calc(100% - ${Math.min(panelWidth, window.innerWidth * 0.7)}px)` : '100%',
+          //   marginRight: 0
+          // }}
         >
           <FormulaBar />
-          <div className="flex-1 overflow-auto">
-            {isEmpty ? <ModernEmptyState /> : <Grid />}
+          <div 
+            className="flex-1 overflow-auto"
+            onContextMenu={handleContextMenu}
+          >
+            {isEmpty ? <ModernEmptyState /> : <Grid isEditing={isEditing} onEditingChange={handleEditingChange} />}
           </div>
         </div>
       </div>
+      
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          position={contextMenu}
+          onClose={handleCloseContextMenu}
+          onOpenAIWithRange={handleOpenAIWithRange}
+          isCell={true}
+          selectedCells={selectedCells}
+          cellId={selectedCells.length === 1 ? selectedCells[0] : null}
+        />
+      )}
+    </>
+  );
+};
+
+const Spreadsheet = ({ isPanelOpen, panelWidth = 320, onOpenAIWithRange }) => {
+  return (
+    <SelectionProvider>
+      <SpreadsheetContent 
+        isPanelOpen={isPanelOpen} 
+        panelWidth={panelWidth}
+        onOpenAIWithRange={onOpenAIWithRange}
+      />
     </SelectionProvider>
   );
 };

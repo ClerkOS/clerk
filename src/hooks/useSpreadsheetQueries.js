@@ -77,23 +77,24 @@ export const useNl2Formula = () => {
   });
 };
 
-// Hook for batch cell operations (if needed in the future)
+// Hook for batch cell operations using the batch endpoint
 export const useBatchCellUpdate = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (updates) => Promise.all(
-      updates.map(({ workbookId, sheet, address, value }) => api.editCell(workbookId, sheet, address, value))
-    ),
-    onSuccess: (results, updates) => {
-      // Update each cell in cache
-      updates.forEach(({ workbookId, sheet, address }, index) => {
-        if (results[index]) {
-          queryClient.setQueryData(queryKeys.cell(workbookId, sheet, address), results[index]);
-        }
-      });
+    mutationFn: ({ workbookId, sheet, edits }) => api.batchEditCells(workbookId, sheet, edits),
+    onSuccess: (data, { workbookId, sheet }) => {
+      // Update each cell in cache from the batch response
+      if (data.data && data.data.edits) {
+        data.data.edits.forEach((cellData) => {
+          queryClient.setQueryData(
+            queryKeys.cell(workbookId, sheet, cellData.address), 
+            { data: { cell: cellData } }
+          );
+        });
+      }
       
-      // Invalidate cells list
+      // Invalidate cells list to refresh any list views
       queryClient.invalidateQueries({ queryKey: queryKeys.cells() });
     },
     onError: (error) => {
@@ -163,6 +164,23 @@ export const useDeleteSheet = () => {
     },
     onError: (error) => {
       console.error('Error deleting sheet:', error);
+    },
+  });
+};
+
+// Hook for adding a named range
+export const useAddNamedRange = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ workbookId, sheet, name, refersTo, scope }) => 
+      api.addNamedRange(workbookId, sheet, name, refersTo, scope),
+    onSuccess: (data, { workbookId, sheet }) => {
+      // Invalidate sheet data to refresh named ranges
+      queryClient.invalidateQueries({ queryKey: queryKeys.sheet(workbookId, sheet) });
+    },
+    onError: (error) => {
+      console.error('Error adding named range:', error);
     },
   });
 }; 

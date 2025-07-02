@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNl2Formula, queryKeys } from './useSpreadsheetQueries';
+import api from '../services/api';
 
-export const useAIOperations = () => {
+export const useAIOperations = (workbookId) => {
   const queryClient = useQueryClient();
   const nl2formulaMutation = useNl2Formula();
 
@@ -22,6 +23,32 @@ export const useAIOperations = () => {
     }
   };
 
+  const generateSummary = async (prompt, range) => {
+    try {
+      if (!workbookId) {
+        throw new Error('No workbook ID available. Please import a workbook first.');
+      }
+      const result = await api.nl2summary(workbookId, prompt, range);
+      return result;
+    } catch (error) {
+      console.error('Summary generation failed:', error);
+      throw error;
+    }
+  };
+
+  const explainFormula = async (prompt) => {
+    try {
+      if (!workbookId) {
+        throw new Error('No workbook ID available. Please import a workbook first.');
+      }
+      const result = await api.f2nl(workbookId, prompt);
+      return result;
+    } catch (error) {
+      console.error('Formula explanation failed:', error);
+      throw error;
+    }
+  };
+
   const getFormulaSuggestions = async (partialQuery) => {
     // This could be expanded to use a different API endpoint for suggestions
     // For now, we'll use the same nl2formula endpoint with partial queries
@@ -36,6 +63,8 @@ export const useAIOperations = () => {
 
   return {
     convertToFormula,
+    generateSummary,
+    explainFormula,
     getFormulaSuggestions,
     isConverting: nl2formulaMutation.isPending,
     conversionError: nl2formulaMutation.error,

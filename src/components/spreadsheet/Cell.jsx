@@ -12,14 +12,19 @@ const Cell = ({
   onClick, 
   onMouseEnter,
   col, 
-  row 
+  row,
+  isEditing: globalIsEditing,
+  onEditingChange
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [localIsEditing, setLocalIsEditing] = useState(false);
   const [draftValue, setDraftValue] = useState('');
   const inputRef = useRef(null);
   const cellRef = useRef(null);
   const { getCell } = useSpreadsheet();
   const { previewFormula, previewTarget, clearPreview } = useFormulaPreview();
+
+  // Determine if this cell should be editing
+  const isEditing = (globalIsEditing && isActiveCell) || localIsEditing;
 
   // React Query hooks
   const cellId = `${col}${row}`;
@@ -54,6 +59,13 @@ const Cell = ({
   useEffect(() => {
     setDraftValue(displayValue);
   }, [displayValue]);
+
+  // Notify parent when editing state changes
+  useEffect(() => {
+    if (onEditingChange && isActiveCell) {
+      onEditingChange(isEditing);
+    }
+  }, [isEditing, isActiveCell, onEditingChange]);
 
   // Determine cell styling based on selected/highlighted state and type
   const getCellClasses = useCallback(() => {
@@ -109,10 +121,75 @@ const Cell = ({
     return classes;
   }, [isActiveCell, isSelected, isHighlighted, type, displayValue, col, isFormulaCell]);
 
+  // Get inline styles based on cell styling
+  const getCellStyles = useCallback(() => {
+    const styles = {
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    };
+
+    // Apply cell styling if available
+    if (cellData?.style) {
+      const style = cellData.style;
+      
+      // Debug logging
+      console.log(`Cell ${col}${row} styling:`, style);
+      
+      // Font properties
+      if (style.fontBold) {
+        styles.fontWeight = 'bold';
+        console.log(`Applied bold to cell ${col}${row}`);
+      }
+      if (style.fontItalic) {
+        styles.fontStyle = 'italic';
+        console.log(`Applied italic to cell ${col}${row}`);
+      }
+      if (style.fontSize) {
+        styles.fontSize = `${style.fontSize}px`;
+        console.log(`Applied font size ${style.fontSize}px to cell ${col}${row}`);
+      }
+      if (style.fontFamily) {
+        styles.fontFamily = style.fontFamily;
+        console.log(`Applied font family ${style.fontFamily} to cell ${col}${row}`);
+      }
+      if (style.fontColor) {
+        styles.color = style.fontColor;
+        console.log(`Applied font color ${style.fontColor} to cell ${col}${row}`);
+      }
+      
+      // Background color
+      if (style.backgroundColor && style.backgroundColor !== '#FFFFFF') {
+        styles.backgroundColor = style.backgroundColor;
+        console.log(`Applied background color ${style.backgroundColor} to cell ${col}${row}`);
+      }
+      
+      // Text alignment
+      if (style.alignment) {
+        styles.textAlign = style.alignment;
+        console.log(`Applied alignment ${style.alignment} to cell ${col}${row}`);
+      }
+      
+      // Border styling
+      if (style.borderStyle) {
+        styles.borderStyle = 'solid';
+        styles.borderWidth = style.borderStyle === 'thin' ? '1px' : 
+                            style.borderStyle === 'medium' ? '2px' : '3px';
+        if (style.borderColor) {
+          styles.borderColor = style.borderColor;
+        }
+        console.log(`Applied border style ${style.borderStyle} to cell ${col}${row}`);
+      }
+    } else {
+      // Debug: log when no styling is found
+      console.log(`No styling found for cell ${col}${row}`);
+    }
+
+    return styles;
+  }, [cellData?.style, col, row]);
+
   // Handle double click to start editing
   const handleDoubleClick = useCallback(() => {
     if (isActiveCell) {
-      setIsEditing(true);
+      setLocalIsEditing(true);
     }
   }, [isActiveCell]);
 
@@ -134,7 +211,7 @@ const Cell = ({
         setDraftValue(displayValue);
       }
     }
-    setIsEditing(false);
+    setLocalIsEditing(false);
   }, [draftValue, displayValue, editCellMutation, cellId, clearPreview, col, row]);
 
   // Handle key press
@@ -143,7 +220,7 @@ const Cell = ({
       e.preventDefault();
       handleCellUpdate();
     } else if (e.key === 'Escape') {
-      setIsEditing(false);
+      setLocalIsEditing(false);
       setDraftValue(displayValue);
       clearPreview();
     }
@@ -174,7 +251,7 @@ const Cell = ({
       <td 
         className={getCellClasses()}
         data-cell={cellId}
-        style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+        style={getCellStyles()}
       >
         <div className="w-full h-full flex items-center justify-center">
           <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
@@ -189,7 +266,7 @@ const Cell = ({
       <td 
         className={getCellClasses()}
         data-cell={cellId}
-        style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+        style={getCellStyles()}
       >
         <div className="w-full h-full flex items-center justify-center text-red-500 text-xs">
           Error
@@ -206,7 +283,7 @@ const Cell = ({
       onMouseEnter={onMouseEnter}
       onDoubleClick={handleDoubleClick}
       data-cell={cellId}
-      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+      style={getCellStyles()}
     >
       {isEditing ? (
         <input
@@ -216,8 +293,8 @@ const Cell = ({
           onChange={handleChange}
           onBlur={handleCellUpdate}
           onKeyDown={handleKeyPress}
-          className="w-full h-full bg-transparent border-none outline-none p-0 text-gray-900"
-          style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+          className="w-full h-full bg-transparent border-none outline-none p-0 text-gray-900 dark:text-gray-100"
+          style={getCellStyles()}
         />
       ) : (
         <div className="relative w-full h-full text-gray-900 dark:text-gray-100">
