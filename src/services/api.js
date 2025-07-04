@@ -116,7 +116,7 @@ const api = {
 
   renameSheet: async (workbookId, oldName, newName) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/sheet`, {
+      const response = await axios.put(`${API_BASE_URL}/rename-sheet`, {
         oldName: oldName,
         newName: newName
       });

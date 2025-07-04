@@ -81,9 +81,17 @@ const SheetSwitcher = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
-  const handleRename = () => {
+  const handleRename = async () => {
     if (nameInput.trim() && nameInput !== currentSheet?.name) {
-      renameSheet(currentSheetId, nameInput.trim());
+      try {
+        await renameSheet(currentSheetId, nameInput.trim());
+        console.log('Sheet renamed successfully');
+      } catch (error) {
+        console.error('Failed to rename sheet:', error);
+        // Reset the input to the original name on error
+        setNameInput(currentSheet?.name || '');
+        // You could show a toast notification here
+      }
     }
     setRenaming(false);
   };
@@ -221,8 +229,8 @@ const SheetSwitcher = () => {
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               onBlur={handleRename}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleRename();
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter') await handleRename();
                 if (e.key === 'Escape') { setRenaming(false); setNameInput(currentSheet?.name || ''); }
               }}
               maxLength={20}

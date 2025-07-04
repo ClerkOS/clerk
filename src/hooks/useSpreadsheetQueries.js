@@ -93,7 +93,7 @@ export const useSheets = (workbookId, options = {}) => {
   return useQuery({
     queryKey: queryKeys.sheets(workbookId),
     queryFn: () => api.getSheets(workbookId),
-    enabled: !!workbookId,
+    enabled: true, // Always enabled since our backend doesn't require workbookId
     ...options,
   });
 };

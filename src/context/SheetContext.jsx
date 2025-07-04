@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { useSheets as useSheetsQuery, useDeleteSheet } from '../hooks/useSpreadsheetQueries';
+import { useSheets as useSheetsQuery, useDeleteSheet, useRenameSheet } from '../hooks/useSpreadsheetQueries';
 import { useSpreadsheet } from './SpreadsheetContext';
+import api from '../services/api';
 
 const SheetContext = createContext();
 
@@ -8,20 +9,23 @@ export const SheetProvider = ({ children }) => {
   const { spreadsheetData, switchSheet, addSheet } = useSpreadsheet();
   const workbookId = spreadsheetData.workbook_id;
   
-  // Fetch sheets from backend
-  const { data: sheetsData, isLoading, error } = useSheetsQuery(workbookId);
+  // Fetch sheets from backend (no workbookId required)
+  const { data: sheetsData, isLoading, error } = useSheetsQuery();
   
   // Delete sheet mutation
   const deleteSheetMutation = useDeleteSheet();
+  
+  // Rename sheet mutation
+  const renameSheetMutation = useRenameSheet();
   
   const [currentSheetId, setCurrentSheetId] = useState('sheet1');
   const prevSheetCountRef = useRef(0);
 
   // Convert backend sheet names to frontend format
-  const sheets = sheetsData?.data?.sheets?.map((sheetName, index) => ({
+  const sheets = sheetsData?.sheets ? Object.keys(sheetsData.sheets).map((sheetName, index) => ({
     id: `sheet${index + 1}`,
     name: sheetName
-  })) || [];
+  })) : [];
 
   console.log('SheetContext Debug:', {
     workbookId,
@@ -67,9 +71,22 @@ export const SheetProvider = ({ children }) => {
     }
   };
 
-  const renameSheet = (id, newName) => {
-    // For now, this is a frontend-only operation
-    // In the future, you might want to add an API endpoint for renaming sheets
+  const renameSheet = async (id, newName) => {
+    const sheetToRename = sheets.find(sheet => sheet.id === id);
+    if (!sheetToRename) return;
+    
+    try {
+      await renameSheetMutation.mutateAsync({
+        workbookId: workbookId,
+        oldName: sheetToRename.name,
+        newName: newName
+      });
+      // The sheets query will be invalidated by the useRenameSheet hook
+      console.log('Sheet renamed successfully:', sheetToRename.name, '->', newName);
+    } catch (error) {
+      console.error('Failed to rename sheet:', error);
+      throw error;
+    }
   };
 
   const deleteSheet = async (id) => {
