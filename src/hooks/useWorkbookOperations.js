@@ -14,6 +14,11 @@ export const useWorkbookOperations = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cells() });
       queryClient.invalidateQueries({ queryKey: queryKeys.workbook() });
       
+      // Also invalidate all individual cell queries to force refresh
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'cell' 
+      });
+      
       return result;
     } catch (error) {
       console.error('Import failed:', error);
