@@ -115,8 +115,10 @@ export const useAddSheet = () => {
   return useMutation({
     mutationFn: ({ workbookId, sheetName }) => api.addSheet(workbookId, sheetName),
     onSuccess: (data, variables) => {
-      // Invalidate sheets query
-      queryClient.invalidateQueries({ queryKey: queryKeys.sheets(variables.workbookId) });
+      // Invalidate all sheets queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === 'sheets' 
+      });
     },
   });
 };
@@ -276,5 +278,13 @@ export const useDeleteNamedRange = () => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['namedRanges', variables.workbookId] });
     },
+  });
+};
+
+// Hook for formula evaluation
+export const useEvaluateFormula = () => {
+  return useMutation({
+    mutationFn: ({ formula, sheetName, address }) => 
+      api.evaluateFormula(formula, sheetName, address),
   });
 }; 

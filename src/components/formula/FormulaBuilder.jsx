@@ -3,7 +3,7 @@ import { Search, Calculator, DollarSign, CheckSquare, Type, Calendar, Search as 
 import { useTheme } from '../../context/ThemeContext';
 import { useFormulaPreview } from '../../context/FormulaPreviewContext';
 import { useSpreadsheet } from '../../context/SpreadsheetContext';
-import { useEditCell } from '../../hooks/useSpreadsheetQueries';
+import { useEditCell, useEvaluateFormula } from '../../hooks/useSpreadsheetQueries';
 
 const formulaCategories = [
   { 
@@ -76,14 +76,14 @@ const formulaCategories = [
 const FormulaBuilder = ({ onWidthChange }) => {
   const { theme } = useTheme();
   const { setPreview, clearPreview } = useFormulaPreview();
-  const { updateCellWithFormula } = useSpreadsheet();
+  const { selectedCell, updateCellWithFormula } = useSpreadsheet();
   const [activeCategory, setActiveCategory] = useState('math');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFunction, setSelectedFunction] = useState(null);
   const [formula, setFormula] = useState('');
-  const [targetCell, setTargetCell] = useState('B4');
+  const [targetCell, setTargetCell] = useState('A1');
   const [targetRange, setTargetRange] = useState('');
-  const [previewResult, setPreviewResult] = useState('0');
+  const [previewResult, setPreviewResult] = useState('');
   const [width, setWidth] = useState(320);
   const [selectedTarget, setSelectedTarget] = useState('current'); // 'current', 'column', or 'row'
   const isResizing = useRef(false);
@@ -94,6 +94,7 @@ const FormulaBuilder = ({ onWidthChange }) => {
 
   // React Query hooks
   const editCellMutation = useEditCell();
+  const evaluateFormulaMutation = useEvaluateFormula();
 
   const handleFunctionSelect = (func) => {
     setSelectedFunction(func);
@@ -158,9 +159,8 @@ const FormulaBuilder = ({ onWidthChange }) => {
         const row = parseInt(target.match(/[0-9]+/)?.[0]);
         
         if (col && row) {
-          // Use React Query mutation for better performance and error handling
-          const cellId = `${col}${row}`;
-          await editCellMutation.mutateAsync({ cellId, value: formula });
+          // Use the spreadsheet context to update the cell
+          await updateCellWithFormula(col, row, formula, targetRange);
           
           console.log('Applied formula:', formula, 'to target:', target);
           
@@ -178,11 +178,48 @@ const FormulaBuilder = ({ onWidthChange }) => {
     }
   };
 
-  const handlePreviewFormula = () => {
-    // TODO: Implement actual formula preview logic
-    const result = '150'; // Placeholder
-    setPreviewResult(result);
-    setPreview(formula, targetCell, result);
+  const handlePreviewFormula = async () => {
+    if (!formula.trim()) {
+      console.log('No formula to preview');
+      return;
+    }
+
+    try {
+      // Parse the target cell from the input
+      const target = targetRange || targetCell;
+      
+      // For now, handle single cell application
+      // TODO: Handle range application (B4:B10, etc.)
+      if (target && formula) {
+        // Extract column and row from target (e.g., "B4" -> col="B", row=4)
+        const col = target.match(/[A-Z]+/)?.[0];
+        const row = parseInt(target.match(/[0-9]+/)?.[0]);
+        
+        if (col && row) {
+          // Use React Query mutation for formula evaluation
+          const result = await evaluateFormulaMutation.mutateAsync({ 
+            formula, 
+            sheetName: 'Sheet1', 
+            address: target 
+          });
+          
+          if (result.error) {
+            console.error('Formula evaluation error:', result.error);
+            setPreviewResult('Error: ' + result.error);
+          } else {
+            console.log('Previewed formula:', formula, 'result:', result.result);
+            setPreviewResult(result.result);
+            setPreview(formula, target, result.result);
+          }
+        } else {
+          console.error('Invalid target cell format:', target);
+          setPreviewResult('Error: Invalid cell format');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to preview formula:', error);
+      setPreviewResult('Error: ' + error.message);
+    }
   };
 
   const handleClearFormula = () => {
@@ -192,8 +229,23 @@ const FormulaBuilder = ({ onWidthChange }) => {
     clearPreview();
   };
 
+  // Set current cell as default on mount and when selected cell changes
+  useEffect(() => {
+    if (selectedCell && selectedCell.col && selectedCell.row) {
+      const currentCellAddress = `${selectedCell.col}${selectedCell.row}`;
+      setTargetCell(currentCellAddress);
+      setTargetRange('');
+      setSelectedTarget('current');
+    }
+  }, [selectedCell]);
+
   const handleSelectCurrentCell = () => {
-    setTargetCell('B4'); // TODO: Get actual current cell
+    if (selectedCell && selectedCell.col && selectedCell.row) {
+      const currentCellAddress = `${selectedCell.col}${selectedCell.row}`;
+      setTargetCell(currentCellAddress);
+    } else {
+      setTargetCell('A1');
+    }
     setTargetRange('');
     setSelectedTarget('current');
     clearPreview();
@@ -213,15 +265,22 @@ const FormulaBuilder = ({ onWidthChange }) => {
     clearPreview();
   };
 
-  // Set current cell as default on mount
-  useEffect(() => {
-    handleSelectCurrentCell();
-  }, []);
+  const handleSelectRange = () => {
+    // For now, just use the current cell as the range
+    // TODO: Implement proper range selection
+    setTargetRange(targetCell);
+    setSelectedTarget('range');
+    clearPreview();
+  };
 
-  // Update preview when formula or target changes
+  // Update preview when formula or target changes (debounced)
   useEffect(() => {
     if (formula && targetCell) {
-      handlePreviewFormula();
+      const timeoutId = setTimeout(() => {
+        handlePreviewFormula();
+      }, 500); // Debounce for 500ms
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [formula, targetCell]);
 
@@ -334,6 +393,20 @@ const FormulaBuilder = ({ onWidthChange }) => {
             >
               Entire Row
             </button>
+            <button
+              onClick={handleSelectRange}
+              className={`px-3 py-1.5 text-sm rounded-md ${
+                selectedTarget === 'range'
+                  ? isDark 
+                    ? 'bg-blue-600 text-white hover:bg-blue-500' 
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                  : isDark 
+                    ? 'bg-gray-600 hover:bg-gray-500' 
+                    : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              Select Range
+            </button>
           </div>
         </div>
 
@@ -343,9 +416,11 @@ const FormulaBuilder = ({ onWidthChange }) => {
             <span className="font-medium">Formula Editor</span>
             {previewResult && (
               <span className={`text-sm px-2 py-1 rounded ${
-                isDark ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'
+                previewResult.startsWith('Error:') 
+                  ? (isDark ? 'bg-red-900 text-red-300' : 'bg-red-100 text-red-800')
+                  : (isDark ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800')
               }`}>
-                Result: {previewResult}
+                {previewResult.startsWith('Error:') ? previewResult : `Result: ${previewResult}`}
               </span>
             )}
           </div>
@@ -362,6 +437,62 @@ const FormulaBuilder = ({ onWidthChange }) => {
 Example: =SUM(A1:A10)"
             ref={formulaEditorRef}
           />
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={handlePreviewFormula}
+              disabled={!formula.trim()}
+              className={`px-3 py-1.5 text-sm rounded-md ${
+                !formula.trim()
+                  ? (isDark ? 'bg-gray-600 text-gray-400' : 'bg-gray-200 text-gray-400')
+                  : (isDark ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-blue-500 text-white hover:bg-blue-600')
+              }`}
+            >
+              Preview
+            </button>
+            <button
+              onClick={handleClearFormula}
+              className={`px-3 py-1.5 text-sm rounded-md ${
+                isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        {/* Common Formulas */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span>📝</span>
+            <span className="font-medium">Common Formulas</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { name: 'SUM', template: '=SUM(A1:A10)' },
+              { name: 'AVERAGE', template: '=AVERAGE(B1:B10)' },
+              { name: 'COUNT', template: '=COUNT(C1:C10)' },
+              { name: 'MAX', template: '=MAX(D1:D10)' },
+              { name: 'MIN', template: '=MIN(E1:E10)' },
+              { name: 'IF', template: '=IF(A1>10,"High","Low")' },
+            ].map((template) => (
+              <button
+                key={template.name}
+                onClick={() => setFormula(template.template)}
+                className={`p-2 text-xs rounded-md text-left ${
+                  isDark 
+                    ? 'bg-gray-700 hover:bg-gray-600' 
+                    : 'bg-gray-50 hover:bg-gray-100'
+                }`}
+              >
+                <div className="font-medium">{template.name}</div>
+                <div className={`text-xs ${
+                  isDark ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  {template.template}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Function Categories */}

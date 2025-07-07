@@ -94,7 +94,7 @@ const api = {
 
   addSheet: async (workbookId, sheetName) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/sheet`, {
+      const response = await axios.post(`${API_BASE_URL}/add-sheet`, {
         name: sheetName
       });
       return response.data;
@@ -106,7 +106,7 @@ const api = {
 
   deleteSheet: async (workbookId, sheetName) => {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/sheet?name=${sheetName}`);
+      const response = await axios.delete(`${API_BASE_URL}/delete-sheet?name=${sheetName}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting sheet:', error);
@@ -249,6 +249,33 @@ const api = {
       return response.data;
     } catch (error) {
       console.error('Error deleting named range:', error);
+      throw error;
+    }
+  },
+
+  // Evaluate a formula without saving it to the sheet
+  evaluateFormula: async (formula, sheetName = 'Sheet1', address = 'A1') => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/evaluate-formula`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          formula,
+          sheet: sheetName,
+          address
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error evaluating formula:', error);
       throw error;
     }
   }

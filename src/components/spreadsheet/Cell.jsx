@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSpreadsheet } from '../../context/SpreadsheetContext';
 import { useFormulaPreview } from '../../context/FormulaPreviewContext';
 import { useCell, useEditCell } from '../../hooks/useSpreadsheetQueries';
+import { useDarkMode } from '../../hooks/useDarkMode';
 
 const Cell = ({ 
   value, 
@@ -22,6 +23,7 @@ const Cell = ({
   const cellRef = useRef(null);
   const { getCell } = useSpreadsheet();
   const { previewFormula, previewTarget, clearPreview } = useFormulaPreview();
+  const { isDarkMode, adjustStyle } = useDarkMode();
 
   // Determine if this cell should be editing
   const isEditing = (globalIsEditing && isActiveCell) || localIsEditing;
@@ -69,22 +71,22 @@ const Cell = ({
 
   // Determine cell styling based on selected/highlighted state and type
   const getCellClasses = useCallback(() => {
-    let classes = 'px-1 sm:px-2 py-1 ';
+    let classes = 'px-1 sm:px-2 py-1 color-transition ';
     
-    // Base styling
-    classes += 'bg-white dark:bg-gray-900 ';
+    // Base styling - remove grey backgrounds
+    classes += 'bg-white dark:bg-transparent ';
     
     // Active cell styling (the main selected cell)
     if (isActiveCell) {
-      classes += 'border-2 border-black bg-blue-50 dark:border-white dark:bg-gray-800 ';
+      classes += 'border-2 border-black bg-blue-50 dark:border-white dark:bg-blue-900/20 ';
     } 
     // Selected cells styling (part of multi-selection)
     else if (isSelected) {
       classes += 'bg-blue-50 dark:bg-blue-900/20 border border-black dark:border-white ';
     }
-    // Highlighted column styling  
+    // Highlighted column styling - remove grey background
     else if (isHighlighted) {
-      classes += 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 ';
+      classes += 'bg-gray-50 dark:bg-transparent border border-gray-200 dark:border-gray-700 ';
     }
     // Default styling
     else {
@@ -134,49 +136,55 @@ const Cell = ({
       // Debug logging
       console.log(`Cell ${col}${row} styling:`, style);
       
+      // Apply dark mode adjustments to the style
+      const adjustedStyle = adjustStyle(style);
+      
       // Font properties
-      if (style.fontBold) {
+      if (adjustedStyle.fontBold) {
         styles.fontWeight = 'bold';
         console.log(`Applied bold to cell ${col}${row}`);
       }
-      if (style.fontItalic) {
+      if (adjustedStyle.fontItalic) {
         styles.fontStyle = 'italic';
         console.log(`Applied italic to cell ${col}${row}`);
       }
-      if (style.fontSize) {
-        styles.fontSize = `${style.fontSize}px`;
-        console.log(`Applied font size ${style.fontSize}px to cell ${col}${row}`);
+      if (adjustedStyle.fontSize) {
+        styles.fontSize = `${adjustedStyle.fontSize}px`;
+        console.log(`Applied font size ${adjustedStyle.fontSize}px to cell ${col}${row}`);
       }
-      if (style.fontFamily) {
-        styles.fontFamily = style.fontFamily;
-        console.log(`Applied font family ${style.fontFamily} to cell ${col}${row}`);
+      if (adjustedStyle.fontFamily) {
+        styles.fontFamily = adjustedStyle.fontFamily;
+        console.log(`Applied font family ${adjustedStyle.fontFamily} to cell ${col}${row}`);
       }
-      if (style.fontColor) {
-        styles.color = style.fontColor;
-        console.log(`Applied font color ${style.fontColor} to cell ${col}${row}`);
+      if (adjustedStyle.fontColor) {
+        styles.color = adjustedStyle.fontColor;
+        console.log(`Applied font color ${adjustedStyle.fontColor} to cell ${col}${row}`);
       }
       
-      // Background color
-      if (style.backgroundColor && style.backgroundColor !== '#FFFFFF') {
-        styles.backgroundColor = style.backgroundColor;
-        console.log(`Applied background color ${style.backgroundColor} to cell ${col}${row}`);
+      // Background color - only apply if it's not white/transparent and actually exists
+      if (adjustedStyle.backgroundColor && 
+          adjustedStyle.backgroundColor !== '#FFFFFF' && 
+          adjustedStyle.backgroundColor !== 'transparent' &&
+          adjustedStyle.backgroundColor !== 'rgba(0,0,0,0)') {
+        styles.backgroundColor = adjustedStyle.backgroundColor;
+        console.log(`Applied background color ${adjustedStyle.backgroundColor} to cell ${col}${row}`);
       }
       
       // Text alignment
-      if (style.alignment) {
-        styles.textAlign = style.alignment;
-        console.log(`Applied alignment ${style.alignment} to cell ${col}${row}`);
+      if (adjustedStyle.alignment) {
+        styles.textAlign = adjustedStyle.alignment;
+        console.log(`Applied alignment ${adjustedStyle.alignment} to cell ${col}${row}`);
       }
       
       // Border styling
-      if (style.borderStyle) {
+      if (adjustedStyle.borderStyle) {
         styles.borderStyle = 'solid';
-        styles.borderWidth = style.borderStyle === 'thin' ? '1px' : 
-                            style.borderStyle === 'medium' ? '2px' : '3px';
-        if (style.borderColor) {
-          styles.borderColor = style.borderColor;
+        styles.borderWidth = adjustedStyle.borderStyle === 'thin' ? '1px' : 
+                            adjustedStyle.borderStyle === 'medium' ? '2px' : '3px';
+        if (adjustedStyle.borderColor) {
+          styles.borderColor = adjustedStyle.borderColor;
         }
-        console.log(`Applied border style ${style.borderStyle} to cell ${col}${row}`);
+        console.log(`Applied border style ${adjustedStyle.borderStyle} to cell ${col}${row}`);
       }
     } else {
       // Debug: log when no styling is found
@@ -184,7 +192,7 @@ const Cell = ({
     }
 
     return styles;
-  }, [cellData?.style, col, row]);
+  }, [cellData?.style, col, row, adjustStyle]);
 
   // Handle double click to start editing
   const handleDoubleClick = useCallback(() => {

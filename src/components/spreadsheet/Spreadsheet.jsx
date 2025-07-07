@@ -166,6 +166,8 @@ const ModernEmptyState = () => {
 };
 
 const SpreadsheetContent = ({ isPanelOpen, panelWidth, onOpenAIWithRange }) => {
+  console.log('SpreadsheetContent component rendering');
+  
   const { 
     selectedCell, 
     setSelectedCell, 
@@ -398,7 +400,28 @@ const SpreadsheetContent = ({ isPanelOpen, panelWidth, onOpenAIWithRange }) => {
   };
 
   const activeSheet = getActiveSheet();
-  const isEmpty = !activeSheet;
+  const isEmpty = !activeSheet || !activeSheet.id;
+
+  console.log('Spreadsheet rendering:', {
+    activeSheet: activeSheet ? { id: activeSheet.id, name: activeSheet.name } : null,
+    isEmpty,
+    hasActiveSheet: !!activeSheet,
+    hasActiveSheetId: !!(activeSheet && activeSheet.id),
+    activeSheetId: activeSheet?.id,
+    activeSheetName: activeSheet?.name
+  });
+
+  // Force re-render when active sheet changes
+  const gridKey = `grid-${activeSheet?.id || 'default'}`;
+
+  // Debug: Track active sheet changes
+  useEffect(() => {
+    console.log('Spreadsheet - Active sheet changed:', {
+      activeSheetId: activeSheet?.id,
+      activeSheetName: activeSheet?.name,
+      gridKey: gridKey
+    });
+  }, [activeSheet?.id, activeSheet?.name, gridKey]);
 
   return (
     <>
@@ -415,7 +438,15 @@ const SpreadsheetContent = ({ isPanelOpen, panelWidth, onOpenAIWithRange }) => {
             className="flex-1 overflow-auto"
             onContextMenu={handleContextMenu}
           >
-            {isEmpty ? <ModernEmptyState /> : <Grid isEditing={isEditing} onEditingChange={handleEditingChange} />}
+            {isEmpty ? (
+              <ModernEmptyState />
+            ) : (
+              <Grid 
+                key={gridKey} 
+                isEditing={isEditing} 
+                onEditingChange={handleEditingChange} 
+              />
+            )}
           </div>
         </div>
       </div>

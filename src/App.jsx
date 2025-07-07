@@ -16,6 +16,8 @@ import AIPanel from './components/ai/AIPanel';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 
 function MainApp() {
+  console.log('MainApp component rendering');
+  
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showFormulaBuilder, setShowFormulaBuilder] = useState(false);
   const [showChartBuilder, setShowChartBuilder] = useState(false);
@@ -130,7 +132,19 @@ function MainApp() {
                     </div>
                   </div>
                 } />
-                <Route path="/chart-editor" element={<ChartEditor />} />
+                <Route path="/chart-editor" element={
+                  <ThemeProvider>
+                    <SpreadsheetProvider>
+                      <SheetProvider>
+                        <FormulaPreviewProvider>
+                          <div className="flex flex-col h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-200 overflow-hidden">
+                            <ChartEditor />
+                          </div>
+                        </FormulaPreviewProvider>
+                      </SheetProvider>
+                    </SpreadsheetProvider>
+                  </ThemeProvider>
+                } />
               </Routes>
             </Router>
           </FormulaPreviewProvider>

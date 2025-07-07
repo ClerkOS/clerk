@@ -59,6 +59,16 @@ const Grid = ({ isEditing, onEditingChange }) => {
     cellId: null
   });
 
+  // Debug: Log when Grid receives new active sheet
+  useEffect(() => {
+    console.log('Grid component - Active sheet updated:', {
+      activeSheetId: activeSheet?.id,
+      activeSheetName: activeSheet?.name,
+      columnsCount: columns?.length,
+      hasColumns: !!columns
+    });
+  }, [activeSheet?.id, activeSheet?.name, columns]);
+
   // Calculate how many columns can fit in the viewport
   const calculateVisibleColumns = useCallback(() => {
     if (viewportWidth === 0) return 8; // Default fallback

@@ -48,12 +48,20 @@ const ChartEditor = () => {
   const isDark = theme === 'dark';
   const { spreadsheetData, getActiveSheet } = useSpreadsheet();
 
+  // Debug logging
+  console.log('ChartEditor component rendering');
+  console.log('spreadsheetData:', spreadsheetData);
+  console.log('theme:', theme);
+
   // Sheet and column selection
-  const sheets = spreadsheetData.sheets || [];
+  const sheets = spreadsheetData?.sheets || [];
   const [selectedSheetId, setSelectedSheetId] = useState(sheets[0]?.id || '');
   const selectedSheet = useMemo(() => sheets.find(s => s.id === selectedSheetId) || sheets[0], [sheets, selectedSheetId]);
   const columns = selectedSheet ? selectedSheet.columns : [];
   const cells = selectedSheet ? selectedSheet.cells : {};
+
+  console.log('sheets:', sheets);
+  console.log('selectedSheet:', selectedSheet);
 
   // Find all columns with at least one non-empty value
   const availableColumns = useMemo(() => {
@@ -200,9 +208,13 @@ const ChartEditor = () => {
                 value={selectedSheetId}
                 onChange={e => setSelectedSheetId(e.target.value)}
               >
-                {sheets.map(sheet => (
-                  <option key={sheet.id} value={sheet.id}>{sheet.name}</option>
-                ))}
+                {sheets.length > 0 ? (
+                  sheets.map(sheet => (
+                    <option key={sheet.id} value={sheet.id}>{sheet.name}</option>
+                  ))
+                ) : (
+                  <option value="">No sheets available</option>
+                )}
               </select>
             </div>
             <div className="mb-2">
@@ -287,6 +299,29 @@ const ChartEditor = () => {
                 ></span>
               ))}
             </div>
+          </div>
+
+          {/* Data Preview */}
+          <div>
+            <h2 className="text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">Data Preview</h2>
+            {chartData ? (
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                <p>Rows: {chartData.length}</p>
+                <p>X: {xCol}</p>
+                <p>Y: {yCol}</p>
+                <div className="mt-2 max-h-32 overflow-y-auto">
+                  {chartData.slice(0, 5).map((row, i) => (
+                    <div key={i} className="flex justify-between">
+                      <span>{row.x}</span>
+                      <span>{row.y}</span>
+                    </div>
+                  ))}
+                  {chartData.length > 5 && <p className="text-gray-400">... and {chartData.length - 5} more</p>}
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">No data available</p>
+            )}
           </div>
         </aside>
       </div>

@@ -95,19 +95,8 @@ const ChartBuilder = ({ onWidthChange }) => {
   const isDark = theme === 'dark';
 
   const handleCreateChart = () => {
-    // TODO: Implement chart creation logic
-    // For now, just navigate to the chart editor page
+    // Navigate to the chart editor page
     navigate('/chart-editor');
-  };
-
-  const handlePreviewChart = () => {
-    // TODO: Implement chart preview logic
-    console.log('Previewing chart...');
-  };
-
-  const handleSaveTemplate = () => {
-    // TODO: Implement template saving logic
-    console.log('Saving chart template...');
   };
 
   return (
@@ -231,35 +220,15 @@ const ChartBuilder = ({ onWidthChange }) => {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Create Chart Button */}
       <div className={`p-4 border-t ${
         isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
       }`}>
         <button
           onClick={handleCreateChart}
-          className="w-full mb-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-semibold shadow text-sm"
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-semibold shadow text-sm"
         >
           Create Chart
-        </button>
-        <button
-          onClick={handlePreviewChart}
-          className={`w-full mb-2 px-4 py-2 rounded-md ${
-            isDark 
-              ? 'bg-gray-700 text-white hover:bg-gray-600' 
-              : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-          } text-sm`}
-        >
-          Preview
-        </button>
-        <button
-          onClick={handleSaveTemplate}
-          className={`w-full px-4 py-2 rounded-md ${
-            isDark 
-              ? 'bg-gray-700 text-white hover:bg-gray-600' 
-              : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-          } text-sm`}
-        >
-          Save as Template
         </button>
       </div>
     </div>

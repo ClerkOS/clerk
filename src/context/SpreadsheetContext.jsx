@@ -118,14 +118,46 @@ export const SpreadsheetProvider = ({ children }) => {
     }
   }, [updateQueue]);
 
+  // Debug: Log when active sheet changes
+  useEffect(() => {
+    console.log('Active sheet changed:', {
+      activeSheetId: spreadsheetData.activeSheet,
+      sheets: spreadsheetData.sheets.map(s => ({ id: s.id, name: s.name })),
+      activeSheetFound: spreadsheetData.sheets.find(s => s.id === spreadsheetData.activeSheet)
+    });
+  }, [spreadsheetData.activeSheet, spreadsheetData.sheets]);
+
   // Get the currently active sheet
   const getActiveSheet = useCallback(() => {
     const sheet = spreadsheetData.sheets.find(sheet => sheet.id === spreadsheetData.activeSheet);
+    
+    console.log('getActiveSheet called:', {
+      activeSheetId: spreadsheetData.activeSheet,
+      sheets: spreadsheetData.sheets.map(s => ({ id: s.id, name: s.name })),
+      foundSheet: sheet ? { id: sheet.id, name: sheet.name } : null
+    });
+    
+    // Return a default sheet if no active sheet is found
+    if (!sheet) {
+      console.log('No active sheet found, returning default');
+      return {
+        id: 'default',
+        name: 'Default',
+        cells: {},
+        columns: generateColumns(visibleColumns),
+        rows: 100,
+        activeCell: 'A1',
+      };
+    }
+    
     // Generate columns dynamically based on visibleColumns
-    return {
+    const result = {
       ...sheet,
       columns: generateColumns(visibleColumns)
     };
+    
+    console.log('Returning active sheet:', { id: result.id, name: result.name });
+    return result;
   }, [spreadsheetData, visibleColumns]);
 
   // Add more columns when needed
@@ -324,6 +356,12 @@ export const SpreadsheetProvider = ({ children }) => {
   const getCell = useCallback((col, row) => {
     const cellId = `${col}${row}`;
     const activeSheet = getActiveSheet();
+    
+    // Add null checks to prevent errors
+    if (!activeSheet || !activeSheet.cells) {
+      return { value: '', formula: '', type: 'text', formatted: '' };
+    }
+    
     return activeSheet.cells[cellId] || { value: '', formula: '', type: 'text', formatted: '' };
   }, [getActiveSheet]);
 
@@ -350,7 +388,9 @@ export const SpreadsheetProvider = ({ children }) => {
         });
         
         // Invalidate sheets query to refresh the sheet list
-        queryClient.invalidateQueries({ queryKey: ['sheets', response.data.workbook_id] });
+        queryClient.invalidateQueries({ 
+          predicate: (query) => query.queryKey[0] === 'sheets' 
+        });
         
         // Optionally, show a notification here if you have setNotification
         // setNotification && setNotification({ type: 'success', message: response.message });
@@ -446,7 +486,9 @@ export const SpreadsheetProvider = ({ children }) => {
         });
         
         // Invalidate sheets query to refresh the sheet list
-        queryClient.invalidateQueries({ queryKey: ['sheets', response.data.workbook_id] });
+        queryClient.invalidateQueries({ 
+          predicate: (query) => query.queryKey[0] === 'sheets' 
+        });
         
         console.log('Workbook loaded successfully:', {
           workbookId: response.data.workbook_id,
@@ -468,36 +510,67 @@ export const SpreadsheetProvider = ({ children }) => {
     const activeSheet = spreadsheetData.sheets.find(s => s.id === sheetId);
     if (!activeSheet) return;
 
+    console.log('switchSheet called:', { sheetId, sheetName: activeSheet.name });
+
     setSpreadsheetData(prevData => ({
       ...prevData,
       activeSheet: sheetId
     }));
 
-    // Load sheet data from backend
-    try {
-      const response = await api.getSheet(spreadsheetData.workbook_id, activeSheet.name);
-      if (response && response.success) {
-        const sheetData = response.data.sheet;
-        // Convert backend cell format to frontend format
-        const frontendCells = {};
-        if (sheetData.cells) {
-          Object.entries(sheetData.cells).forEach(([cellId, cellData]) => {
-            frontendCells[cellId] = {
-              value: cellData.value || '',
-              formula: cellData.formula || '',
-              type: cellData.formula ? 'formula' : 'text',
-              formatted: cellData.value || '',
-              style: cellData.style || null
+    // Invalidate all cell queries to force refresh
+    queryClient.invalidateQueries({ 
+      predicate: (query) => query.queryKey[0] === 'cell' 
+    });
+
+    // Only try to load sheet data from backend if we have a workbook_id
+    if (spreadsheetData.workbook_id) {
+      try {
+        const response = await api.getSheet(spreadsheetData.workbook_id, activeSheet.name);
+        if (response && response.success) {
+          const sheetData = response.data.sheet;
+          // Convert backend cell format to frontend format
+          const frontendCells = {};
+          if (sheetData.cells) {
+            Object.entries(sheetData.cells).forEach(([cellId, cellData]) => {
+              frontendCells[cellId] = {
+                value: cellData.value || '',
+                formula: cellData.formula || '',
+                type: cellData.formula ? 'formula' : 'text',
+                formatted: cellData.value || '',
+                style: cellData.style || null
+              };
+            });
+          }
+          // Update the sheet with loaded data
+          setSpreadsheetData(prevData => {
+            const updatedSheets = prevData.sheets.map(sheet => {
+              if (sheet.id === sheetId) {
+                return {
+                  ...sheet,
+                  cells: frontendCells
+                };
+              }
+              return sheet;
+            });
+            return {
+              ...prevData,
+              sheets: updatedSheets
             };
           });
+          console.log('Sheet loaded successfully:', {
+            sheetName: activeSheet.name,
+            cellCount: Object.keys(frontendCells).length
+          });
         }
-        // Update the sheet with loaded data
+      } catch (error) {
+        console.log('No backend data for sheet, using empty cells:', error.message);
+        // For new sheets or sheets without backend data, ensure we have empty cells
         setSpreadsheetData(prevData => {
           const updatedSheets = prevData.sheets.map(sheet => {
-            if (sheet.id === sheetId) {
+            if (sheet.id === sheetId && (!sheet.cells || Object.keys(sheet.cells).length === 0)) {
               return {
                 ...sheet,
-                cells: frontendCells
+                cells: {} // Ensure empty cells object
               };
             }
             return sheet;
@@ -507,61 +580,95 @@ export const SpreadsheetProvider = ({ children }) => {
             sheets: updatedSheets
           };
         });
-        console.log('Sheet loaded successfully:', {
-          sheetName: activeSheet.name,
-          cellCount: Object.keys(frontendCells).length
-        });
       }
-    } catch (error) {
-      console.error('Failed to load sheet data:', error);
-      // Continue with the sheet switch even if loading fails
+    } else {
+      console.log('No workbook_id, using existing sheet data');
     }
-  }, [spreadsheetData.workbook_id, spreadsheetData.sheets]);
+  }, [spreadsheetData.workbook_id, spreadsheetData.sheets, queryClient]);
 
   // Add a new sheet
   const addSheet = useCallback(async (sheetName = null) => {
     console.log('addSheet called with:', { sheetName, workbookId: spreadsheetData.workbook_id, sheets: spreadsheetData.sheets });
     
-    if (!spreadsheetData.workbook_id) {
-      console.error('No workbook ID available');
-      console.log('Current spreadsheet data:', spreadsheetData);
-      return;
+    // Ensure we have a proper workbook ID
+    let workbookId = spreadsheetData.workbook_id;
+    if (!workbookId) {
+      // If no workbook_id exists, we need to create one or use a session-based ID
+      workbookId = `workbook_${Date.now()}`;
+      console.log('No workbook_id found, creating new one:', workbookId);
+      
+      // Update the spreadsheet data with the new workbook_id
+      setSpreadsheetData(prevData => ({
+        ...prevData,
+        workbook_id: workbookId
+      }));
     }
-
+    
     try {
       // Generate a default name if none provided
       const newSheetName = sheetName || `Sheet${spreadsheetData.sheets.length + 1}`;
       
-      console.log('Adding sheet with name:', newSheetName, 'to workbook:', spreadsheetData.workbook_id);
+      console.log('Adding sheet with name:', newSheetName, 'to workbook:', workbookId);
       
       const response = await addSheetMutation.mutateAsync({
-        workbookId: spreadsheetData.workbook_id,
+        workbookId: workbookId,
         sheetName: newSheetName
       });
 
       console.log('Add sheet response:', response);
+      console.log('Response type:', typeof response);
+      console.log('Response keys:', response ? Object.keys(response) : 'null/undefined');
 
       if (response && response.success) {
+        // Generate a unique sheet ID based on current timestamp and sheet count
+        const timestamp = Date.now();
+        const sheetNumber = spreadsheetData.sheets.length + 1;
+        const newSheetId = `sheet${sheetNumber}_${timestamp}`;
+        
+        // Safely get the sheet name from response
+        const sheetName = response.sheetName || newSheetName;
+        
         // Create a new sheet object for the frontend
         const newSheet = {
-          id: `sheet${spreadsheetData.sheets.length + 1}`,
-          name: response.data.name,
+          id: newSheetId,
+          name: sheetName,
           cells: {},
           columns: generateColumns(visibleColumns),
           rows: 100,
           activeCell: 'A1',
         };
 
-        // Add the new sheet to the frontend state
-        setSpreadsheetData(prevData => ({
-          ...prevData,
-          sheets: [...prevData.sheets, newSheet]
-          // Don't set activeSheet here - let SheetContext handle it
-        }));
+        console.log('Created new sheet object:', newSheet);
+
+        // Add the new sheet to the frontend state and immediately switch to it
+        setSpreadsheetData(prevData => {
+          const newData = {
+            ...prevData,
+            sheets: [...prevData.sheets, newSheet],
+            activeSheet: newSheetId, // Switch to the new sheet immediately
+            workbook_id: workbookId // Ensure workbook_id is set
+          };
+          
+          console.log('Updated spreadsheet data:', {
+            sheets: newData.sheets.map(s => ({ id: s.id, name: s.name })),
+            activeSheet: newData.activeSheet,
+            workbook_id: newData.workbook_id
+          });
+          
+          return newData;
+        });
+
+        // Force a small delay to ensure state update is processed
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Invalidate the sheets query to refresh the backend data
+        queryClient.invalidateQueries({ 
+          predicate: (query) => query.queryKey[0] === 'sheets' 
+        });
 
         console.log('Sheet added successfully:', {
-          sheetName: response.data.name,
-          sheetId: newSheet.id
+          sheetName: sheetName,
+          sheetId: newSheetId
         });
 
         return newSheet;
@@ -570,7 +677,15 @@ export const SpreadsheetProvider = ({ children }) => {
       console.error('Failed to add sheet:', error);
       throw error;
     }
-  }, [spreadsheetData.workbook_id, spreadsheetData.sheets.length, visibleColumns, addSheetMutation]);
+  }, [spreadsheetData.workbook_id, spreadsheetData.sheets.length, visibleColumns, addSheetMutation, queryClient]);
+
+  // Set active sheet (for external use)
+  const setActiveSheet = useCallback((sheetId) => {
+    setSpreadsheetData(prevData => ({
+      ...prevData,
+      activeSheet: sheetId
+    }));
+  }, []);
 
   const value = {
     spreadsheetData,
@@ -599,6 +714,7 @@ export const SpreadsheetProvider = ({ children }) => {
     fetchWorkbook,
     switchSheet,
     addSheet,
+    setActiveSheet,
   };
 
   return (

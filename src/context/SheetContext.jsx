@@ -1,16 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { useSheets as useSheetsQuery, useDeleteSheet, useRenameSheet } from '../hooks/useSpreadsheetQueries';
+import { useDeleteSheet, useRenameSheet } from '../hooks/useSpreadsheetQueries';
 import { useSpreadsheet } from './SpreadsheetContext';
 import api from '../services/api';
 
 const SheetContext = createContext();
 
 export const SheetProvider = ({ children }) => {
-  const { spreadsheetData, switchSheet, addSheet } = useSpreadsheet();
+  const { spreadsheetData, switchSheet, addSheet, setActiveSheet } = useSpreadsheet();
   const workbookId = spreadsheetData.workbook_id;
   
-  // Fetch sheets from backend (no workbookId required)
-  const { data: sheetsData, isLoading, error } = useSheetsQuery();
+  // Use sheets from SpreadsheetContext instead of React Query to avoid timing issues
+  const sheets = spreadsheetData.sheets || [];
   
   // Delete sheet mutation
   const deleteSheetMutation = useDeleteSheet();
@@ -20,21 +20,14 @@ export const SheetProvider = ({ children }) => {
   
   const [currentSheetId, setCurrentSheetId] = useState('sheet1');
   const prevSheetCountRef = useRef(0);
-
-  // Convert backend sheet names to frontend format
-  const sheets = sheetsData?.sheets ? Object.keys(sheetsData.sheets).map((sheetName, index) => ({
-    id: `sheet${index + 1}`,
-    name: sheetName
-  })) : [];
+  const prevSheetsRef = useRef([]);
 
   console.log('SheetContext Debug:', {
     workbookId,
-    sheetsData,
-    sheets,
+    sheets: sheets.map(s => ({ id: s.id, name: s.name })),
     currentSheetId,
     prevSheetCount: prevSheetCountRef.current,
-    isLoading,
-    error
+    activeSheet: spreadsheetData.activeSheet
   });
 
   // Set current sheet to first sheet when sheets are loaded
@@ -49,21 +42,41 @@ export const SheetProvider = ({ children }) => {
 
   // Auto-switch to the newest sheet when sheets are added
   useEffect(() => {
-    if (sheets.length > 0 && sheets.length > prevSheetCountRef.current) {
-      // A new sheet was added, switch to the newest one
-      const newestSheet = sheets[sheets.length - 1];
-      console.log('Auto-switching to newest sheet:', newestSheet.id, 'from:', currentSheetId);
-      setCurrentSheetId(newestSheet.id);
-      switchSheet(newestSheet.id);
+    const prevSheets = prevSheetsRef.current;
+    const currentSheets = sheets;
+    
+    // Check if a new sheet was added by comparing sheet names
+    if (currentSheets.length > prevSheets.length) {
+      // Find the new sheet (the one that wasn't in the previous list)
+      const newSheet = currentSheets.find(sheet => 
+        !prevSheets.find(prevSheet => prevSheet.name === sheet.name)
+      );
+      
+      if (newSheet) {
+        console.log('New sheet detected in SheetContext:', newSheet.id, 'but letting SpreadsheetContext handle switching');
+        // Don't auto-switch here - let SpreadsheetContext handle it
+        // The SpreadsheetContext.addSheet function already sets the active sheet
+      }
     }
-    // Update the previous sheet count
-    prevSheetCountRef.current = sheets.length;
-  }, [sheets.length, switchSheet]); // Don't include currentSheetId to avoid infinite loops
+    
+    // Update the previous sheets reference
+    prevSheetsRef.current = currentSheets;
+    prevSheetCountRef.current = currentSheets.length;
+  }, [sheets]); // Remove dependencies that could cause conflicts
 
   const addSheetToContext = async (sheetName = null) => {
     try {
+      console.log('Adding sheet in context:', sheetName);
       const newSheet = await addSheet(sheetName);
-      // The auto-switching effect will handle switching to the new sheet
+      console.log('Sheet added successfully in context:', newSheet);
+      
+      // The SpreadsheetContext.addSheet function already handles switching
+      // Just update the current sheet ID to match
+      if (newSheet) {
+        console.log('Updating current sheet ID to match new sheet:', newSheet.id);
+        setCurrentSheetId(newSheet.id);
+      }
+      
       return newSheet;
     } catch (error) {
       console.error('Failed to add sheet in context:', error);
@@ -134,8 +147,8 @@ export const SheetProvider = ({ children }) => {
       renameSheet, 
       deleteSheet,
       setCurrentSheet,
-      isLoading,
-      error
+      isLoading: false,
+      error: null
     }}>
       {children}
     </SheetContext.Provider>
