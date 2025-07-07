@@ -10,6 +10,7 @@ const formulaCategories = [
     id: 'math', 
     label: 'Math & Statistics', 
     icon: <Calculator size={16} />,
+    expanded: true,
     functions: [
       { name: 'SUM', syntax: '=SUM(range)', description: 'Adds all numbers in a range of cells' },
       { name: 'AVERAGE', syntax: '=AVERAGE(range)', description: 'Calculates the arithmetic mean of numbers' },
@@ -20,20 +21,10 @@ const formulaCategories = [
     ]
   },
   { 
-    id: 'lookup', 
-    label: 'Lookup & Reference', 
-    icon: <SearchIcon size={16} />,
-    functions: [
-      { name: 'VLOOKUP', syntax: '=VLOOKUP(lookup, table, col, exact)', description: 'Searches vertically in a table for a value' },
-      { name: 'XLOOKUP', syntax: '=XLOOKUP(lookup, array, return)', description: 'Modern lookup function (Excel 365)' },
-      { name: 'INDEX', syntax: '=INDEX(array, row, col)', description: 'Returns value at intersection of row and column' },
-      { name: 'MATCH', syntax: '=MATCH(lookup, array, type)', description: 'Finds position of value in array' }
-    ]
-  },
-  { 
     id: 'logical', 
     label: 'Logical & Conditional', 
     icon: <CheckSquare size={16} />,
+    expanded: false,
     functions: [
       { name: 'IF', syntax: '=IF(condition, true_value, false_value)', description: 'Returns different values based on condition' },
       { name: 'SUMIF', syntax: '=SUMIF(range, criteria, sum_range)', description: 'Sums cells that meet a criteria' },
@@ -45,9 +36,22 @@ const formulaCategories = [
     ]
   },
   { 
+    id: 'lookup', 
+    label: 'Lookup & Reference', 
+    icon: <SearchIcon size={16} />,
+    expanded: false,
+    functions: [
+      { name: 'VLOOKUP', syntax: '=VLOOKUP(lookup, table, col, exact)', description: 'Searches vertically in a table for a value' },
+      { name: 'XLOOKUP', syntax: '=XLOOKUP(lookup, array, return)', description: 'Modern lookup function (Excel 365)' },
+      { name: 'INDEX', syntax: '=INDEX(array, row, col)', description: 'Returns value at intersection of row and column' },
+      { name: 'MATCH', syntax: '=MATCH(lookup, array, type)', description: 'Finds position of value in array' }
+    ]
+  },
+  { 
     id: 'text', 
     label: 'Text Functions', 
     icon: <Type size={16} />,
+    expanded: false,
     functions: [
       { name: 'CONCATENATE', syntax: '=CONCATENATE(text1, text2, ...)', description: 'Joins multiple text strings together' },
       { name: 'LEN', syntax: '=LEN(text)', description: 'Returns the length of text string' },
@@ -61,6 +65,7 @@ const formulaCategories = [
     id: 'date', 
     label: 'Date & Time', 
     icon: <Calendar size={16} />,
+    expanded: false,
     functions: [
       { name: 'TODAY', syntax: '=TODAY()', description: 'Returns today\'s date' },
       { name: 'NOW', syntax: '=NOW()', description: 'Returns current date and time' },
@@ -251,20 +256,6 @@ const FormulaBuilder = ({ onWidthChange }) => {
     clearPreview();
   };
 
-  const handleSelectColumn = () => {
-    const column = targetCell.replace(/[0-9]/g, '');
-    setTargetRange(`${column}:${column}`);
-    setSelectedTarget('column');
-    clearPreview();
-  };
-
-  const handleSelectRow = () => {
-    const row = targetCell.replace(/[A-Z]/g, '');
-    setTargetRange(`${row}:${row}`);
-    setSelectedTarget('row');
-    clearPreview();
-  };
-
   const handleSelectRange = () => {
     // For now, just use the current cell as the range
     // TODO: Implement proper range selection
@@ -336,18 +327,7 @@ const FormulaBuilder = ({ onWidthChange }) => {
                   ? 'bg-gray-800 border-gray-600 text-white' 
                   : 'bg-white border-gray-200 text-gray-900'
               }`}
-              placeholder="e.g., B4"
-            />
-            <input
-              type="text"
-              value={targetRange}
-              onChange={(e) => setTargetRange(e.target.value)}
-              className={`flex-1 px-3 py-2 rounded-md border ${
-                isDark 
-                  ? 'bg-gray-800 border-gray-600 text-white' 
-                  : 'bg-white border-gray-200 text-gray-900'
-              }`}
-              placeholder="Range: B4:B10 (optional)"
+              placeholder="Cell (e.g., B4) or Range (e.g., B4:B10)"
             />
           </div>
           <div className="flex gap-2">
@@ -364,34 +344,6 @@ const FormulaBuilder = ({ onWidthChange }) => {
               }`}
             >
               Current Cell
-            </button>
-            <button
-              onClick={handleSelectColumn}
-              className={`px-3 py-1.5 text-sm rounded-md ${
-                selectedTarget === 'column'
-                  ? isDark 
-                    ? 'bg-blue-600 text-white hover:bg-blue-500' 
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                  : isDark 
-                    ? 'bg-gray-600 hover:bg-gray-500' 
-                    : 'bg-gray-200 hover:bg-gray-300'
-              }`}
-            >
-              Entire Column
-            </button>
-            <button
-              onClick={handleSelectRow}
-              className={`px-3 py-1.5 text-sm rounded-md ${
-                selectedTarget === 'row'
-                  ? isDark 
-                    ? 'bg-blue-600 text-white hover:bg-blue-500' 
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                  : isDark 
-                    ? 'bg-gray-600 hover:bg-gray-500' 
-                    : 'bg-gray-200 hover:bg-gray-300'
-              }`}
-            >
-              Entire Row
             </button>
             <button
               onClick={handleSelectRange}
@@ -439,23 +391,15 @@ Example: =SUM(A1:A10)"
           />
           <div className="flex gap-2 mt-2">
             <button
-              onClick={handlePreviewFormula}
+              onClick={handleApplyFormula}
               disabled={!formula.trim()}
               className={`px-3 py-1.5 text-sm rounded-md ${
                 !formula.trim()
                   ? (isDark ? 'bg-gray-600 text-gray-400' : 'bg-gray-200 text-gray-400')
-                  : (isDark ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-blue-500 text-white hover:bg-blue-600')
+                  : (isDark ? 'bg-green-600 text-white hover:bg-green-500' : 'bg-green-500 text-white hover:bg-green-600')
               }`}
             >
-              Preview
-            </button>
-            <button
-              onClick={handleClearFormula}
-              className={`px-3 py-1.5 text-sm rounded-md ${
-                isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
-              }`}
-            >
-              Clear
+              Apply Formula
             </button>
           </div>
         </div>
@@ -500,7 +444,7 @@ Example: =SUM(A1:A10)"
           {formulaCategories.map((category) => (
             <div key={category.id} className="space-y-2">
               <button
-                onClick={() => setActiveCategory(category.id)}
+                onClick={() => setActiveCategory(activeCategory === category.id ? null : category.id)}
                 className={`w-full flex items-center justify-between p-2 rounded-md ${
                   activeCategory === category.id
                     ? isDark
@@ -513,7 +457,9 @@ Example: =SUM(A1:A10)"
                   {category.icon}
                   <span>{category.label}</span>
                 </div>
-                <span className="text-sm">▼</span>
+                <span className={`text-sm transition-transform ${
+                  activeCategory === category.id ? 'rotate-180' : ''
+                }`}>▼</span>
               </button>
               
               {activeCategory === category.id && (
@@ -556,12 +502,9 @@ Example: =SUM(A1:A10)"
       <div className={`p-4 border-t ${
         isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
       }`}>
-        <button
-          onClick={handleApplyFormula}
-          className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-        >
-          Apply Formula
-        </button>
+        <div className="text-sm text-center text-gray-500">
+          Click on any function above to insert it into the formula editor
+        </div>
       </div>
     </div>
   );
