@@ -372,8 +372,8 @@ const FormulaBuilder: React.FC<FormulaBuilderProps> = ({ onWidthChange }) => {
               className={`px-3 py-1.5 text-sm rounded-md ${
                 selectedTarget === 'current'
                   ? isDark
-                    ? 'bg-purple-600 text-white hover:bg-purple-500'
-                    : 'bg-purple-100 text-purple-800 hover:bg-purple-600'
+                    ? 'bg-blue-600 text-white hover:bg-blue-500'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
                   : isDark
                     ? 'bg-gray-600 hover:bg-gray-500'
                     : 'bg-gray-200 hover:bg-gray-300'
@@ -386,8 +386,8 @@ const FormulaBuilder: React.FC<FormulaBuilderProps> = ({ onWidthChange }) => {
               className={`px-3 py-1.5 text-sm rounded-md ${
                 selectedTarget === 'range'
                   ? isDark
-                    ? 'bg-purple-600 text-white hover:bg-purple-500'
-                    : 'bg-purple-100 text-purple-800 hover:bg-purple-600'
+                    ? 'bg-blue-600 text-white hover:bg-blue-500'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
                   : isDark
                     ? 'bg-gray-600 hover:bg-gray-500'
                     : 'bg-gray-200 hover:bg-gray-300'
@@ -460,7 +460,7 @@ Example: =SUM(A1:A10)"
                 onClick={() => setFormula(template.template)}
                 className={`p-2 text-xs rounded-md text-left ${
                   isDark
-                    ? 'bg-gray-700 hover:bg-gray-600 '
+                    ? 'bg-gray-700 hover:bg-gray-600'
                     : 'bg-gray-50 hover:bg-gray-100'
                 }`}
               >
