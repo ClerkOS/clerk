@@ -16,7 +16,7 @@ await updateCell(col, row, draftValue);
 
 **After:**
 ```jsx
-import { useCell, useEditCell } from '../../hooks/useSpreadsheetQueries';
+import { useCell, useEditCell } from '../../features/useSpreadsheetQueries';
 
 const cellId = `${col}${row}`;
 const { data: cellDataFromQuery, isLoading, error } = useCell(cellId);
@@ -41,7 +41,7 @@ await updateCellWithFormula(col, row, formula, targetRange);
 
 **After:**
 ```jsx
-import { useEditCell } from '../../hooks/useSpreadsheetQueries';
+import { useEditCell } from '../../features/useSpreadsheetQueries';
 
 const editCellMutation = useEditCell();
 const cellId = `${col}${row}`;
@@ -62,7 +62,7 @@ const [isLoading, setIsLoading] = useState(false);
 
 **After:**
 ```jsx
-import { useAIOperations } from '../../hooks/useAIOperations';
+import { useAIOperations } from '../../features/useAIOperations';
 
 const { convertToFormula, isConverting, conversionError, lastResult } = useAIOperations();
 const result = await convertToFormula(input);
@@ -82,7 +82,7 @@ const result = await convertToFormula(input);
 
 **After:**
 ```jsx
-import { useWorkbookOperations } from '../../hooks/useWorkbookOperations';
+import { useWorkbookOperations } from '../../features/useWorkbookOperations';
 
 const { importWorkbook, exportWorkbook, isImporting, isExporting, importError, exportError } = useWorkbookOperations();
 await importWorkbook(file);
@@ -129,7 +129,7 @@ await exportWorkbook();
 
 **Step 1:** Import React Query hooks
 ```jsx
-import { useCell, useEditCell } from '../../hooks/useSpreadsheetQueries';
+import { useCell, useEditCell } from '../../features/useSpreadsheetQueries';
 ```
 
 **Step 2:** Replace state management
@@ -268,7 +268,7 @@ if (isError) {
 
 ### 1. **Unit Tests**
 ```jsx
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react-features';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();

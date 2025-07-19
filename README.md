@@ -71,7 +71,7 @@ clerk-ui1/
 │   ├── hooks/          # Custom React hooks
 │   ├── utils/          # Utility functions
 │   ├── assets/         # Static assets
-│   └── App.jsx         # Main application component
+│   └── App.tsx         # Main application component
 ├── public/             # Public assets
 └── package.json        # Project dependencies
 ```
