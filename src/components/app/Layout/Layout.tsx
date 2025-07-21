@@ -1,16 +1,16 @@
-import Header from "./Header";
-import Sidebar from "./Sidebar";
-import StatusBar from "./StatusBar";
-import CommandPalette from "./CommandPalette";
-import FormulaBuilder from "./FormulaBuilder";
-import ChartBuilder from "./ChartBuilder";
-import TableBuilder from "./TableBuilder";
-import Spreadsheet from "../spreadsheet/Sheet";
+import Header from "../Header/Header";
+import SideBar from "../SideBar/SideBar";
+import StatusBar from "../StatusBar/StatusBar";
+import CommandPalette from "../CommandPalette/CommandPalette";
+import FormulaBuilder from "../FormulaBuilder/FormulaBuilder";
+import ChartBuilder from "../ChartBuilder/ChartBuilder";
+import TableBuilder from "../TableBuilder/TableBuilder";
+import Spreadsheet from "../../spreadsheet/Sheet/Sheet";
 import React, { useState } from "react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
 
-  const [panelWidth, setPanelWidth] = useState(320);
+  const [panelWidth, setPanelWidth] = useState(10);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [showFormulaBuilder, setShowFormulaBuilder] = useState(false);
   const [showChartBuilder, setShowChartBuilder] = useState(false);
@@ -64,7 +64,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="flex flex-1 overflow-hidden min-h-0">
-        <Sidebar
+        <SideBar
           onFormulaClick={toggleFormulaBuilder}
           onChartClick={toggleChartBuilder}
           onTableClick={toggleTablesPanel}

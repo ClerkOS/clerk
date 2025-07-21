@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect} from 'react';
-import { useTheme } from '../providers/ThemeProvider';
+import { useTheme } from '../../providers/ThemeProvider';
 import { BarChart3, LineChart, PieChart, BarChart, Mountain, ScatterChart, GripVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

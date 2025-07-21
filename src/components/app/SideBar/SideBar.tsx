@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, BarChart, Calculator, Bot } from 'lucide-react';
-import Tooltip from '../ui/ToolTip';
+import Tooltip from '../../ui/ToolTip';
 
 
 interface SidebarProps {
@@ -10,17 +10,17 @@ interface SidebarProps {
   onAIClick?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps>  = ({ onFormulaClick, onChartClick, onTableClick, onAIClick }) => {
+const SideBar: React.FC<SidebarProps>  = ({ onFormulaClick, onChartClick, onTableClick, onAIClick }) => {
   const tools: {
     id: string;
     icon: React.ReactNode;
     label: string;
     onClick?: () => void;
   }[] = [
-    { id: 'table', icon: <Table size={18} />, label: 'Tables', onClick: onTableClick },
-    { id: 'chart', icon: <BarChart size={18} />, label: 'Charts', onClick: onChartClick },
-    { id: 'calculator', icon: <Calculator size={18} />, label: 'Formulas', onClick: onFormulaClick },
-    { id: 'ai', icon: <Bot size={18} />, label: 'AI Assistant', onClick: onAIClick },
+    { id: 'table', icon: <Table size={18} className="m-auto" />, label: 'Tables', onClick: onTableClick },
+    { id: 'chart', icon: <BarChart size={18} className="m-auto" />, label: 'Charts', onClick: onChartClick },
+    { id: 'calculator', icon: <Calculator size={18} className="m-auto" />, label: 'Formulas', onClick: onFormulaClick },
+    { id: 'ai', icon: <Bot size={18} className="m-auto" />, label: 'AI Assistant', onClick: onAIClick },
   ];
 
   return (
@@ -37,9 +37,9 @@ const Sidebar: React.FC<SidebarProps>  = ({ onFormulaClick, onChartClick, onTabl
               onClick={tool.onClick}
               disabled={!tool.onClick}
             >
-              <div className="w-4 h-4 sm:w-[18px] sm:h-[18px] flex items-center justify-center">
+              {/*<div className="w-4 h-4 sm:w-[18px] sm:h-[18px] flex items-center justify-center">*/}
               {tool.icon}
-              </div>
+              {/*</div>*/}
             </button>
           </Tooltip>
         ))}
@@ -48,4 +48,4 @@ const Sidebar: React.FC<SidebarProps>  = ({ onFormulaClick, onChartClick, onTabl
   );
 };
 
-export default Sidebar;
+export default SideBar;

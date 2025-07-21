@@ -4,7 +4,7 @@
 // import { FormulaPreviewProvider } from './context/FormulaPreviewContext.jsx';
 // import { SheetProvider } from './context/SheetContext.jsx';
 // import Header from './components/layout/Header.jsx';
-// import Sidebar from './components/layout/Sidebar.jsx';
+// import SideBar from './components/layout/SideBar.jsx';
 // import Spreadsheet from './components/spreadsheet/Spreadsheet.jsx';
 // import StatusBar from './components/layout/StatusBar.jsx';
 // import CommandPalette.tsx from './components/ui/CommandPalette.tsx.jsx';
@@ -89,7 +89,7 @@
 //                       />
 //                     )}
 //                     <div className="flex flex-1 overflow-hidden min-h-0">
-//                       <Sidebar
+//                       <SideBar
 //                         onFormulaClick={toggleFormulaBuilder}
 //                         onChartClick={toggleChartBuilder}
 //                         onTableClick={toggleTablesPanel}

@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Moon, Sun, ChevronDown, User, Upload, Download } from 'lucide-react';
-import { useTheme } from '../providers/ThemeProvider';
+import { useTheme } from '../../providers/ThemeProvider';
 // import { useSpreadsheet } from '../../context/SpreadsheetContext.jsx';
 // import { useWorkbookOperations } from '../../features/useWorkbookOperations.js';
-import ThemeToggle from '../ui/ThemeToggle';
+import ThemeToggle from '../../ui/ThemeToggle';
 
 const Header = () => {
   const { theme, toggleTheme } = useTheme();

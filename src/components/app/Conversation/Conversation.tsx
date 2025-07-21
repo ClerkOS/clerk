@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Trash2, Code, Play, Lightbulb, BarChart3 } from 'lucide-react';
-import { useTheme } from "../providers/ThemeProvider";
+import { useTheme } from "../../providers/ThemeProvider";
 // import { useSpreadsheet } from '../../context/SpreadsheetContext.jsx';
 // import { useTypeDetection } from '../../features/useTypeDetection.js';
 

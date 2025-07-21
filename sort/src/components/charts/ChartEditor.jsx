@@ -179,7 +179,7 @@
 //       </div>
 //
 //       <div className="flex flex-1 min-h-0">
-//         {/* Left Sidebar */}
+//         {/* Left SideBar */}
 //         <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-6 flex flex-col gap-8 transition-colors duration-200">
 //           {/* Chart Type */}
 //           <div>
@@ -284,7 +284,7 @@
 //           </div>
 //         </main>
 //
-//         {/* Right Sidebar */}
+//         {/* Right SideBar */}
 //         <aside className="w-72 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 p-6 flex flex-col gap-8 transition-colors duration-200">
 //           {/* Appearance */}
 //           <div>

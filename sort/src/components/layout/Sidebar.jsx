@@ -2,7 +2,7 @@
 // import { Table, BarChart, Calculator, Bot } from 'lucide-react';
 // import Tooltip from '../ui/Tooltip.jsx';
 //
-// const Sidebar = ({ onFormulaClick, onChartClick, onTableClick, onAIClick }) => {
+// const SideBar = ({ onFormulaClick, onChartClick, onTableClick, onAIClick }) => {
 //   const tools = [
 //     { id: 'table', icon: <Table size={18} />, label: 'Tables', onClick: onTableClick },
 //     { id: 'chart', icon: <BarChart size={18} />, label: 'Charts', onClick: onChartClick },
@@ -35,4 +35,4 @@
 //   );
 // };
 //
-// export default Sidebar;
+// export default SideBar;

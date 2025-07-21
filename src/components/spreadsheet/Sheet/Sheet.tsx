@@ -3,16 +3,17 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 // import { useSpreadsheet } from '../../context/SpreadsheetContext.jsx';
 // import { SelectionProvider, useSelection } from './SelectionManager.jsx';
 import { Upload, Plus, FileText, FileUp, FileDown, AlertCircle, CheckCircle } from 'lucide-react';
-import { useTheme } from "../providers/ThemeProvider";
-import EmptyState from "./EmptyState";
-import FormulaBar from "./FormulaBar";
-import Grid from "./Grid";
+import { useTheme } from "../../providers/ThemeProvider";
+import EmptyState from "../EmptyState/EmptyState";
+import FormulaBar from "../FormulaBar/FormulaBar";
+import Grid from "../Grid/Grid";
+import ContextMenu from '../../app/ContextMenu/ContextMenu';
 // import { handleFileUpload, validateFile } from '../../services/fileService.js';
 // import { useWorkbookOperations } from '../../features/useWorkbookOperations.js';
 // import ContextMenu from '../ai/ContextMenu.jsx';
 
 
-interface SpreadsheetContentProps {
+interface SpreadsheetProps {
   isPanelOpen?: boolean;
   panelWidth?: number;
   onOpenAIWithRange: (range: string) => void;
@@ -24,7 +25,7 @@ interface Notification {
   icon: React.ReactNode;
 }
 
-const SpreadsheetContent: React.FC<SpreadsheetContentProps> = ({ isPanelOpen = false, panelWidth = 320, onOpenAIWithRange }) => {
+const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWidth = 320, onOpenAIWithRange }) => {
   console.log('SpreadsheetContent component rendering');
 
   // const {
@@ -329,36 +330,32 @@ const SpreadsheetContent: React.FC<SpreadsheetContentProps> = ({ isPanelOpen = f
       </div>
 
       {/* Context Menu */}
-      {/*{contextMenu && (*/}
-      {/*  <ContextMenu*/}
-      {/*    position={contextMenu}*/}
-      {/*    onClose={handleCloseContextMenu}*/}
-      {/*    onOpenAIWithRange={handleOpenAIWithRange}*/}
-      {/*    isCell={true}*/}
-      {/*    selectedCells={selectedCells}*/}
-      {/*    cellId={selectedCells.length === 1 ? selectedCells[0] : null}*/}
-      {/*  />*/}
-      {/*)}*/}
+      {contextMenu && (
+        <ContextMenu
+          position={contextMenu}
+          onClose={handleCloseContextMenu}
+          onOpenAIWithRange={() => console.log('Open AI with range')}
+          isCell={true}
+          selectedCells={[]}
+          cellId={''}
+        />
+      )}
     </>
   );
 };
 
-interface SpreadsheetProps {
-  isPanelOpen?: boolean;
-  panelWidth?: number;
-  onOpenAIWithRange: (range: string) => void;
-}
 
-const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen=false, panelWidth = 320, onOpenAIWithRange }) => {
-  return (
-    // <SelectionProvider>
-      <SpreadsheetContent
-        isPanelOpen={isPanelOpen}
-        panelWidth={panelWidth}
-        onOpenAIWithRange={onOpenAIWithRange}
-      />
-    // </SelectionProvider>
-  );
-};
+
+// const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen=false, panelWidth = 320, onOpenAIWithRange }) => {
+//   return (
+//     // <SelectionProvider>
+//       <SpreadsheetContent
+//         isPanelOpen={isPanelOpen}
+//         panelWidth={panelWidth}
+//         onOpenAIWithRange={onOpenAIWithRange}
+//       />
+//     // </SelectionProvider>
+//   );
+// };
 
 export default Spreadsheet;

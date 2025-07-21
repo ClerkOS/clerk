@@ -1,14 +1,22 @@
 import React, { useRef, useCallback } from 'react';
 
-const ColumnHeader = ({ label, isHighlighted, onResize, width }) => {
-  const resizeRef = useRef(null);
-  const isResizing = useRef(false);
-  const startX = useRef(0);
-  const startWidth = useRef(0);
 
-  const handleMouseDown = useCallback((e) => {
+interface ColumnHeaderProps {
+  label: string;
+  isHighlighted?: boolean;
+  onResize: (label: string, newWidth: number) => void;
+  width: number;
+}
+
+const ColumnHeader: React.FC<ColumnHeaderProps> = ({ label, isHighlighted, onResize, width }) => {
+  const resizeRef = useRef<HTMLDivElement>(null);
+  const isResizing = useRef<boolean>(false);
+  const startX = useRef<number>(0);
+  const startWidth = useRef<number>(0);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     // Only handle resize if clicking on the resize handle
-    if (!e.target.closest('.resize-handle')) {
+    if (!(e.target as HTMLElement).closest('.resize-handle')) {
       return;
     }
 
@@ -24,7 +32,7 @@ const ColumnHeader = ({ label, isHighlighted, onResize, width }) => {
     document.body.classList.add('select-none');
   }, [width]);
 
-  const handleMouseMove = useCallback((e) => {
+  const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizing.current) return;
 
     const delta = e.clientX - startX.current;
@@ -54,13 +62,14 @@ const ColumnHeader = ({ label, isHighlighted, onResize, width }) => {
 
   const classes = `
     relative
-    bg-gray-50 dark:bg-gray-900
-    border border-gray-200 dark:border-gray-700
-    text-center px-1 py-1 sm:py-2
+    bg-gray-200 dark:bg-gray-800
+    border border-gray-300 dark:border-gray-700
+    text-center px-1 py-1 
     font-semibold
     text-gray-700 dark:text-gray-200
     text-xs sm:text-sm
     ${isHighlighted ? 'bg-blue-50 dark:bg-blue-900/20' : ''}
+    h-4
   `;
 
   return (
@@ -69,7 +78,7 @@ const ColumnHeader = ({ label, isHighlighted, onResize, width }) => {
       style={{
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         width: `${width}px`,
-        minWidth: `${width}px`
+        minWidth: `${width}px`,
       }}
     >
       {label}
@@ -80,7 +89,7 @@ const ColumnHeader = ({ label, isHighlighted, onResize, width }) => {
         className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/50 group resize-handle"
         onMouseDown={handleMouseDown}
       >
-        <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-4 bg-gray-300 dark:bg-gray-600 group-hover:bg-blue-500 rounded-full" />
+        {/*<div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-4 bg-gray-300 dark:bg-gray-600 group-hover:bg-blue-500 rounded-full" />*/}
       </div>
     </th>
   );

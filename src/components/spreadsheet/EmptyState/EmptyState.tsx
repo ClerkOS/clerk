@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, Plus, FileText } from 'lucide-react';
-import { useTheme } from "../providers/ThemeProvider";
+import { useTheme } from "../../providers/ThemeProvider";
 
 interface ModernEmptyStateProps {
   onFileUpload: (file: File) => Promise<void>;

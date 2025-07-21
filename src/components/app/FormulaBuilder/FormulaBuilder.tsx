@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Calculator, DollarSign, CheckSquare, Type, Calendar, Search as SearchIcon, GripVertical } from 'lucide-react';
-import { useTheme } from '../providers/ThemeProvider';
+import { useTheme } from '../../providers/ThemeProvider';
 // import { useFormulaPreview } from '../../context/FormulaPreviewContext.jsx';
 // import { useSpreadsheet } from '../../context/SpreadsheetContext.jsx';
 // import { useEditCell, useEvaluateFormula } from '../../features/useSpreadsheetQueries.js';

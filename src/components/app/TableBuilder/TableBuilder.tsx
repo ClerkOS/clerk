@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Copy, GripVertical, Plus, Trash2 } from "lucide-react";
-import { useTheme } from "../providers/ThemeProvider";
+import { useTheme } from "../../providers/ThemeProvider";
 
 // import { useSpreadsheet } from '../../context/SpreadsheetContext.jsx';
 
