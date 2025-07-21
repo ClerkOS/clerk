@@ -64,12 +64,12 @@ const ColumnHeader: React.FC<ColumnHeaderProps> = ({ label, isHighlighted, onRes
     relative
     bg-gray-200 dark:bg-gray-800
     border border-gray-300 dark:border-gray-700
-    text-center px-1 py-1 
+    text-center px-1 py-0
     font-semibold
     text-gray-700 dark:text-gray-200
     text-xs sm:text-sm
     ${isHighlighted ? 'bg-blue-50 dark:bg-blue-900/20' : ''}
-    h-4
+    h-1
   `;
 
   return (

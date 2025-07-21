@@ -162,8 +162,6 @@ const FormulaBuilder: React.FC<FormulaBuilderProps> = ({ onWidthChange }) => {
     };
   }, []);
 
-  const isDark = theme === 'dark';
-
   // const handleApplyFormula = async () => {
   //   if (!formula.trim()) {
   //     console.log('No formula to apply');
@@ -313,11 +311,7 @@ const FormulaBuilder: React.FC<FormulaBuilderProps> = ({ onWidthChange }) => {
 
   return (
     <div
-      className={`relative border-l flex flex-col h-full ${
-        isDark
-          ? 'bg-gray-800 border-gray-700 text-white'
-          : 'bg-white border-gray-200 text-gray-900'
-      }`}
+      className="relative border-l flex flex-col h-full bg-white border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
       style={{ width: `${width}px` }}
     >
       {/* Resize Handle */}
@@ -327,18 +321,14 @@ const FormulaBuilder: React.FC<FormulaBuilderProps> = ({ onWidthChange }) => {
       >
         <GripVertical
           size={16}
-          className={`absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 ${
-            isDark ? 'text-gray-400' : 'text-gray-500'
-          }`}
+          className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
         />
       </div>
 
       {/* Header */}
-      <div className={`p-4 border-b ${
-        isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
-      }`}>
+      <div className="p-4 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
         <h3 className="font-medium text-lg">Formula Builder</h3>
-        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Create and apply formulas to your data
         </p>
       </div>
@@ -346,9 +336,7 @@ const FormulaBuilder: React.FC<FormulaBuilderProps> = ({ onWidthChange }) => {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {/* Target Cell Selector */}
-        <div ref={targetSelectorRef} className={`mb-6 p-4 rounded-lg ${
-          isDark ? 'bg-gray-700' : 'bg-gray-50'
-        }`}>
+        <div ref={targetSelectorRef} className="mb-6 p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
           <div className="flex items-center gap-2 mb-3">
             <span>🎯</span>
             <span className="font-medium">Apply Formula To</span>
@@ -358,39 +346,25 @@ const FormulaBuilder: React.FC<FormulaBuilderProps> = ({ onWidthChange }) => {
               type="text"
               value={targetCell}
               onChange={(e) => setTargetCell(e.target.value)}
-              className={`flex-1 px-3 py-2 rounded-md border ${
-                isDark
-                  ? 'bg-gray-800 border-gray-600 text-white'
-                  : 'bg-white border-gray-200 text-gray-900'
-              }`}
+              className="flex-1 px-3 py-2 rounded-md border bg-white border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
               placeholder="Cell (e.g., B4) or Range (e.g., B4:B10)"
             />
           </div>
           <div className="flex gap-2">
             <button
-              // onClick={handleSelectCurrentCell}
               className={`px-3 py-1.5 text-sm rounded-md ${
                 selectedTarget === 'current'
-                  ? isDark
-                    ? 'bg-blue-600 text-white hover:bg-blue-500'
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                  : isDark
-                    ? 'bg-gray-600 hover:bg-gray-500'
-                    : 'bg-gray-200 hover:bg-gray-300'
+                  ? 'bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500'
+                  : 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500'
               }`}
             >
               Current Cell
             </button>
             <button
-              // onClick={handleSelectRange}
               className={`px-3 py-1.5 text-sm rounded-md ${
                 selectedTarget === 'range'
-                  ? isDark
-                    ? 'bg-blue-600 text-white hover:bg-blue-500'
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                  : isDark
-                    ? 'bg-gray-600 hover:bg-gray-500'
-                    : 'bg-gray-200 hover:bg-gray-300'
+                  ? 'bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500'
+                  : 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500'
               }`}
             >
               Select Range
@@ -405,21 +379,17 @@ const FormulaBuilder: React.FC<FormulaBuilderProps> = ({ onWidthChange }) => {
             {previewResult && (
               <span className={`text-sm px-2 py-1 rounded ${
                 previewResult.startsWith('Error:')
-                  ? (isDark ? 'bg-red-900 text-red-300' : 'bg-red-100 text-red-800')
-                  : (isDark ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800')
+                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                  : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
               }`}>
-                {previewResult.startsWith('Error:') ? previewResult : `Result: ${previewResult}`}
-              </span>
+              {previewResult.startsWith('Error:') ? previewResult : `Result: ${previewResult}`}
+            </span>
             )}
           </div>
           <textarea
             value={formula}
             onChange={(e) => setFormula(e.target.value)}
-            className={`w-full px-3 py-2 rounded-md border font-mono ${
-              isDark
-                ? 'bg-gray-700 border-gray-600 text-white'
-                : 'bg-white border-gray-200 text-gray-900'
-            }`}
+            className="w-full px-3 py-2 rounded-md border font-mono bg-white border-gray-200 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             rows={4}
             placeholder="Enter your formula here...
 Example: =SUM(A1:A10)"
@@ -427,12 +397,11 @@ Example: =SUM(A1:A10)"
           />
           <div className="flex gap-2 mt-2">
             <button
-              // onClick={handleApplyFormula}
               disabled={!formula.trim()}
               className={`px-3 py-1.5 text-sm rounded-md ${
                 !formula.trim()
-                  ? (isDark ? 'bg-gray-600 text-gray-400' : 'bg-gray-200 text-gray-400')
-                  : (isDark ? 'bg-green-600 text-white hover:bg-green-500' : 'bg-green-500 text-white hover:bg-green-600')
+                  ? 'bg-gray-200 text-gray-400 dark:bg-gray-600 dark:text-gray-400'
+                  : 'bg-green-500 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500'
               }`}
             >
               Apply Formula
@@ -458,16 +427,10 @@ Example: =SUM(A1:A10)"
               <button
                 key={template.name}
                 onClick={() => setFormula(template.template)}
-                className={`p-2 text-xs rounded-md text-left ${
-                  isDark
-                    ? 'bg-gray-700 hover:bg-gray-600'
-                    : 'bg-gray-50 hover:bg-gray-100'
-                }`}
+                className="p-2 text-xs rounded-md text-left bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600"
               >
                 <div className="font-medium">{template.name}</div>
-                <div className={`text-xs ${
-                  isDark ? 'text-gray-400' : 'text-gray-500'
-                }`}>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
                   {template.template}
                 </div>
               </button>
@@ -480,13 +443,8 @@ Example: =SUM(A1:A10)"
           {formulaCategories.map((category) => (
             <div key={category.id} className="space-y-2">
               <button
-                // onClick={() => setActiveCategory(activeCategory === category.id ? null : category.id)}
                 className={`w-full flex items-center justify-between p-2 rounded-md ${
-                  activeCategory === category.id
-                    ? isDark
-                      ? 'bg-gray-700'
-                      : 'bg-gray-100'
-                    : ''
+                  activeCategory === category.id ? 'bg-gray-100 dark:bg-gray-700' : ''
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -503,26 +461,15 @@ Example: =SUM(A1:A10)"
                   {category.functions.map((func) => (
                     <div
                       key={func.name}
-                      // onClick={() => handleFunctionSelect(func)}
-                      className={`p-3 rounded-md cursor-pointer ${
-                        isDark
-                          ? 'bg-gray-700 hover:bg-gray-600'
-                          : 'bg-gray-50 hover:bg-gray-100'
-                      }`}
+                      className="p-3 rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600"
                     >
-                      <div className={`font-mono text-sm ${
-                        isDark ? 'text-green-400' : 'text-green-600'
-                      }`}>
+                      <div className="font-mono text-sm text-green-600 dark:text-green-400">
                         {func.name}
                       </div>
-                      <div className={`text-xs mt-1 ${
-                        isDark ? 'text-gray-400' : 'text-gray-500'
-                      }`}>
+                      <div className="text-xs mt-1 text-gray-500 dark:text-gray-400">
                         {func.syntax}
                       </div>
-                      <div className={`text-xs mt-1 ${
-                        isDark ? 'text-gray-400' : 'text-gray-500'
-                      }`}>
+                      <div className="text-xs mt-1 text-gray-500 dark:text-gray-400">
                         {func.description}
                       </div>
                     </div>
@@ -535,10 +482,8 @@ Example: =SUM(A1:A10)"
       </div>
 
       {/* Quick Actions */}
-      <div className={`p-4 border-t ${
-        isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
-      }`}>
-        <div className="text-sm text-center text-gray-500">
+      <div className="p-4 border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+        <div className="text-sm text-center text-gray-500 dark:text-gray-400">
           Click on any function above to insert it into the formula editor
         </div>
       </div>

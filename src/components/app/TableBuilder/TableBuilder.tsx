@@ -25,10 +25,8 @@ interface IntuitiveTableBuilderProps {
   onWidthChange?: (width: number) => void;
 }
 
-const IntuitiveTableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthChange }) => {
-  const { theme } = useTheme();
+const TableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthChange }) => {
   // const { selectedCell, updateCell } = useSpreadsheet();
-  const isDark = theme === "dark";
 
   const [width, setWidth] = useState<number>(320);
   const [tableData, setTableData] = useState<string[][]>([
@@ -225,11 +223,7 @@ const IntuitiveTableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthCh
 
   return (
     <div
-      className={`relative border-l flex flex-col h-full ${
-        isDark
-          ? "bg-gray-800 border-gray-700 text-white"
-          : "bg-white border-gray-200 text-gray-900"
-      }`}
+      className={"relative border-l flex flex-col h-full bg-white border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white "}
       style={{ width: `${width}px` }}
     >
       {/* Resize Handle */}
@@ -244,31 +238,24 @@ const IntuitiveTableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthCh
       </div>
 
       {/* Header */}
-      <div className={`p-4 border-b ${
-        isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"
-      }`}>
+      <div className={"p-4 border-b dark:border-gray-700 dark:bg-gray-900 border-gray-200 bg-gray-50"}>
         <h3 className="font-semibold text-lg">🏗️ Table Builder</h3>
-        <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+        <p className={"text-sm text-gray-400 dark:text-gray-500"}>
           Click cells to edit • Drag to resize
         </p>
       </div>
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
 
         {/* Quick Size Buttons */}
         <div>
-          <div className={`text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>📏 Quick Sizes</div>
+          <div className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">📏 Quick Sizes</div>
           <div className="flex gap-2 flex-wrap">
             {quickSizes.map(size => (
               <button
                 key={size.label}
                 onClick={() => setQuickSize(size.rows, size.cols)}
-                className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                  isDark
-                    ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                }`}
+                className="px-3 py-1.5 text-xs rounded-md transition-colors bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200"
               >
                 {size.label}
               </button>
@@ -278,7 +265,7 @@ const IntuitiveTableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthCh
 
         {/* Style Options */}
         <div>
-          <div className={`text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>🎨 Style</div>
+          <div className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">🎨 Style</div>
           <div className="grid grid-cols-2 gap-2">
             {styles.map(style => (
               <button
@@ -286,16 +273,12 @@ const IntuitiveTableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthCh
                 onClick={() => setTableStyle(style.id)}
                 className={`p-2 text-xs rounded-md border-2 transition-all ${
                   tableStyle === style.id
-                    ? isDark
-                      ? "border-blue-500 bg-blue-900 text-blue-200"
-                      : "border-blue-500 bg-blue-50 text-blue-800"
-                    : isDark
-                      ? "border-gray-600 bg-gray-700 hover:border-gray-500 text-gray-200"
-                      : "border-gray-200 bg-white hover:border-gray-300 text-gray-700"
+                    ? "border-blue-500 bg-blue-50 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                    : "border-gray-200 bg-white hover:border-gray-300 text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:text-gray-200"
                 }`}
               >
                 <div className="font-medium">{style.name}</div>
-                <div className={`font-mono ${isDark ? "text-gray-400" : "text-gray-500"}`}>{style.preview}</div>
+                <div className="font-mono text-gray-500 dark:text-gray-400">{style.preview}</div>
               </button>
             ))}
           </div>
@@ -303,10 +286,8 @@ const IntuitiveTableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthCh
 
         {/* Live Table Preview */}
         <div>
-          <div className={`text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>✨ Live Preview</div>
-          <div className={`border rounded-lg p-3 overflow-auto ${
-            isDark ? "border-gray-600 bg-gray-700" : "border-gray-200 bg-gray-50"
-          }`}>
+          <div className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">✨ Live Preview</div>
+          <div className="border border-gray-200 rounded-lg p-3 overflow-auto bg-gray-50 dark:border-gray-600 dark:bg-gray-700">
             <table className={getTableClassName()}>
               <tbody>
               {tableData.map((row, rowIndex) => (
@@ -315,28 +296,18 @@ const IntuitiveTableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthCh
                     <td
                       key={colIndex}
                       className={`border p-2 relative ${
-                        isDark
-                          ? "border-gray-600"
-                          : "border-gray-200"
-                      } ${
                         rowIndex === 0
-                          ? isDark
-                            ? "bg-gray-600 font-medium"
-                            : "bg-gray-100 font-medium"
-                          : isDark
-                            ? "bg-gray-800"
-                            : "bg-white"
-                      } ${tableStyle === "striped" && rowIndex % 2 === 1 ? (isDark ? "bg-gray-700" : "bg-gray-50") : ""}`}
+                          ? "bg-gray-100 font-medium dark:bg-gray-600"
+                          : "bg-white dark:bg-gray-800"
+                      } border-gray-200 dark:border-gray-600 ${
+                        tableStyle === "striped" && rowIndex % 2 === 1 ? "bg-gray-50 dark:bg-gray-700" : ""
+                      }`}
                     >
                       <input
                         type="text"
                         value={cell}
                         onChange={(e) => updateTableCell(rowIndex, colIndex, e.target.value)}
-                        className={`w-full bg-transparent outline-none rounded px-1 py-0.5 ${
-                          isDark
-                            ? "focus:bg-yellow-900 focus:ring-1 focus:ring-yellow-600 text-white"
-                            : "focus:bg-yellow-50 focus:ring-1 focus:ring-yellow-300 text-gray-900"
-                        }`}
+                        className="w-full bg-transparent outline-none rounded px-1 py-0.5 text-gray-900 focus:bg-yellow-50 focus:ring-1 focus:ring-yellow-300 dark:text-white dark:focus:bg-yellow-900 dark:focus:ring-yellow-600"
                         placeholder={rowIndex === 0 ? `Header ${colIndex + 1}` : "Data"}
                         onFocus={() => setSelectedCellBuilder({ row: rowIndex, col: colIndex })}
                       />
@@ -389,26 +360,17 @@ const IntuitiveTableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthCh
 
         {/* Quick Actions */}
         <div>
-          <div className={`text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>⚡ Quick Actions
-          </div>
+          <div className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">⚡ Quick Actions</div>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={fillSampleData}
-              className={`px-3 py-2 rounded-md transition-colors text-sm ${
-                isDark
-                  ? "bg-purple-900 text-purple-200 hover:bg-purple-800"
-                  : "bg-purple-100 text-purple-700 hover:bg-purple-200"
-              }`}
+              className="px-3 py-2 rounded-md transition-colors text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-200 dark:hover:bg-purple-800"
             >
               📊 Sample Data
             </button>
             <button
               onClick={clearTable}
-              className={`px-3 py-2 rounded-md transition-colors text-sm ${
-                isDark
-                  ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              className="px-3 py-2 rounded-md transition-colors text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
             >
               🗑️ Clear All
             </button>
@@ -417,11 +379,9 @@ const IntuitiveTableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthCh
       </div>
 
       {/* Footer */}
-      <div className={`p-4 border-t ${
-        isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
+      <div className="p-4 border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
         <div className="flex gap-2">
           <button
-            // onClick={applyToSheet}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
           >
             <Plus size={16} />
@@ -434,7 +394,6 @@ const IntuitiveTableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthCh
             <Copy size={16} />
           </button>
         </div>
-
       </div>
 
       {/*<style jsx>{`*/}
@@ -463,4 +422,4 @@ const IntuitiveTableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthCh
   );
 };
 
-export default IntuitiveTableBuilder;
+export default TableBuilder;
