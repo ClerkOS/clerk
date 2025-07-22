@@ -45,12 +45,12 @@ export const useGrid = () => {
   }
 
   const columns = Array.from({ length: 100 }, (_, i) => getColumnName(i));
-  console.log(columns.length)
+  // console.log(columns.length)
 
   const rowVirtualizer = useVirtualizer({
     count: 1000,
     getScrollElement: () => gridRef.current,
-    estimateSize: () => 20, //height of row cell
+    estimateSize: () => 22, //height of row cell
     overscan: 10
   })
 
@@ -58,7 +58,7 @@ export const useGrid = () => {
     horizontal: true,
     count: columns.length,
     getScrollElement: () => gridRef.current,
-    estimateSize: () => 40, // width of column cell
+    estimateSize: () => 35, // width of column cell
     overscan: 10
   })
 

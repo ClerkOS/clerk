@@ -111,16 +111,10 @@ const Grid: React.FC<GridProps> = ({ isEditing, onEditingChange }) => {
                     <Cell
                       key={cellId}
                       value={""}
-                      type={""}
-                      isSelected={false}
-                      isActiveCell={false}
-                      isHighlighted={false}
-                      onClick={() => null}
-                      onMouseEnter={() => null}
+                      formula={""}
                       col={col}
-                      row={rowIndex + 1}
-                      isEditing={isEditing}
-                      onEditingChange={onEditingChange}
+                      row={`$rowIndex + 1`}
+                      style={{}}
                     />
                   );
                 })}
