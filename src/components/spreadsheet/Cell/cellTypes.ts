@@ -28,6 +28,7 @@ interface CellProps {
     borderStyle?: 'thin' | 'medium' | 'thick';
     borderColor?: string;
   };
+  workbookId: string // temp till we setup create and imports
 }
 
 interface CellData {

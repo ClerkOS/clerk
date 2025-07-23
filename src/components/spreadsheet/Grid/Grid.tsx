@@ -113,8 +113,9 @@ const Grid: React.FC<GridProps> = ({ isEditing, onEditingChange }) => {
                       value={""}
                       formula={""}
                       col={col}
-                      row={`$rowIndex + 1`}
+                      row={String(rowIndex + 1)}
                       style={{}}
+                      workbookId={"fb749a46-8eda-4e5d-a663-5dd52028a85a"}
                     />
                   );
                 })}

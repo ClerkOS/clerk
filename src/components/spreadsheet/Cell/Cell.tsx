@@ -6,7 +6,7 @@ import React from "react";
 import { CellProps } from "./cellTypes.js";
 import useCell from "./useCell";
 
-const Cell: React.FC<CellProps> = ({ value, formula, col, row, style }) => {
+const Cell: React.FC<CellProps> = ({ value, formula, col, row, style, workbookId }) => {
 
   const {
     isEditing,
@@ -27,7 +27,7 @@ const Cell: React.FC<CellProps> = ({ value, formula, col, row, style }) => {
     saveCellChange,
     handleKeyDown,
     cellData
-  } = useCell({ value, formula, col, row, style });
+  } = useCell({ value, formula, col, row, style, workbookId });
 
   // Show loading state if React Query is loading
   if (isLoading) {
