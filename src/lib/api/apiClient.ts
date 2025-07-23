@@ -50,3 +50,15 @@ export async function getCell(workbookId: string, sheet: string, address: number
   return api.get(`/cell/${workbookId}/${sheet}/${address}`);
 }
 
+export async function createWorkbook(){
+  return api.post("/workbook/create")
+}
+
+export async function importWorkbook(){}
+
+export async function getWorkbook(){}
+
+export async function addSheet(){}
+
+export async function getSheet(){}
+

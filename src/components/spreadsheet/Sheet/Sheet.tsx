@@ -1,50 +1,28 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React from "react";
 // import TablesPanel from './TablesPanel.jsx';
 // import { useSpreadsheet } from '../../context/SpreadsheetContext.jsx';
 // import { SelectionProvider, useSelection } from './SelectionManager.jsx';
 import EmptyState from "../EmptyState/EmptyState";
 import FormulaBar from "../FormulaBar/FormulaBar";
 import Grid from "../Grid/Grid";
-import ContextMenu from '../../app/ContextMenu/ContextMenu';
-import {useSheet} from "./useSheet";
-import {type SpreadsheetProps, type Notification} from "./sheetTypes";
+import ContextMenu from "../../app/ContextMenu/ContextMenu";
+import { useSheet } from "./useSheet";
+import { type SpreadsheetProps } from "./sheetTypes";
 // import { handleFileUpload, validateFile } from '../../services/fileService.js';
 // import { useWorkbookOperations } from '../../features/useWorkbookOperations.js';
 // import ContextMenu from '../ai/ContextMenu.jsx';
 
 
-
 const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWidth = 320, onOpenAIWithRange }) => {
-  console.log('SpreadsheetContent component rendering');
+  console.log("SpreadsheetContent component rendering");
 
-  const{
-    showTablesPanel,
-    setShowTablesPanel,
-    tablesPanelWidth,
-    setTablesPanelWidth,
-    notification,
-    setNotification,
-    contextMenu,
-    setContextMenu,
-    isEditing,
-    setIsEditing,
-    fileInputRef,
-    handleKeyDown,
-    handleEditingChange,
-    isEmpty,
-    handleContextMenu,
-    handleFileUpload,
-    handleCloseContextMenu,
-    // handleFileImport,
-    // handleFileExport,
-    // handleContextMenu,
-    // handleCloseContextMenu,
-    // handleOpenAIWithRange,
-    // isEmpty,
-    // handleFileUpload,
-    handleNewSheet,
-    handleSampleData
-  } = useSheet()
+  const {
+    workbookId,
+    isWorkbookLoaded,
+    handleCreateWorkbook
+  } = useSheet();
+
+  const contextMenu = false;
 
   return (
     <>
@@ -58,20 +36,21 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
           <FormulaBar />
           <div
             className="flex-1 overflow-auto"
-            onContextMenu={handleContextMenu}
+            // onContextMenu={handleContextMenu}
           >
-            {isEmpty ? (
-              <EmptyState
-                onFileUpload={handleFileUpload}
-                onNewSheet={() => console.log('Create new sheet')}
-                onSampleData={() => console.log('Load sample data')}
-                error={null} // Replace with actual error state if needed
+            {isWorkbookLoaded ? (
+              <Grid
+                key={`grid-${"default"}`} // Replace with actual active sheet ID
+                isEditing={true}
+                onEditingChange={() => console.log("Edit")}
+                workbookId={workbookId}
               />
             ) : (
-              <Grid
-                key={`grid-${'default'}`} // Replace with actual active sheet ID
-                isEditing={isEditing}
-                onEditingChange={handleEditingChange}
+              <EmptyState
+                onFileUpload={async () => console.log("Import sheet")}
+                onCreateNewWorkbook={handleCreateWorkbook}
+                onSampleData={() => console.log("Load sample data")}
+                error={null} // Replace with actual error state if needed
               />
             )}
           </div>
@@ -82,17 +61,16 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
       {contextMenu && (
         <ContextMenu
           position={contextMenu}
-          onClose={handleCloseContextMenu}
-          onOpenAIWithRange={() => console.log('Open AI with range')}
+          onClose={() => console.log("Close")}
+          onOpenAIWithRange={() => console.log("Open AI with range")}
           isCell={true}
           selectedCells={[]}
-          cellId={''}
+          cellId={""}
         />
       )}
     </>
   );
 };
-
 
 
 // const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen=false, panelWidth = 320, onOpenAIWithRange }) => {

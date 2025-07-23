@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Upload, Plus, FileText } from 'lucide-react';
 import { useTheme } from "../../providers/ThemeProvider";
 
-interface ModernEmptyStateProps {
+interface EmptyStateProps {
   onFileUpload: (file: File) => Promise<void>;
-  onNewSheet: () => void;
+  onCreateNewWorkbook: () => void;
   onSampleData: () => void;
   error?: string | null;
 }
 
-const EmptyState: React.FC<ModernEmptyStateProps> = ({ onFileUpload, onNewSheet, onSampleData, error }) => {
+const EmptyState: React.FC<EmptyStateProps> = ({ onFileUpload, onCreateNewWorkbook, onSampleData, error }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const { theme } = useTheme();
@@ -122,32 +122,32 @@ const EmptyState: React.FC<ModernEmptyStateProps> = ({ onFileUpload, onNewSheet,
         <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex ">
         <button
-          onClick={onNewSheet}
+          onClick={onCreateNewWorkbook}
           className="
             group flex items-center gap-2 px-4 py-2.5 text-sm font-medium
             bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
-            rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750
-            transition-all duration-200 hover:scale-105 hover:shadow-md
+            rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700
+
           "
         >
           <Plus size={16} className="text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300" />
-          <span className="text-gray-700 dark:text-gray-300">New Sheet</span>
+          <span className="text-gray-700 dark:text-gray-300">Create new workbook</span>
         </button>
 
-        <button
-          onClick={onSampleData}
-          className="
-            group flex items-center gap-2 px-4 py-2.5 text-sm font-medium
-            bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
-            rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750
-            transition-all duration-200 hover:scale-105 hover:shadow-md
-          "
-        >
-          <FileText size={16} className="text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300" />
-          <span className="text-gray-700 dark:text-gray-300">Sample Data</span>
-        </button>
+        {/*<button*/}
+        {/*  onClick={onSampleData}*/}
+        {/*  className="*/}
+        {/*    group flex items-center gap-2 px-4 py-2.5 text-sm font-medium*/}
+        {/*    bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700*/}
+        {/*    rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750*/}
+        {/*    transition-all duration-200 hover:scale-105 hover:shadow-md*/}
+        {/*  "*/}
+        {/*>*/}
+        {/*  <FileText size={16} className="text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300" />*/}
+        {/*  <span className="text-gray-700 dark:text-gray-300">Sample Data</span>*/}
+        {/*</button>*/}
       </div>
     </div>
   );

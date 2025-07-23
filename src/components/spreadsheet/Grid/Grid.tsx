@@ -5,7 +5,7 @@ import ColumnHeader from "../ColumnHeader/ColumnHeader";
 import Cell from "../Cell/Cell";
 
 
-const Grid: React.FC<GridProps> = ({ isEditing, onEditingChange }) => {
+const Grid: React.FC<GridProps> = ({ workbookId, isEditing, onEditingChange }) => {
   const {
     gridRef,
     virtualRows,
@@ -115,7 +115,7 @@ const Grid: React.FC<GridProps> = ({ isEditing, onEditingChange }) => {
                       col={col}
                       row={String(rowIndex + 1)}
                       style={{}}
-                      workbookId={"fb749a46-8eda-4e5d-a663-5dd52028a85a"}
+                      workbookId={workbookId}
                     />
                   );
                 })}

@@ -19,6 +19,7 @@ interface ContextMenuState {
 }
 
 interface GridProps {
+  workbookId: string;
   isEditing: boolean;
   onEditingChange: (isEditing: boolean) => void;
 }
