@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { CellProps } from "./cellTypes";
+import React, { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
+import { CellProps, ImportStyle, RenderStyle } from "./cellTypes";
 import { setCell, SetCellPayload } from "../../../lib/api/apiClient";
+import { adjustStyleForDarkMode } from "../../../features/spreadsheet/utils/utils";
+import { useTheme } from "../../providers/ThemeProvider";
 
 export default function useCell({ value, formula, col, row, style, workbookId }: CellProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -12,6 +14,8 @@ export default function useCell({ value, formula, col, row, style, workbookId }:
   const inputRef = useRef<HTMLInputElement>(null);
   const cellRef = useRef<HTMLTableCellElement>(null);
   const cellId = `${col}${row}`;
+  const { theme } = useTheme();
+  const isDarkMode = theme === "dark";
 
   // Click to select cell
   const handleClick = () => {
@@ -53,7 +57,7 @@ export default function useCell({ value, formula, col, row, style, workbookId }:
           address: cellId,
           value: draftValue,
           formula: draftFormula
-        }
+        };
         await setCell(workbookId, payload);
 
       } catch (error) {
@@ -133,6 +137,14 @@ export default function useCell({ value, formula, col, row, style, workbookId }:
     return classes;
   }, [isActive]);
 
+  // Get inline styles based on cell styling
+  const getCellStyles = useCallback(
+    (style: ImportStyle): CSSProperties => {
+      return adjustStyleForDarkMode(style, isDarkMode);
+    },
+    [isDarkMode]
+  );
+
   return {
     isEditing,
     isLoading,
@@ -146,6 +158,7 @@ export default function useCell({ value, formula, col, row, style, workbookId }:
     cellRef,
     cellId,
     getCellClasses,
+    getCellStyles,
     handleClick,
     handleDoubleClick,
     handleChange,

@@ -1,4 +1,6 @@
 // Number of rows to render initially and when loading more
+import { CellDataBySheet } from "../Cell/cellTypes";
+
 const ROW_BATCH_SIZE = 20;
 // Number of rows to preload before reaching the bottom
 const PRELOAD_THRESHOLD = 5;
@@ -20,6 +22,8 @@ interface ContextMenuState {
 
 interface GridProps {
   workbookId: string;
+  workbookSheets: string[]
+  sheetData: CellDataBySheet;
   isEditing: boolean;
   onEditingChange: (isEditing: boolean) => void;
 }

@@ -6,7 +6,7 @@ import React from "react";
 import { CellProps } from "./cellTypes.js";
 import useCell from "./useCell";
 
-const Cell: React.FC<CellProps> = ({ value, formula, col, row, style, workbookId }) => {
+const Cell: React.FC<CellProps> = ({ col, row, value, formula, style, workbookId }) => {
 
   const {
     isEditing,
@@ -21,21 +21,22 @@ const Cell: React.FC<CellProps> = ({ value, formula, col, row, style, workbookId
     cellRef,
     cellId,
     getCellClasses,
+    getCellStyles,
     handleClick,
     handleDoubleClick,
     handleChange,
     saveCellChange,
     handleKeyDown,
     cellData
-  } = useCell({ value, formula, col, row, style, workbookId });
+  } = useCell({ col, row, value, formula, style, workbookId  });
 
   // Show loading state if React Query is loading
   if (isLoading) {
     return (
       <td
         className={getCellClasses()}
-        // data-cell={cellId}
-        // style={getCellStyles()}
+        data-cell={cellId}
+        style={getCellStyles(style)}
       >
         <div className="w-full h-full flex items-center justify-center">
           <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
@@ -49,8 +50,8 @@ const Cell: React.FC<CellProps> = ({ value, formula, col, row, style, workbookId
     return (
       <td
         className={getCellClasses()}
-        // data-cell={cellId}
-        // style={getCellStyles()}
+        data-cell={cellId}
+        style={getCellStyles(style)}
       >
         <div className="w-full h-full flex items-center justify-center">
           <div className="w-4 h-4 bg-red-500 rounded animate-pulse"></div>
@@ -66,8 +67,8 @@ const Cell: React.FC<CellProps> = ({ value, formula, col, row, style, workbookId
       onClick={ handleClick}
       // onMouseEnter={onMouseEnter}
       onDoubleClick={handleDoubleClick}
-      // data-cell={cellId}
-      // style={getCellStyles()}
+      data-cell={cellId}
+      style={getCellStyles(style)}
     >
       {isEditing ? (
         <input
@@ -78,12 +79,12 @@ const Cell: React.FC<CellProps> = ({ value, formula, col, row, style, workbookId
           onBlur={saveCellChange}
           onKeyDown={handleKeyDown}
           className="w-full h-full bg-transparent border-none outline-none text-gray-800 dark:text-gray-100"
-          // style={getCellStyles()}
+          style={getCellStyles(style)}
         />
       ) : (
         <div className="relative w-full h-full text-gray-700 dark:text-gray-100">
           <div className="absolute -inset-px pointer-events-none" />
-          {draftValue || (draftFormula ? `=${draftFormula}` : "")}
+          {value || (formula ? `=${formula}` : "")}
 
           {/*/!* Formula Preview Overlay *!/*/}
           {/*{isPreviewTarget && previewFormula && (*/}

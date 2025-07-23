@@ -5,11 +5,10 @@ import { useTheme } from "../../providers/ThemeProvider";
 interface EmptyStateProps {
   onFileUpload: (file: File) => Promise<void>;
   onCreateNewWorkbook: () => void;
-  onSampleData: () => void;
   error?: string | null;
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ onFileUpload, onCreateNewWorkbook, onSampleData, error }) => {
+const EmptyState: React.FC<EmptyStateProps> = ({ onFileUpload, onCreateNewWorkbook, error }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const { theme } = useTheme();

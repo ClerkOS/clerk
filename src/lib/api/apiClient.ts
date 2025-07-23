@@ -54,9 +54,20 @@ export async function createWorkbook(){
   return api.post("/workbook/create")
 }
 
-export async function importWorkbook(){}
+export async function importWorkbook(file: File){
+  const formData = new FormData()
+  formData.append("file", file)
 
-export async function getWorkbook(){}
+  return api.post("/workbook/import", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  })
+}
+
+export async function getWorkbook(workbookId: string){
+  return api.get(`/workbook/${workbookId}`)
+}
 
 export async function addSheet(){}
 

@@ -3,9 +3,10 @@ import { useGrid } from "./useGrid";
 import { type GridProps } from "./gridTypes";
 import ColumnHeader from "../ColumnHeader/ColumnHeader";
 import Cell from "../Cell/Cell";
+import sheet from "../Sheet/Sheet";
 
 
-const Grid: React.FC<GridProps> = ({ workbookId, isEditing, onEditingChange }) => {
+const Grid: React.FC<GridProps> = ({ workbookId, workbookSheets, sheetData, isEditing, onEditingChange }) => {
   const {
     gridRef,
     virtualRows,
@@ -106,15 +107,17 @@ const Grid: React.FC<GridProps> = ({ workbookId, isEditing, onEditingChange }) =
                 {virtualCols.map(virtualCol => {
                   const col = columns[virtualCol.index];
                   const cellId = `${col}${rowIndex + 1}`;
+                  const activeSheet = workbookSheets?.[0]
+                  const cellData = sheetData?.[activeSheet]?.[cellId]
 
                   return (
                     <Cell
                       key={cellId}
-                      value={""}
-                      formula={""}
                       col={col}
                       row={String(rowIndex + 1)}
-                      style={{}}
+                      value={cellData?.value || ""}
+                      formula={cellData?.formula || ""}
+                      style={cellData?.style || {}}
                       workbookId={workbookId}
                     />
                   );

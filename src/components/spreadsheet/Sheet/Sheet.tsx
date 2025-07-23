@@ -19,7 +19,10 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
   const {
     workbookId,
     isWorkbookLoaded,
-    handleCreateWorkbook
+    handleCreateWorkbook,
+    handleImportWorkbook,
+    sheets,
+    cellDataBySheet
   } = useSheet();
 
   const contextMenu = false;
@@ -44,13 +47,14 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
                 isEditing={true}
                 onEditingChange={() => console.log("Edit")}
                 workbookId={workbookId}
+                workbookSheets={sheets}
+                sheetData={cellDataBySheet}
               />
             ) : (
               <EmptyState
-                onFileUpload={async () => console.log("Import sheet")}
+                onFileUpload={handleImportWorkbook}
                 onCreateNewWorkbook={handleCreateWorkbook}
-                onSampleData={() => console.log("Load sample data")}
-                error={null} // Replace with actual error state if needed
+                error={null}
               />
             )}
           </div>

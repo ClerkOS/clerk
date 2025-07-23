@@ -17,23 +17,25 @@ interface CellProps {
   formula?: string,
   col: string,
   row: string,
-  style?: {
-    fontBold?: boolean;
-    fontItalic?: boolean;
-    fontSize?: number;
-    fontFamily?: string;
-    fontColor?: string;
-    backgroundColor?: string;
-    alignment?: 'left' | 'center' | 'right';
-    borderStyle?: 'thin' | 'medium' | 'thick';
-    borderColor?: string;
-  };
+  style: ImportStyle
+  // style?: {
+  //   fontBold?: boolean;
+  //   fontItalic?: boolean;
+  //   fontSize?: number;
+  //   fontFamily?: string;
+  //   fontColor?: string;
+  //   backgroundColor?: string;
+  //   alignment?: 'left' | 'center' | 'right';
+  //   borderStyle?: 'thin' | 'medium' | 'thick';
+  //   borderColor?: string;
+  //   numberFormat?: string
+  // };
   workbookId: string // temp till we setup create and imports
 }
 
+// TODO: number format has specific types
 interface CellData {
   value?: string;
-  formatted?: string;
   type?: string;
   formula?: string;
   style?: {
@@ -46,8 +48,47 @@ interface CellData {
     alignment?: 'left' | 'center' | 'right';
     borderStyle?: 'thin' | 'medium' | 'thick';
     borderColor?: string;
+    numberFormat?: string
   };
 }
+
+interface ImportStyle {
+  fontBold?: boolean;
+  fontItalic?: boolean;
+  fontSize?: number;
+  fontFamily?: string;
+  fontColor?: string;
+  backgroundColor?: string;
+  alignment?: "left" | "center" | "right";
+  borderStyle?: "thin" | "medium" | "thick";
+  borderColor?: string;
+  numberFormat?: string;
+}
+
+interface RenderStyle {
+  fontFamily?: string;
+  fontWeight?: string
+  fontStyle?: string
+  fontSize?: string;
+  fontColor?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  textAlign?: string // "left" | "center" | "right"
+  borderStyle?: string
+  borderWidth?: string // 1px | 2px | 3px
+  numberFormat?: string;
+}
+
+// Map cell index to data (A1 -> { value: "Product", formula: "", style: { ... })
+type SheetCells = Record<string, CellData>
+
+// Map sheet to SheetCells (
+// sheet1 -> {
+//     "A1": { value: "Product", formula: "", style: { ... } },
+//     "A2": { value: "Apples", formula: "", style: { ... } },
+//     ...
+//     }
+type CellDataBySheet = Record<string, SheetCells>
 
 // Other types that might be used in the application
 // interface CellStyle {
@@ -67,4 +108,4 @@ interface CellData {
 //   row: number;
 // }
 
-export type { CellProps, CellData };
+export type { CellProps, CellData, ImportStyle, RenderStyle, CellDataBySheet};
