@@ -69,7 +69,16 @@ export async function getWorkbook(workbookId: string){
   return api.get(`/workbook/${workbookId}`)
 }
 
-export async function addSheet(){}
+export async function getSheets(workbookId: string){
+  return api.get(`/sheet/list/${workbookId}`)
+}
 
-export async function getSheet(){}
+export async function getSheet(workbookId: string, sheetName: string){
+  return api.get(`/sheet/get/${workbookId}/${sheetName}`)
+}
+
+export async function addSheet(workbookId: string, sheetName: string){
+  return api.post(`/sheet/${workbookId}`, {sheetName})
+}
+
 

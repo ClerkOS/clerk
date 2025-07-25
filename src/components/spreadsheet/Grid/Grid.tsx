@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useGrid } from "./useGrid";
 import { type GridProps } from "./gridTypes";
 import ColumnHeader from "../ColumnHeader/ColumnHeader";
 import Cell from "../Cell/Cell";
-import sheet from "../Sheet/Sheet";
+import { useActiveSheet } from "../../providers/SheetProvider";
 
 
 const Grid: React.FC<GridProps> = ({ workbookId, workbookSheets, sheetData, isEditing, onEditingChange }) => {
@@ -18,7 +18,7 @@ const Grid: React.FC<GridProps> = ({ workbookId, workbookSheets, sheetData, isEd
     columns,
     isLoadingColumns,
     // generateRows,
-    handleGridMouseDown,
+    handleGridMouseDown
     // handleGridMouseUp,
     // isActiveCell,
     // isHighlighted,
@@ -26,6 +26,14 @@ const Grid: React.FC<GridProps> = ({ workbookId, workbookSheets, sheetData, isEd
     // handleCellHover,
     // handleColumnResize,
   } = useGrid();
+
+  const { activeSheet, setActiveSheet } = useActiveSheet();
+
+  useEffect(() => {
+    if (workbookSheets.length > 0) {
+      setActiveSheet(workbookSheets[0]);
+    }
+  }, [workbookSheets]);
 
 
   return (
@@ -68,8 +76,7 @@ const Grid: React.FC<GridProps> = ({ workbookId, workbookSheets, sheetData, isEd
                   key={col}
                   label={col}
                   isHighlighted={false}
-                  onResize={() => {
-                  }}
+                  onResize={() => {}}
                   width={virtualCol.size}
                 />
               );
@@ -107,8 +114,7 @@ const Grid: React.FC<GridProps> = ({ workbookId, workbookSheets, sheetData, isEd
                 {virtualCols.map(virtualCol => {
                   const col = columns[virtualCol.index];
                   const cellId = `${col}${rowIndex + 1}`;
-                  const activeSheet = workbookSheets?.[0]
-                  const cellData = sheetData?.[activeSheet]?.[cellId]
+                  const cellData = activeSheet ? sheetData?.[activeSheet]?.[cellId] : undefined;
 
                   return (
                     <Cell

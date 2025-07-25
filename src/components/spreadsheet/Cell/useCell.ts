@@ -1,32 +1,34 @@
 import React, { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
-import { CellProps, ImportStyle, RenderStyle } from "./cellTypes";
+import { CellProps, UseCellProps, ImportStyle, RenderStyle } from "./cellTypes";
 import { setCell, SetCellPayload } from "../../../lib/api/apiClient";
 import { adjustStyleForDarkMode } from "../../../features/spreadsheet/utils/utils";
 import { useTheme } from "../../providers/ThemeProvider";
+import { useActiveCell } from "../../providers/ActiveCellProvider";
+import cell from "./Cell";
 
-export default function useCell({ value, formula, col, row, style, workbookId }: CellProps) {
+export default function useCell({ col, row, value, formula, style, workbookId,  cellId, isActive, setActiveCellId }: UseCellProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [isActive, setIsActive] = useState(false);
+  // const [isActive, setIsActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [draftValue, setDraftValue] = useState("");
   const [draftFormula, setDraftFormula] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const cellRef = useRef<HTMLTableCellElement>(null);
-  const cellId = `${col}${row}`;
   const { theme } = useTheme();
   const isDarkMode = theme === "dark";
 
   // Click to select cell
-  const handleClick = () => {
-    setIsActive(true);
-  };
+  const handleClick = useCallback(() => {
+    setActiveCellId(cellId);
+  }, [cellId, setActiveCellId]);
+
   // Double click to start editing
-  const handleDoubleClick = () => {
+  const handleDoubleClick = useCallback(() => {
     setIsEditing(true);
     setDraftValue(value || "");
     setDraftFormula(formula || "");
-  };
+  }, [value, formula]);
 
   // Focus input when it becomes editable
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function useCell({ value, formula, col, row, style, workbookId }:
   }, []);
 
   // Save changes
-  const saveCellChange = async () => {
+  const saveCellChange = useCallback(async () => {
     if (draftValue !== value || draftFormula !== formula) {
       try {
         const payload: SetCellPayload = {
@@ -59,7 +61,6 @@ export default function useCell({ value, formula, col, row, style, workbookId }:
           formula: draftFormula
         };
         await setCell(workbookId, payload);
-
       } catch (error) {
         console.error("Error saving cell:", error);
         setIsError(true);
@@ -67,19 +68,17 @@ export default function useCell({ value, formula, col, row, style, workbookId }:
       }
     }
     setIsEditing(false);
-    setIsActive(false);
-  };
+  }, [draftValue, draftFormula, value, formula, cellId, workbookId]);
 
   // Submit on Enter
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = useCallback(async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      saveCellChange();
+      await saveCellChange();
     } else if (e.key === "Escape") {
       setIsEditing(false);
-      setIsActive(false);
     }
-  };
+  }, [saveCellChange]);
 
   // Determine cell styling based on selected/highlighted state and type
   const getCellClasses = useCallback(() => {
@@ -92,45 +91,20 @@ export default function useCell({ value, formula, col, row, style, workbookId }:
     if (isActive) {
       classes += "border-2 border-black bg-blue-50 dark:border-white dark:bg-blue-900/20 ";
     } else if (isActive && isEditing) {
-      classes += "p-0 border-2 border-black bg-blue-50 dark:border-white dark:bg-blue-900/20 ";
+      classes += "border-2 border-black bg-blue-50 dark:border-white dark:bg-blue-900/20 ";
     }
     // Selected cells styling (part of multi-selection)
-    else if (isActive) {
-      classes += "bg-blue-50 dark:bg-blue-900/20 border border-black dark:border-white ";
-    }
-    // Highlighted column styling - remove grey background
-    else if (isActive) {
-      classes += "bg-gray-50 dark:bg-transparent border border-gray-200 dark:border-gray-700 ";
-    }
+    // else if (isActive) {
+    //   classes += "bg-blue-50 dark:bg-blue-900/20 border border-black dark:border-white ";
+    // }
+    // // Highlighted column styling - remove grey background
+    // else if (isActive) {
+    //   classes += "bg-gray-50 dark:bg-transparent border border-gray-200 dark:border-gray-700 ";
+    // }
     // Default styling
     else {
       classes += "border border-gray-200 dark:border-gray-700 ";
     }
-
-    // Type-specific styles and value-based coloring
-    // if (type === 'currency' || displayValue?.toString().startsWith('$') || !isNaN(Number(displayValue))) {
-    //   classes += 'text-right ';
-    // } else {
-    //   classes += 'text-left ';
-    // }
-    //
-    // // Profit (green), Cost (red) - only for columns F and E
-    // if (col === 'F' && !isNaN(Number(displayValue))) {
-    //   classes += 'text-green-600 dark:text-green-400 font-semibold ';
-    // } else if (col === 'E' && !isNaN(Number(displayValue))) {
-    //   classes += 'text-red-500 dark:text-red-400 font-semibold ';
-    // }
-    //
-    // // Header
-    // if (type === 'header') {
-    //   classes += 'font-semibold ';
-    // }
-    //
-    // // Formula cell styling
-    // if (isFormulaCell) {
-    //   classes += 'text-blue-600 dark:text-blue-400 font-mono text-xs sm:text-sm ';
-    // }
-
     // Text size for all cells
     classes += "text-xs sm:text-sm ";
 

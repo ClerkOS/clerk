@@ -116,6 +116,14 @@ function hslToHex(h: number, s: number, l: number): string {
  * @param color - Hex color string
  * @param isDarkMode - Whether dark mode is active
  * @returns Adjusted hex color string
+ *
+ *
+ * light ----------> dark
+ * black text -> white text
+ * white background -> dark background
+ * color fill?  ->
+ * dark color  -> dark color, add transparency
+ * light color -> darken color, add transparency
  */
 export function adjustColorForDarkMode(color: string | undefined, isDarkMode: boolean): string | undefined {
   if (!isDarkMode || !color) {
@@ -131,10 +139,11 @@ export function adjustColorForDarkMode(color: string | undefined, isDarkMode: bo
 
   try {
     const hsl = hexToHsl(color);
+    // console.log("hsl color", hsl)
 
     // Only adjust colors that are actually light (lightness > 60%)
     if (hsl.l <= 60) {
-      console.log(`Skipping color adjustment for ${color} - already dark (L: ${hsl.l})`);
+      // console.log(`Skipping color adjustment for ${color} - already dark (L: ${hsl.l})`);
       return color;
     }
 
@@ -144,6 +153,7 @@ export function adjustColorForDarkMode(color: string | undefined, isDarkMode: bo
       l: Math.max(15, hsl.l * 0.4)   // Reduce lightness to 40% of original
     };
 
+    // console.log("adjusted color", hslToHex(adjustedHsl.h, adjustedHsl.s, adjustedHsl.l))
     return hslToHex(adjustedHsl.h, adjustedHsl.s, adjustedHsl.l);
   } catch (error) {
     console.warn("Failed to adjust color for dark mode:", color, error);
@@ -198,6 +208,7 @@ export function adjustStyleForDarkMode(style: ImportStyle, isDarkMode: boolean):
 
   // Font color
   if (style.fontColor) {
+    // console.log(style.fontColor)
     adjustedStyle.color = isDarkMode
       ? adjustColorForDarkMode(style.fontColor, isDarkMode)
       : style.fontColor;

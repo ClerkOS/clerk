@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 // import TablesPanel from './TablesPanel.jsx';
 // import { useSpreadsheet } from '../../context/SpreadsheetContext.jsx';
 // import { SelectionProvider, useSelection } from './SelectionManager.jsx';
@@ -8,24 +8,24 @@ import Grid from "../Grid/Grid";
 import ContextMenu from "../../app/ContextMenu/ContextMenu";
 import { useSheet } from "./useSheet";
 import { type SpreadsheetProps } from "./sheetTypes";
+import { useActiveSheet } from "../../providers/SheetProvider";
 // import { handleFileUpload, validateFile } from '../../services/fileService.js';
 // import { useWorkbookOperations } from '../../features/useWorkbookOperations.js';
 // import ContextMenu from '../ai/ContextMenu.jsx';
 
 
 const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWidth = 320, onOpenAIWithRange }) => {
-  console.log("SpreadsheetContent component rendering");
-
   const {
     workbookId,
     isWorkbookLoaded,
     handleCreateWorkbook,
     handleImportWorkbook,
     sheets,
-    cellDataBySheet
+    cellDataBySheet,
+    contextMenu,
+    handleContextMenu,
+    handleCloseContextMenu
   } = useSheet();
-
-  const contextMenu = false;
 
   return (
     <>
@@ -39,7 +39,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
           <FormulaBar />
           <div
             className="flex-1 overflow-auto"
-            // onContextMenu={handleContextMenu}
+            onContextMenu={handleContextMenu}
           >
             {isWorkbookLoaded ? (
               <Grid
@@ -65,7 +65,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
       {contextMenu && (
         <ContextMenu
           position={contextMenu}
-          onClose={() => console.log("Close")}
+          onClose={handleCloseContextMenu}
           onOpenAIWithRange={() => console.log("Open AI with range")}
           isCell={true}
           selectedCells={[]}

@@ -13,24 +13,24 @@
 // }
 
 interface CellProps {
-  value?: string,
-  formula?: string,
   col: string,
   row: string,
+  value?: string,
+  formula?: string,
   style: ImportStyle
-  // style?: {
-  //   fontBold?: boolean;
-  //   fontItalic?: boolean;
-  //   fontSize?: number;
-  //   fontFamily?: string;
-  //   fontColor?: string;
-  //   backgroundColor?: string;
-  //   alignment?: 'left' | 'center' | 'right';
-  //   borderStyle?: 'thin' | 'medium' | 'thick';
-  //   borderColor?: string;
-  //   numberFormat?: string
-  // };
-  workbookId: string // temp till we setup create and imports
+  workbookId: string
+}
+
+interface UseCellProps {
+  col: string;
+  row: string;
+  value?: string;
+  formula?: string;
+  style: ImportStyle;
+  workbookId: string;
+  cellId: string;
+  isActive: boolean;
+  setActiveCellId: (cellId: string) => void;
 }
 
 // TODO: number format has specific types
@@ -108,4 +108,4 @@ type CellDataBySheet = Record<string, SheetCells>
 //   row: number;
 // }
 
-export type { CellProps, CellData, ImportStyle, RenderStyle, CellDataBySheet};
+export type { CellProps, UseCellProps, CellData, ImportStyle, RenderStyle, CellDataBySheet};

@@ -4,6 +4,8 @@ import App from "./App";
 
 import "./index.css";
 import { ThemeProvider } from "./components/providers/ThemeProvider";
+import { ActiveSheetProvider } from "./components/providers/SheetProvider";
+import { ActiveCellProvider } from "./components/providers/ActiveCellProvider";
 
 // TODO: Add providers here
 // function App() {
@@ -20,7 +22,11 @@ if (!rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <ThemeProvider>
-        <App />
+        <ActiveSheetProvider>
+          <ActiveCellProvider>
+            <App />
+          </ActiveCellProvider>
+        </ActiveSheetProvider>
       </ThemeProvider>
     </StrictMode>
   );

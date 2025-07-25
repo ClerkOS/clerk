@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircle, CheckCircle, Database, HelpCircle, Table } from "lucide-react";
 import { Notification, SpreadsheetProps } from "./sheetTypes";
 import {CellData, CellDataBySheet} from "../Cell/cellTypes";
+import {Position} from "../../app/ContextMenu/contextMenuTypes";
 import { createWorkbook, getWorkbook, importWorkbook } from "../../../lib/api/apiClient";
 
 export const useSheet = () => {
@@ -11,6 +12,7 @@ export const useSheet = () => {
   const [isWorkbookLoaded, setIsWorkbookLoaded] = useState<boolean>(false)
   const [sheets, setSheets] = useState<string[]>([])
   const [cellDataBySheet, setCellDataBySheet] = useState<CellDataBySheet>({})
+  const [contextMenu, setContextMenu] = useState<Position | null>(null);
 
 
   const handleCreateWorkbook = async ()=> {
@@ -51,6 +53,19 @@ export const useSheet = () => {
     }
   }
 
+// Handle context menu
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
   // console.log("workbookId:", workbookId)
   // console.log("sheets:",sheets)
   // console.log("book data:",cellDataBySheet)
@@ -62,7 +77,10 @@ export const useSheet = () => {
     handleCreateWorkbook,
     handleImportWorkbook,
     sheets,
-    cellDataBySheet
+    cellDataBySheet,
+    contextMenu,
+    handleContextMenu,
+    handleCloseContextMenu
     //
     // showTablesPanel,
     // setShowTablesPanel,

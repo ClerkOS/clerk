@@ -5,13 +5,16 @@ import React from "react";
 // import { useDarkMode } from '../../features/useDarkMode.js';
 import { CellProps } from "./cellTypes.js";
 import useCell from "./useCell";
+import { useActiveCell } from "../../providers/ActiveCellProvider";
 
 const Cell: React.FC<CellProps> = ({ col, row, value, formula, style, workbookId }) => {
+  const cellId = `${col}${row}`;
+  const { activeCellId, setActiveCellId } = useActiveCell()
+  let isActive = activeCellId === cellId
 
   const {
     isEditing,
     isLoading,
-    isActive,
     isError,
     draftValue,
     setDraftValue,
@@ -19,7 +22,6 @@ const Cell: React.FC<CellProps> = ({ col, row, value, formula, style, workbookId
     setDraftFormula,
     inputRef,
     cellRef,
-    cellId,
     getCellClasses,
     getCellStyles,
     handleClick,
@@ -27,8 +29,9 @@ const Cell: React.FC<CellProps> = ({ col, row, value, formula, style, workbookId
     handleChange,
     saveCellChange,
     handleKeyDown,
-    cellData
-  } = useCell({ col, row, value, formula, style, workbookId  });
+  } = useCell({ col, row, value, formula, style, workbookId, cellId, isActive, setActiveCellId  });
+
+
 
   // Show loading state if React Query is loading
   if (isLoading) {
@@ -64,7 +67,7 @@ const Cell: React.FC<CellProps> = ({ col, row, value, formula, style, workbookId
     <td
       ref={cellRef}
       className={getCellClasses()}
-      onClick={ handleClick}
+      onMouseDown={handleClick}
       // onMouseEnter={onMouseEnter}
       onDoubleClick={handleDoubleClick}
       data-cell={cellId}
@@ -100,4 +103,4 @@ const Cell: React.FC<CellProps> = ({ col, row, value, formula, style, workbookId
   );
 };
 
-export default Cell;
+export default React.memo(Cell);
