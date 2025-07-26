@@ -57,7 +57,7 @@ const chartTypes: ChartType[] = [
 const ChartBuilder: React.FC<ChartBuilderProps> = ({ onWidthChange }) => {
   const { theme } = useTheme();
   // const navigate = useNavigate();
-  const [width, setWidth] = useState<number>(320);
+  const [width, setWidth] = useState<number>(340);
   const [dataMode, setDataMode] = useState<'range' | 'table' | 'selection'>('range');
   const [selectedChart, setSelectedChart] = useState<string>('column');
   const [showLegend, setShowLegend] = useState<boolean>(true);

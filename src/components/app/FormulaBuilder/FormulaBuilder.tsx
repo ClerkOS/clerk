@@ -107,7 +107,7 @@ const FormulaBuilder: React.FC<FormulaBuilderProps> = ({ onWidthChange }) => {
   const [targetCell, setTargetCell] = useState<string>('A1');
   const [targetRange, setTargetRange] = useState<string>('');
   const [previewResult, setPreviewResult] = useState<string>('');
-  const [width, setWidth] = useState<number>(320);
+  const [width, setWidth] = useState<number>(340);
   const [selectedTarget, setSelectedTarget] = useState<'current' | 'column' | 'row' | 'range'>('current');
   const isResizing = useRef<boolean>(false);
   const startX = useRef<number>(0);

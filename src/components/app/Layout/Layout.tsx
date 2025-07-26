@@ -6,7 +6,9 @@ import FormulaBuilder from "../FormulaBuilder/FormulaBuilder";
 import ChartBuilder from "../ChartBuilder/ChartBuilder";
 import TableBuilder from "../TableBuilder/TableBuilder";
 import Spreadsheet from "../../spreadsheet/Sheet/Sheet";
+import Conversation from "../Conversation/Conversation";
 import React, { useState } from "react";
+import { RangeSelection } from "../Conversation/conversationTypes";
 
 export function Layout({ children }: { children: React.ReactNode }) {
 
@@ -16,7 +18,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [showChartBuilder, setShowChartBuilder] = useState(false);
   const [showTablesPanel, setShowTablesPanel] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
-  const [selectedRangeForAI, setSelectedRangeForAI] = useState<string | null>(null);
+  const [selectedRangeForAI, setSelectedRangeForAI] = useState<RangeSelection | null>(null);
 
   const toggleCommandPalette = () => {
     setCommandPaletteOpen(!commandPaletteOpen);
@@ -50,7 +52,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   };
 
   const handleOpenAIWithRange = (range: string) => {
-    setSelectedRangeForAI(range);
+    const rangeSelection: RangeSelection = {range: range}
+    setSelectedRangeForAI(rangeSelection);
     setShowAIPanel(true);
   };
 
@@ -87,13 +90,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {showFormulaBuilder && <FormulaBuilder onWidthChange={setPanelWidth} />}
         {showChartBuilder && <ChartBuilder onWidthChange={setPanelWidth} />}
         {showTablesPanel && <TableBuilder onWidthChange={setPanelWidth} />}
-        {/*{showAIPanel && (*/}
-        {/*  <Conversation*/}
-        {/*    onWidthChange={setPanelWidth}*/}
-        {/*    selectedRange={selectedRangeForAI}*/}
-        {/*    setSelectedRange={setSelectedRangeForAI}*/}
-        {/*  />*/}
-        {/*)}*/}
+        {showAIPanel && (
+          <Conversation
+            onWidthChange={setPanelWidth}
+            selectedRange={selectedRangeForAI}
+            setSelectedRange={setSelectedRangeForAI}
+          />
+        )}
 
       </div>
     </div>

@@ -28,7 +28,7 @@ interface IntuitiveTableBuilderProps {
 const TableBuilder: React.FC<IntuitiveTableBuilderProps> = ({ onWidthChange }) => {
   // const { selectedCell, updateCell } = useSpreadsheet();
 
-  const [width, setWidth] = useState<number>(320);
+  const [width, setWidth] = useState<number>(340);
   const [tableData, setTableData] = useState<string[][]>([
     ["Product", "Price", "Stock"],
     ["", "", ""],
