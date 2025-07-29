@@ -4,6 +4,7 @@ import { type GridProps } from "./gridTypes";
 import ColumnHeader from "../ColumnHeader/ColumnHeader";
 import Cell from "../Cell/Cell";
 import { useActiveSheet } from "../../providers/SheetProvider";
+import RowHeader from "../RowHeader/RowHeader";
 
 
 const Grid: React.FC<GridProps> = ({ workbookId, workbookSheets, sheetData, isEditing, onEditingChange }) => {
@@ -11,20 +12,14 @@ const Grid: React.FC<GridProps> = ({ workbookId, workbookSheets, sheetData, isEd
     gridRef,
     virtualRows,
     virtualCols,
+    rowVirtualizer,
     columnVirtualizer,
     columnLoadingTriggerRef,
     isMouseDown,
     contextMenu,
     columns,
     isLoadingColumns,
-    // generateRows,
     handleGridMouseDown
-    // handleGridMouseUp,
-    // isActiveCell,
-    // isHighlighted,
-    // handleCellClick,
-    // handleCellHover,
-    // handleColumnResize,
   } = useGrid();
 
   const { activeSheet, setActiveSheet } = useActiveSheet();
@@ -37,107 +32,99 @@ const Grid: React.FC<GridProps> = ({ workbookId, workbookSheets, sheetData, isEd
 
 
   return (
-    <div
-      ref={gridRef}
-      className="flex-1 overflow-auto p-0 relative w-full bg-white dark:bg-gray-900"
-      onMouseDown={handleGridMouseDown}
-      style={{
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        height: "100%" // Grid should take up all vertical space of its parent
-      }}
-    >
-      <div style={{ width: columnVirtualizer.getTotalSize() }}>
-        <table
-          className="border-collapse table-fixed w-full bg-white dark:bg-gray-900"
-          // style={{ width: columnVirtualizer.getTotalSize() }}
+    <>
+      <div
+        ref={gridRef}
+        className="flex-1 p-0 relative bg-white dark:bg-gray-900"
+        style={{ overflow: "auto", width: "100%", height: "100%", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+      >
+        <div
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            width: `${columnVirtualizer.getTotalSize()}px`,
+            position: 'relative',
+          }}
         >
-          {/* Defines column widths */}
-          {/* First column is the row header */}
-          {/* For each virtualized column, set its width */}
-          <colgroup>
-            <col style={{ width: "18px" }} />
-            {virtualCols.map(virtualCol => (
-              <col key={columns[virtualCol.index]} style={{ width: `${virtualCol.size}px` }} />
-            ))}
-          </colgroup>
+          {rowVirtualizer.getVirtualItems().map((virtualRow) =>(
+            <React.Fragment key={virtualRow.index}>
+              {columnVirtualizer.getVirtualItems().map(virtualCol => {
+                const rowIndex = virtualRow.index;
+                const colIndex = virtualCol.index;
+                const col = columns[virtualCol.index];
+                const cellId = `${col}${virtualRow.index + 1}`;
+                const cellData = activeSheet ? sheetData?.[activeSheet]?.[cellId] : undefined;
 
-          {/* Sticky column header */}
-          <thead className="sticky top-0 z-20 bg-white dark:bg-gray-800 ">
-          <tr>
-            {/* Sticky top-left corner cell (row header column header) */}
-            <th
-              className="sticky left-0 z-30 bg-gray-300  dark:bg-gray-800 border border-gray-300 dark:border-gray-700"
-            ></th>
-            {/* Render visible column headers */}
-            {virtualCols.map(virtualCol => {
-              const col = columns[virtualCol.index];
-              return (
-                <ColumnHeader
-                  key={col}
-                  label={col}
-                  isHighlighted={false}
-                  onResize={() => {}}
-                  width={virtualCol.size}
-                />
-              );
-            })}
-            {/* Trigger for lazy loading more columns */}
-            <th ref={columnLoadingTriggerRef} className="w-6 sm:w-8 bg-transparent border-none">
-              {isLoadingColumns && (
-                <div className="flex justify-center items-center py-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500" />
-                </div>
-              )}
-            </th>
-          </tr>
-          </thead>
+                return (
+                  <Cell
+                    key={cellId}
+                    col={col}
+                    row={String(rowIndex + 1)}
+                    value={cellData?.value || ""}
+                    formula={cellData?.formula || ""}
+                    style={cellData?.style || {}}
+                    workbookId={workbookId}
+                    left={virtualCol.start + 40}
+                    top={virtualRow.start + 22}
+                    width={virtualCol.size}
+                    height={virtualRow.size}
+                  />
+                );
+              })}
+            </React.Fragment>
+          ))}
 
-          <tbody>
-          {/* Spacer row before the first visible virtual row */}
-          <tr style={{ height: `${virtualRows[0]?.start ?? 0}px` }}></tr>
+          {/* ROW HEADERS */}
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => (
+            <div
+              key={`row-header-${virtualRow.index}`}
+              className=" bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-center text-xs sm:text-xs"
+              style={{
+                position: 'absolute',
+                top: virtualRow.start + 22,
+                left: 0,
+                width: 40,
+                height: virtualRow.size,
+                zIndex: 2,
+              }}
+            >
+              {virtualRow.index + 1}
+            </div>
+          ))}
 
-          {/* Render visible virtual rows */}
-          {virtualRows.map(virtualRow => {
-            const rowIndex = virtualRow.index;
+          {/* COLUMN HEADERS */}
+          {columnVirtualizer.getVirtualItems().map((virtualCol) => (
+            <div
+              key={`col-header-${virtualCol.index}`}
+              className="text-center text-xs sm:text-sm font-medium bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 cursor-col-resize hover:bg-blue-500/50 group resize-handle"
 
-            return (
-              <tr key={virtualRow.key}
-                  style={{ height: `${virtualRow.size}px` }} // Height of each row
-              >
-                {/* Sticky row header (left side of table) */}
-                <td
-                  className="sticky left-0 z-10 bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-xs sm:text-xs">
-                  {rowIndex + 1}
-                </td>
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: virtualCol.start + 40,
+                height: 22,
+                width: virtualCol.size,
+                zIndex: 2,
+              }}
+            >
+              {columns[virtualCol.index]}
+            </div>
+          ))}
 
-                {/* Render each visible virtual cell in the row */}
-                {virtualCols.map(virtualCol => {
-                  const col = columns[virtualCol.index];
-                  const cellId = `${col}${rowIndex + 1}`;
-                  const cellData = activeSheet ? sheetData?.[activeSheet]?.[cellId] : undefined;
-
-                  return (
-                    <Cell
-                      key={cellId}
-                      col={col}
-                      row={String(rowIndex + 1)}
-                      value={cellData?.value || ""}
-                      formula={cellData?.formula || ""}
-                      style={cellData?.style || {}}
-                      workbookId={workbookId}
-                    />
-                  );
-                })}
-                {/* Empty padding cell at end of each row */}
-                <td className="w-6 sm:w-8 bg-transparent border-none" />
-              </tr>
-            );
-          })}
-          </tbody>
-        </table>
-
+          {/* TOP LEFT CORNER */}
+          <div
+            className="bg-gray-100 dark:bg-gray-800 border-b border-r border-gray-300 dark:border-gray-700"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: 40,
+              height: 22,
+              zIndex: 3,
+            }}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

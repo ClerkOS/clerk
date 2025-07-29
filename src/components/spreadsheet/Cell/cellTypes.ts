@@ -19,6 +19,11 @@ interface CellProps {
   formula?: string,
   style: ImportStyle
   workbookId: string
+
+  top: number;
+  left: number;
+  width: number;
+  height: number;
 }
 
 interface UseCellProps {

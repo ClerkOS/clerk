@@ -29,12 +29,9 @@ export const useGrid = () => {
   const columnLoadingTriggerRef = useRef<HTMLTableCellElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
-
   /**
    * Virtualization
    */
-  // const columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]; // temporary columns for testing
-
   function getColumnName(index: number) {
     let columnName = '';
     while (index >= 0) {
@@ -48,7 +45,7 @@ export const useGrid = () => {
   // console.log(columns.length)
 
   const rowVirtualizer = useVirtualizer({
-    count: 1000,
+    count: 100,
     getScrollElement: () => gridRef.current,
     estimateSize: () => 22, //height of row cell
     overscan: 10
@@ -56,9 +53,10 @@ export const useGrid = () => {
 
   const columnVirtualizer = useVirtualizer({
     horizontal: true,
-    count: columns.length,
+    // count: columns.length,
+    count: 50,
     getScrollElement: () => gridRef.current,
-    estimateSize: () => 35, // width of column cell
+    estimateSize: () => 75, // width of column cell
     overscan: 10
   })
 
@@ -173,6 +171,7 @@ export const useGrid = () => {
     gridRef,
     virtualRows,
     virtualCols,
+    rowVirtualizer,
     columnVirtualizer,
     isMouseDown,
     contextMenu,

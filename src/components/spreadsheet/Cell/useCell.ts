@@ -85,15 +85,16 @@ export default function useCell({ col, row, value, formula, style, workbookId,  
     let classes = "px-1 sm:px-2 py-1 color-transition ";
 
     // Base styling - remove grey backgrounds
-    classes += "bg-white dark:bg-transparent ";
+    classes += "dark:bg-transparent ";
 
     // Active cell styling (the main selected cell)
     if (isActive) {
-      classes += "border-2 border-black bg-blue-50 dark:border-white dark:bg-blue-900/20 ";
-    } else if (isActive && isEditing) {
-      classes += "border-2 border-black bg-blue-50 dark:border-white dark:bg-blue-900/20 ";
+      classes += "border-2 border-blue-400 dark:border-white ";
+      classes += isEditing
+        ? "bg-blue-50 dark:bg-blue-900/20 "
+        : "bg-blue-50 dark:bg-blue-900/20 ";
     }
-    // Selected cells styling (part of multi-selection)
+      // Selected cells styling (part of multi-selection)
     // else if (isActive) {
     //   classes += "bg-blue-50 dark:bg-blue-900/20 border border-black dark:border-white ";
     // }
@@ -109,7 +110,7 @@ export default function useCell({ col, row, value, formula, style, workbookId,  
     classes += "text-xs sm:text-sm ";
 
     return classes;
-  }, [isActive]);
+  }, [isActive, isEditing]);
 
   // Get inline styles based on cell styling
   const getCellStyles = useCallback(

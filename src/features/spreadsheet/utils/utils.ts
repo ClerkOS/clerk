@@ -8,6 +8,11 @@ export interface HSL {
   l: number;
 }
 
+export const DEFAULT_BORDER_COLOR = {
+  light: "#e5e7eb", // gray-200
+  dark: "#374151"   // gray-700
+};
+
 // colorUtils.ts
 /**
  * Converts a hex color to HSL values
@@ -191,14 +196,14 @@ export function getContrastFontColor(
 }
 
 /**
- * Adjusts a complete style object for dark mode
+ * Adjusts a complete style object for dark mode (assumption is file is imported in light mode
  * @param style - Style object with backgroundColor, fontColor, etc.
  * @param isDarkMode - Whether dark mode is active
  * @returns Adjusted style object
  */
 export function adjustStyleForDarkMode(style: ImportStyle, isDarkMode: boolean): CSSProperties  {
   const adjustedStyle: CSSProperties = {
-    fontFamily: style.fontFamily || "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   };
 
   // Font weight & style
@@ -226,27 +231,25 @@ export function adjustStyleForDarkMode(style: ImportStyle, isDarkMode: boolean):
     adjustedStyle.color = getContrastFontColor(adjustedStyle.backgroundColor, isDarkMode);
   }
 
-  // Adjust border color
-  if (style.borderColor) {
-    adjustedStyle.borderColor = isDarkMode
-      ? adjustColorForDarkMode(style.borderColor, isDarkMode)
-      : style.borderColor
-  }
-
   // Text alignment
   if (style.alignment) {
     adjustedStyle.textAlign = style.alignment;
   }
+
+  // Adjust border color
+  const borderColor = style.borderColor === "#000000" || style.borderColor === "black"
+    ? DEFAULT_BORDER_COLOR[isDarkMode ? "dark" : "light"]
+    : style.borderColor;
 
   // Border styling
   if (style.borderStyle) {
     adjustedStyle.borderStyle = "solid";
     adjustedStyle.borderWidth = style.borderStyle === "thin" ? "1px" : style.borderStyle === "medium" ? "2px" : "3px";
   }
-  if (style.borderColor) {
+  if (borderColor) {
     adjustedStyle.borderColor = isDarkMode
       ? adjustColorForDarkMode(style.borderColor, isDarkMode )
-      : style.borderColor;
+      : borderColor;
   }
 
   return adjustedStyle;

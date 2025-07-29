@@ -9,7 +9,10 @@ export const api = axios.create({
 });
 
 // TODO: Set up interceptors (e.g., for auth or logging)
+// TODO: Create separate file for request types and interfaces
 
+
+// Payload interface definitions
 export interface SetCellPayload {
   sheet: string;
   address: string;
@@ -38,6 +41,8 @@ export interface BatchSetCellPayload {
   }[];
 }
 
+
+// Cell APIs
 export async function setCell(workbookId: string, payload: SetCellPayload) {
   return api.post(`/cell/${workbookId}`, payload);
 }
@@ -50,6 +55,7 @@ export async function getCell(workbookId: string, sheet: string, address: number
   return api.get(`/cell/${workbookId}/${sheet}/${address}`);
 }
 
+// Workbook APIs
 export async function createWorkbook(){
   return api.post("/workbook/create")
 }
@@ -69,6 +75,7 @@ export async function getWorkbook(workbookId: string){
   return api.get(`/workbook/${workbookId}`)
 }
 
+// Sheet APIs
 export async function getSheets(workbookId: string){
   return api.get(`/sheet/list/${workbookId}`)
 }
@@ -80,5 +87,11 @@ export async function getSheet(workbookId: string, sheetName: string){
 export async function addSheet(workbookId: string, sheetName: string){
   return api.post(`/sheet/${workbookId}`, {sheetName})
 }
+
+// Conversation APIs
+export async function getCompletion(workbookId: string, sheetName: string, prompt: string) {
+  return api.post(`/completion/${workbookId}`, { sheetName, prompt });
+}
+
 
 

@@ -10,21 +10,21 @@ const Conversation: React.FC<ConversationProps> = () => {
     {
       id: 1,
       role: 'assistant',
-      content: 'Hello! I\'m your personal spreadsheet assistant. I can manipulate your spreadsheet based on your natural language requests. Please import a spreadsheet file first to get started!',
+      content: 'Hello! I\'m your personal spreadsheet assistant. I can manipulate your spreadsheet based on your natural language requests. Please import a spreadsheet file or add data to a new one to get started!',
       timestamp: new Date()
     },
-    {
-      id: 2,
-      role: 'user',
-      content: 'Add a col to sum the total for each row in the table',
-      timestamp: new Date()
-    }
+    // {
+    //   id: 2,
+    //   role: 'user',
+    //   content: 'Add a col to sum the total for each row in the table',
+    //   timestamp: new Date()
+    // }
   ]);
 
   return (
     <div
       className="flex flex-col h-full border-l dark:border-gray-700 dark:bg-gray-800 border-gray-200 bg-white"
-      style={{ width: "340px" }}
+      style={{ width: "440px" }}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b dark:border-gray-700 border-gray-200">

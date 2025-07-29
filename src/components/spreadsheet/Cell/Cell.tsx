@@ -6,8 +6,10 @@ import React from "react";
 import { CellProps } from "./cellTypes.js";
 import useCell from "./useCell";
 import { useActiveCell } from "../../providers/ActiveCellProvider";
+import { useGrid } from "../Grid/useGrid";
 
-const Cell: React.FC<CellProps> = ({ col, row, value, formula, style, workbookId }) => {
+// TODO: Re-add formula preview overlay
+const Cell: React.FC<CellProps> = ({ col, row, value, formula, style, workbookId, top, left, width, height }) => {
   const cellId = `${col}${row}`;
   const { activeCellId, setActiveCellId } = useActiveCell()
   let isActive = activeCellId === cellId
@@ -31,27 +33,33 @@ const Cell: React.FC<CellProps> = ({ col, row, value, formula, style, workbookId
     handleKeyDown,
   } = useCell({ col, row, value, formula, style, workbookId, cellId, isActive, setActiveCellId  });
 
+  const {
+    rowVirtualizer,
+    columnVirtualizer
+  } = useGrid()
+
 
 
   // Show loading state if React Query is loading
   if (isLoading) {
     return (
-      <td
-        className={getCellClasses()}
+      <div
+        // className={getCellClasses()}
+        className={"px-1 sm:px-2 py-1 color-transition "}
         data-cell={cellId}
         style={getCellStyles(style)}
       >
         <div className="w-full h-full flex items-center justify-center">
           <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
         </div>
-      </td>
+      </div>
     );
   }
 
   // Show error state if React Query has an error
   if (isError) {
     return (
-      <td
+      <div
         className={getCellClasses()}
         data-cell={cellId}
         style={getCellStyles(style)}
@@ -59,19 +67,26 @@ const Cell: React.FC<CellProps> = ({ col, row, value, formula, style, workbookId
         <div className="w-full h-full flex items-center justify-center">
           <div className="w-4 h-4 bg-red-500 rounded animate-pulse"></div>
         </div>
-      </td>
+      </div>
     );
   }
 
   return (
-    <td
+    <div
       ref={cellRef}
-      className={getCellClasses()}
       onMouseDown={handleClick}
       // onMouseEnter={onMouseEnter}
       onDoubleClick={handleDoubleClick}
       data-cell={cellId}
-      style={getCellStyles(style)}
+      className={getCellClasses()}
+      // className={"px-1 sm:px-2 py-1 color-transition dark:bg-transparent border-2 border-blue-400 dark:border-white "}
+      style={{
+        position: "absolute",
+        transform: `translateX(${left}px) translateY(${top}px)`,
+        width,
+        height,
+        ...getCellStyles(style),
+      }}
     >
       {isEditing ? (
         <input
@@ -88,18 +103,9 @@ const Cell: React.FC<CellProps> = ({ col, row, value, formula, style, workbookId
         <div className="relative w-full h-full text-gray-700 dark:text-gray-100">
           <div className="absolute -inset-px pointer-events-none" />
           {value || (formula ? `=${formula}` : "")}
-
-          {/*/!* Formula Preview Overlay *!/*/}
-          {/*{isPreviewTarget && previewFormula && (*/}
-          {/*  <div className="absolute inset-0 pointer-events-none bg-green-100/10 border-2 border-dashed border-green-500 rounded-sm z-10">*/}
-          {/*    <div className="absolute inset-0 flex items-center justify-center text-sm text-green-600 dark:text-green-400">*/}
-          {/*      {previewFormula}*/}
-          {/*    </div>*/}
-          {/*  </div>*/}
-          {/*)}*/}
         </div>
       )}
-    </td>
+    </div>
   );
 };
 

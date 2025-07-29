@@ -19,6 +19,7 @@ export const useSheet = () => {
     try{
       const response = await createWorkbook()
       if (response.data.success){
+        console.log("workbookId:", response.data.data.workbook_id)
         setWorkbookId(response.data.data.workbook_id)
         setIsWorkbookLoaded(true)
       }
@@ -33,6 +34,7 @@ export const useSheet = () => {
       const importResponse = await importWorkbook(file)
       if (importResponse.data.success){
         const newWorkbookId = importResponse.data.data.workbook_id;
+        console.log(newWorkbookId)
         setWorkbookId(newWorkbookId)
         setSheets(importResponse.data.data.sheets)
 
