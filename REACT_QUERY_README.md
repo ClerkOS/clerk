@@ -19,7 +19,7 @@ npm install @tanstack/react-query
 ```
 
 ### 2. Query Client Configuration
-The query client is configured in `src/main.jsx`:
+The query client is configured in `src/main.tsx`:
 
 ```jsx
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -44,7 +44,7 @@ const queryClient = new QueryClient({
 Fetches a single cell's data.
 
 ```jsx
-import { useCell } from '../hooks/useSpreadsheetQueries';
+import { useCell } from '../features/useSpreadsheetQueries';
 
 const { data: cellData, isLoading, error } = useCell('A1');
 ```
@@ -53,7 +53,7 @@ const { data: cellData, isLoading, error } = useCell('A1');
 Updates a cell's value.
 
 ```jsx
-import { useEditCell } from '../hooks/useSpreadsheetQueries';
+import { useEditCell } from '../features/useSpreadsheetQueries';
 
 const editCellMutation = useEditCell();
 
@@ -65,7 +65,7 @@ await editCellMutation.mutateAsync({ cellId: 'A1', value: 'New Value' });
 Imports a workbook file.
 
 ```jsx
-import { useImportWorkbook } from '../hooks/useSpreadsheetQueries';
+import { useImportWorkbook } from '../features/useSpreadsheetQueries';
 
 const importMutation = useImportWorkbook();
 
@@ -77,7 +77,7 @@ await importMutation.mutateAsync(file);
 Exports the current workbook.
 
 ```jsx
-import { useExportWorkbook } from '../hooks/useSpreadsheetQueries';
+import { useExportWorkbook } from '../features/useSpreadsheetQueries';
 
 const exportMutation = useExportWorkbook();
 
@@ -89,7 +89,7 @@ const blob = await exportMutation.mutateAsync();
 Converts natural language to Excel formulas.
 
 ```jsx
-import { useNl2Formula } from '../hooks/useSpreadsheetQueries';
+import { useNl2Formula } from '../features/useSpreadsheetQueries';
 
 const nl2formulaMutation = useNl2Formula();
 
@@ -103,7 +103,7 @@ const result = await nl2formulaMutation.mutateAsync('sum of cells A1 to A10');
 Combines import and export operations with enhanced error handling.
 
 ```jsx
-import { useWorkbookOperations } from '../hooks/useWorkbookOperations';
+import { useWorkbookOperations } from '../features/useWorkbookOperations';
 
 const {
   importWorkbook,
@@ -119,7 +119,7 @@ const {
 Enhanced AI operations with caching and suggestions.
 
 ```jsx
-import { useAIOperations } from '../hooks/useAIOperations';
+import { useAIOperations } from '../features/useAIOperations';
 
 const {
   convertToFormula,
@@ -149,7 +149,7 @@ export const queryKeys = {
 
 ```jsx
 import React from 'react';
-import { useCell, useEditCell } from '../hooks/useSpreadsheetQueries';
+import { useCell, useEditCell } from '../features/useSpreadsheetQueries';
 
 const CellComponent = ({ cellId }) => {
   const { data: cell, isLoading, error } = useCell(cellId);
@@ -218,7 +218,7 @@ if (isLoading || isPending) {
 
 ```jsx
 import { useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '../hooks/useSpreadsheetQueries';
+import { queryKeys } from '../features/useSpreadsheetQueries';
 
 const queryClient = useQueryClient();
 

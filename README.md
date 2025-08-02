@@ -18,7 +18,7 @@ A modern, responsive spreadsheet application built with React, Vite, and Tailwin
 
 - 🛠️ **Tools & Utilities**
   - Command palette for quick actions
-  - Sidebar with essential tools
+  - SideBar with essential tools
   - Formula bar for calculations
   - Property panel for cell customization
 
@@ -71,7 +71,7 @@ clerk-ui1/
 │   ├── hooks/          # Custom React hooks
 │   ├── utils/          # Utility functions
 │   ├── assets/         # Static assets
-│   └── App.jsx         # Main application component
+│   └── App.tsx         # Main application component
 ├── public/             # Public assets
 └── package.json        # Project dependencies
 ```
@@ -79,7 +79,7 @@ clerk-ui1/
 ## Key Components
 
 - **Header**: Top navigation bar with theme toggle and user controls
-- **Sidebar**: Left-side panel with essential tools
+- **SideBar**: Left-side panel with essential tools
 - **Grid**: Main spreadsheet component
 - **FormulaBar**: Input area for formulas and cell content
 - **StatusBar**: Bottom panel showing current status
