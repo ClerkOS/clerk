@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import EmptyState from "../EmptyState/EmptyState";
 import FormulaBar from "../FormulaBar/FormulaBar";
 import Grid from "../Grid/Grid";
+import { RevoGrid } from '@revolist/react-datagrid';
 import ContextMenu from "../../app/ContextMenu/ContextMenu";
 import { useSheet } from "./useSheet";
 import { type SpreadsheetProps } from "./sheetTypes";
@@ -27,6 +28,26 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
     handleCloseContextMenu
   } = useSheet();
 
+  const { activeSheet, setActiveSheet } = useActiveSheet();
+
+  const columns = [...Array(26)].map((_, i) => String.fromCharCode(65 + i));
+
+  const columnDefs = columns.map(col => ({
+    prop: col,
+    name: col,
+    size: 100,
+  }));
+
+  const sheetData = activeSheet ? cellDataBySheet?.[activeSheet] : null
+  const numRows = 100; // adjust as needed
+  const data = Array.from({ length: numRows }, (_, rowIndex) => {
+    const row: Record<string, string> = {};
+    columns.forEach(col => {
+      const cellId = `${col}${rowIndex + 1}`;
+      row[col] = sheetData?.[cellId]?.value ?? '';    });
+    return row;
+  });
+
   return (
     <>
       <div className="flex h-full w-full">
@@ -42,13 +63,23 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
             onContextMenu={handleContextMenu}
           >
             {isWorkbookLoaded ? (
-              <Grid
-                key={`grid-${"default"}`} // Replace with actual active sheet ID
-                isEditing={true}
-                onEditingChange={() => console.log("Edit")}
-                workbookId={workbookId}
-                workbookSheets={sheets}
-                sheetData={cellDataBySheet}
+              // <Grid
+              //   key={`grid-${"default"}`} // Replace with actual active sheet ID
+              //   isEditing={true}
+              //   onEditingChange={() => console.log("Edit")}
+              //   workbookId={workbookId}
+              //   workbookSheets={sheets}
+              //   sheetData={cellDataBySheet}
+              // />
+              <RevoGrid
+                className={"flex-1 p-0 relative bg-white dark:bg-gray-900"}
+                style={{fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+                columns={columnDefs}
+                source={data}
+                rowHeaders
+                resize={true}
+                autoSizeColumn
+                theme="default"
               />
             ) : (
               <EmptyState

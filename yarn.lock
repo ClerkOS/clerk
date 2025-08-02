@@ -358,6 +358,18 @@
   resolved "https://registry.npmjs.org/@pkgjs/parseargs/-/parseargs-0.11.0.tgz"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
+"@revolist/react-datagrid@^4.16.0":
+  version "4.16.0"
+  resolved "https://registry.npmjs.org/@revolist/react-datagrid/-/react-datagrid-4.16.0.tgz"
+  integrity sha512-tmIeuseRZ5/9Nyh/NhdN0wB23eCKRvOx9raV6bdYEoY2dRovuo8whK5bxClXsQH4h7C4SDMwbxdTSiXsbCfMVQ==
+  dependencies:
+    "@revolist/revogrid" "4.16.0"
+
+"@revolist/revogrid@^4.16.0", "@revolist/revogrid@4.16.0":
+  version "4.16.0"
+  resolved "https://registry.npmjs.org/@revolist/revogrid/-/revogrid-4.16.0.tgz"
+  integrity sha512-Lyc6XtVhAYp4Zo8tPjuWU1JQItVe+LzCxMbpGFH8Vmid/5XCL5nxTFzaLd5L40/G3kbihlj0ZH9wlV0V1zUfmA==
+
 "@rollup/rollup-darwin-arm64@4.40.1":
   version "4.40.1"
   resolved "https://registry.npmjs.org/@rollup/rollup-darwin-arm64/-/rollup-darwin-arm64-4.40.1.tgz"

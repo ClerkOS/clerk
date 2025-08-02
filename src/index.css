@@ -9,6 +9,7 @@
     }
 
     .dark {
+        /*--background: 214 80% 3.9%;*/
         --background: 222.2 84% 4.9%;
         --foreground: 210 40% 98%;
     }
@@ -55,3 +56,32 @@
         transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
 }
+
+div.header-content {
+    @apply
+    border
+    /*bg-slate-200*/
+    border-b-gray-300
+    border-r-gray-300
+    border-l-0
+    dark:bg-gray-800
+    dark:border-gray-700
+    dark:text-gray-200
+    text-center
+    px-1
+    py-1
+        /*font-semibold*/
+    text-xs sm:text-sm;
+}
+
+/*revogr-viewport-scroll {*/
+/*    @apply*/
+/*    bg-gray-200*/
+/*    border-gray-300*/
+/*    dark:bg-gray-800 border*/
+/*    dark:border-gray-700*/
+/*    text-center*/
+/*    text-xs sm:text-xs*/
+/*hsl(222.2 84% 4.9%)*/
+/*#020817*/
+/*}*/
