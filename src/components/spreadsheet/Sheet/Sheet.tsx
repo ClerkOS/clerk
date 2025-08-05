@@ -10,6 +10,7 @@ import ContextMenu from "../../app/ContextMenu/ContextMenu";
 import { useSheet } from "./useSheet";
 import { type SpreadsheetProps } from "./sheetTypes";
 import { useActiveSheet } from "../../providers/SheetProvider";
+import Grid2 from "../Grid/Grid2";
 // import { handleFileUpload, validateFile } from '../../services/fileService.js';
 // import { useWorkbookOperations } from '../../features/useWorkbookOperations.js';
 // import ContextMenu from '../ai/ContextMenu.jsx';
@@ -71,16 +72,17 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
               //   workbookSheets={sheets}
               //   sheetData={cellDataBySheet}
               // />
-              <RevoGrid
-                className={"flex-1 p-0 relative bg-white dark:bg-gray-900"}
-                style={{fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
-                columns={columnDefs}
-                source={data}
-                rowHeaders
-                resize={true}
-                autoSizeColumn
-                theme="default"
-              />
+              // <RevoGrid
+              //   className={"flex-1 p-0 relative bg-white dark:bg-gray-900"}
+              //   style={{fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+              //   columns={columnDefs}
+              //   source={data}
+              //   rowHeaders
+              //   resize={true}
+              //   autoSizeColumn
+              //   theme="default"
+              // />
+              <Grid2 />
             ) : (
               <EmptyState
                 onFileUpload={handleImportWorkbook}
