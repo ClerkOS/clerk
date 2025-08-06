@@ -34,7 +34,7 @@ export const useSheet = () => {
       const importResponse = await importWorkbook(file)
       if (importResponse.data.success){
         const newWorkbookId = importResponse.data.data.workbook_id;
-        console.log(newWorkbookId)
+        console.log("workbookId:", newWorkbookId)
         setWorkbookId(newWorkbookId)
         setSheets(importResponse.data.data.sheets)
 
