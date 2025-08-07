@@ -94,6 +94,13 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap:Ma
   const handleEditCommit = async () => {
     if (!editingCell) return;
     const addr = `${columnIndexToLetter(editingCell.col)}${editingCell.row + 1}`;
+    const prevValue = cellMap.get(addr)?.value ?? "";
+
+    if (editValue === prevValue){
+      setEditingCell(null);
+      setEditValue("");
+      return;
+    }
 
     // Update frontend map
     setCellMap(prev => {
@@ -116,8 +123,6 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap:Ma
       address: addr,
       value: editValue
     });
-
-    setEditingCell(null);
   };
 
   return{

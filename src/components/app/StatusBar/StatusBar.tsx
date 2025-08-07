@@ -25,38 +25,38 @@ const StatusBar = () => {
     >
       {/* Left side - Sheet Switcher */}
       <div className="flex items-center space-x-4">
-        <SheetSwitcher />
+        {/*<SheetSwitcher />*/}
       </div>
 
       {/* Right side - zoom controls */}
       <div className="flex items-center space-x-1 sm:space-x-2">
-        <button
-          // onClick={handleZoomOut}
-          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors touch-target"
-          title="Zoom Out"
-        >
-          <ZoomOut size={14} className="m-auto"/>
-        </button>
-        <button
-          // onClick={handleResetZoom}
-          className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors min-w-[3rem] text-center touch-target"
-        >
-          {20}%
-          {/*{zoom}%*/}
-        </button>
-        <button
-          // onClick={handleZoomIn}
-          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors touch-target"
-          title="Zoom In"
-        >
-          <ZoomIn size={14} className="m-auto"/>
-        </button>
+        {/*<button*/}
+        {/*  // onClick={handleZoomOut}*/}
+        {/*  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors touch-target"*/}
+        {/*  title="Zoom Out"*/}
+        {/*>*/}
+        {/*  <ZoomOut size={14} className="m-auto"/>*/}
+        {/*</button>*/}
+        {/*<button*/}
+        {/*  // onClick={handleResetZoom}*/}
+        {/*  className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors min-w-[3rem] text-center touch-target"*/}
+        {/*>*/}
+        {/*  {20}%*/}
+        {/*  /!*{zoom}%*!/*/}
+        {/*</button>*/}
+        {/*<button*/}
+        {/*  // onClick={handleZoomIn}*/}
+        {/*  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors touch-target"*/}
+        {/*  title="Zoom In"*/}
+        {/*>*/}
+        {/*  <ZoomIn size={14} className="m-auto"/>*/}
+        {/*</button>*/}
         <button
           // onClick={handleResetZoom}
           className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors touch-target"
           title="Reset Zoom"
         >
-          <Maximize2 size={14} className="m-auto"/>
+          {/*<Maximize2 size={14} className="m-auto"/>*/}
         </button>
       </div>
     </div>

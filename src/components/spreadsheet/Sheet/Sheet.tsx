@@ -49,8 +49,8 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
               <Grid
                 workbookId={workbookId}
                 sheetName={activeSheet ?? "Sheet1"}
-                initialCellMap={sheetData}
-                // initialCellMap={cellDataBySheet["Sheet1"] ?? new Map()}
+                // initialCellMap={sheetData}
+                initialCellMap={cellDataBySheet["Sheet1"] ?? new Map()}
               />
             ) : (
               <EmptyState
