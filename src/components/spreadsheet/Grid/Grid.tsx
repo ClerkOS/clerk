@@ -1,131 +1,182 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  CELL_HEIGHT,
+  CELL_WIDTH, CellData, defaultStyle,
+  HEADER_HEIGHT,
+  HEADER_WIDTH,
+  TOTAL_COLS,
+  TOTAL_ROWS,
+  VIEWPORT_BUFFER,
+  GridProps
+} from "./gridTypes";
 import { useGrid } from "./useGrid";
-import { type GridProps } from "./gridTypes";
-import ColumnHeader from "../ColumnHeader/ColumnHeader";
-import Cell from "../Cell/Cell";
-import { useActiveSheet } from "../../providers/SheetProvider";
-import RowHeader from "../RowHeader/RowHeader";
+import { columnIndexToLetter } from "../../../utils/utils";
 
-
-const Grid: React.FC<GridProps> = ({ workbookId, workbookSheets, sheetData, isEditing, onEditingChange }) => {
+const Grid: React.FC<GridProps> = ({ workbookId, sheetName, initialCellMap }) => {
   const {
-    gridRef,
-    virtualRows,
-    virtualCols,
-    rowVirtualizer,
-    columnVirtualizer,
-    columnLoadingTriggerRef,
-    isMouseDown,
-    contextMenu,
-    columns,
-    isLoadingColumns,
-    handleGridMouseDown
-  } = useGrid();
-
-  const { activeSheet, setActiveSheet } = useActiveSheet();
-
-  useEffect(() => {
-    if (workbookSheets.length > 0) {
-      setActiveSheet(workbookSheets[0]);
-    }
-  }, [workbookSheets]);
-
+    scrollContainerRef,
+    scrollRef,
+    scroll,
+    setScroll,
+    size,
+    setSize,
+    rafRef,
+    cellPool,
+    visibleCols,
+    visibleRows,
+    startCol,
+    startRow,
+    scrollX,
+    scrollY,
+    selectedCell,
+    setSelectedCell,
+    editingCell,
+    setEditingCell,
+    cellMap,
+    editValue,
+    setEditValue,
+    setCellMap,
+    handleCellClick,
+    handleCellDoubleClick,
+    handleEditCommit
+  } = useGrid(workbookId, sheetName, initialCellMap);
 
   return (
-    <>
+    <div className="relative w-full h-full">
+      {/* Corner cell */}
       <div
-        ref={gridRef}
-        className="flex-1 p-0 relative bg-white dark:bg-gray-900"
-        style={{ overflow: "auto", width: "100%", height: "100%", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+        className="absolute top-0 left-0 bg-gray-100 dark:bg-gray-800 border-b border-r border-gray-300 dark:border-gray-700"
+        style={{ width: HEADER_WIDTH, height: HEADER_HEIGHT }}
+      />
+
+      {/* Virtualized column headers */}
+      <div
+        className="absolute top-0 "
+        style={{
+          left: HEADER_WIDTH,
+          height: HEADER_HEIGHT,
+          width: size.width,
+          overflow: "hidden"
+        }}
+      >
+        {Array.from({ length: visibleCols }).map((_, i) => {
+          const colIndex = startCol + i;
+          return (
+            <div
+              key={colIndex}
+              className=" absolute bg-gray-50 dark:bg-gray-800 border-r border-b border-gray-300 dark:border-gray-700 text-center text-xs text-gray-600"
+              style={{
+                transform: `translateX(${colIndex * CELL_WIDTH - scrollX}px)`,
+                width: CELL_WIDTH,
+                height: HEADER_HEIGHT,
+                lineHeight: `${HEADER_HEIGHT}px`
+              }}
+            >
+              {columnIndexToLetter(colIndex)}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Virtualized row headers */}
+      <div
+        className="absolute left-0 "
+        style={{
+          top: HEADER_HEIGHT,
+          width: HEADER_WIDTH,
+          height: size.height,
+          overflow: "hidden"
+        }}
+      >
+        {Array.from({ length: visibleRows }).map((_, i) => {
+          const rowIndex = startRow + i;
+          return (
+            <div
+              key={rowIndex}
+              className=" absolute bg-gray-50 dark:bg-gray-800 border-b border-r border-gray-300 dark:border-gray-700 text-center text-xs text-gray-600"
+              style={{
+                transform: `translateY(${rowIndex * CELL_HEIGHT - scrollY}px)`,
+                width: HEADER_WIDTH,
+                height: CELL_HEIGHT,
+                lineHeight: `${CELL_HEIGHT}px`
+              }}
+            >
+              {rowIndex + 1}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Scrollable grid */}
+      <div
+        className="absolute"
+        style={{
+          top: HEADER_HEIGHT,
+          left: HEADER_WIDTH,
+          right: 0,
+          bottom: 0
+        }}
       >
         <div
-          style={{
-            height: `${rowVirtualizer.getTotalSize()}px`,
-            width: `${columnVirtualizer.getTotalSize()}px`,
-            position: 'relative',
-          }}
+          ref={scrollContainerRef}
+          className="w-full h-full overflow-scroll"
         >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) =>(
-            <React.Fragment key={virtualRow.index}>
-              {columnVirtualizer.getVirtualItems().map(virtualCol => {
-                const rowIndex = virtualRow.index;
-                const colIndex = virtualCol.index;
-                const col = columns[virtualCol.index];
-                const cellId = `${col}${virtualRow.index + 1}`;
-                const cellData = activeSheet ? sheetData?.[activeSheet]?.[cellId] : undefined;
-
-                return (
-                  <Cell
-                    key={cellId}
-                    col={col}
-                    row={String(rowIndex + 1)}
-                    value={cellData?.value || ""}
-                    formula={cellData?.formula || ""}
-                    style={cellData?.style || {}}
-                    workbookId={workbookId}
-                    left={virtualCol.start + 40}
-                    top={virtualRow.start + 22}
-                    width={virtualCol.size}
-                    height={virtualRow.size}
-                  />
-                );
-              })}
-            </React.Fragment>
-          ))}
-
-          {/* ROW HEADERS */}
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => (
-            <div
-              key={`row-header-${virtualRow.index}`}
-              className=" bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-center text-xs sm:text-xs"
-              style={{
-                position: 'absolute',
-                top: virtualRow.start + 22,
-                left: 0,
-                width: 40,
-                height: virtualRow.size,
-                zIndex: 2,
-              }}
-            >
-              {virtualRow.index + 1}
-            </div>
-          ))}
-
-          {/* COLUMN HEADERS */}
-          {columnVirtualizer.getVirtualItems().map((virtualCol) => (
-            <div
-              key={`col-header-${virtualCol.index}`}
-              className="text-center text-xs sm:text-sm font-medium bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 cursor-col-resize hover:bg-blue-500/50 group resize-handle"
-
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: virtualCol.start + 40,
-                height: 22,
-                width: virtualCol.size,
-                zIndex: 2,
-              }}
-            >
-              {columns[virtualCol.index]}
-            </div>
-          ))}
-
-          {/* TOP LEFT CORNER */}
           <div
-            className="bg-gray-100 dark:bg-gray-800 border-b border-r border-gray-300 dark:border-gray-700"
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: 40,
-              height: 22,
-              zIndex: 3,
+              width: TOTAL_COLS * CELL_WIDTH,
+              height: TOTAL_ROWS * CELL_HEIGHT,
+              position: "relative"
             }}
-          />
+          >
+            {cellPool.map(({ row, col }, index) => {
+              const addr = `${columnIndexToLetter(col)}${row + 1}`;
+              const cellData = cellMap.get(addr);
+
+              return (
+                <div
+                  key={index}
+                  onClick={() => handleCellClick(row, col)}
+                  onDoubleClick={() => handleCellDoubleClick(row, col)}
+                  className="absolute flex items-center justify-center border-b border-r border-gray-300 bg-white text-gray-700 text-sm dark:text-gray-100"
+                  style={{
+                    transform: `translate(${col * CELL_WIDTH}px, ${row * CELL_HEIGHT}px)`,
+                    width: CELL_WIDTH,
+                    height: CELL_HEIGHT,
+                    border:
+                      selectedCell?.row === row && selectedCell?.col === col
+                        ? "2px solid #488cfa"
+                        : ""
+                  }}
+                >
+                  {cellData?.value ?? ""}
+                </div>
+              );
+            })}
+
+            {editingCell && (
+              <input
+                className="absolute border-[3px] rounded-none outline-none focus:outline-none"
+                style={{
+                  top: editingCell.row * CELL_HEIGHT,
+                  left: editingCell.col * CELL_WIDTH,
+                  width: CELL_WIDTH,
+                  height: CELL_HEIGHT,
+                  borderColor: "#488cfa",
+                  borderRadius: 0
+                }}
+                value={editValue}
+                onChange={e => setEditValue(e.target.value)}
+                onBlur={handleEditCommit}
+                onKeyDown={e => e.key === "Enter" && handleEditCommit()}
+                autoFocus
+              />
+            )}
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
+// className="absolute flex items-center justify-center border-b border-r border-gray-300 bg-white text-gray-700 text-sm dark:text-gray-100"
 
 export default Grid;

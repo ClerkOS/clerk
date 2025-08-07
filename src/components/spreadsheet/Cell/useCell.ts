@@ -1,7 +1,7 @@
 import React, { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import { CellProps, UseCellProps, ImportStyle, RenderStyle } from "./cellTypes";
 import { setCell, SetCellPayload } from "../../../lib/api/apiClient";
-import { adjustStyleForDarkMode } from "../../../features/spreadsheet/utils/utils";
+import { adjustStyleForDarkMode } from "../../../utils/utils";
 import { useTheme } from "../../providers/ThemeProvider";
 import { useActiveCell } from "../../providers/ActiveCellProvider";
 import cell from "./Cell";

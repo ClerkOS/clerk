@@ -1,5 +1,6 @@
-import {ImportStyle, RenderStyle} from "../../../components/spreadsheet/Cell/cellTypes";
+import {ImportStyle, RenderStyle} from "../components/spreadsheet/Cell/cellTypes";
 import type { CSSProperties } from "react";
+import { CellData } from "../components/spreadsheet/Grid/gridTypes";
 
 // types.ts
 export interface HSL {
@@ -253,4 +254,39 @@ export function adjustStyleForDarkMode(style: ImportStyle, isDarkMode: boolean):
   }
 
   return adjustedStyle;
+}
+
+/**
+ * Converts a cell index (e.g., "A1", "B2") to row and column indices
+ * @param index
+ */
+export function indexToRowCol(index: string): { row: number; col: number } {
+  const match = index.match(/([A-Z]+)([0-9]+)/);
+  if (!match) throw new Error(`Invalid index: ${index}`);
+  const [, colLetters, rowStr] = match;
+
+  let col = 0;
+  for (let i = 0; i < colLetters.length; i++) {
+    col = col * 26 + (colLetters.charCodeAt(i) - 64);
+  }
+  return { row: parseInt(rowStr, 10) - 1, col: col - 1 };
+}
+
+/**
+ * Converts a column index (0-based) to a letter (e.g., 0 -> "A", 1 -> "B")
+ * @param index
+ */
+export function columnIndexToLetter(index: number): string {
+  let result = "";
+  index++; // make it 1-based
+  while (index > 0) {
+    const remainder = (index - 1) % 26;
+    result = String.fromCharCode(65 + remainder) + result;
+    index = Math.floor((index - 1) / 26);
+  }
+  return result;
+}
+
+export function createCellMap(cells: Record<string, CellData>): Map<string, CellData> {
+  return new Map(Object.entries(cells));
 }

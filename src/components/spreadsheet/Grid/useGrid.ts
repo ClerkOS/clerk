@@ -1,190 +1,150 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-// import {useVirtualizer} from "@tanstack/react-virtual";
-import {
-  ROW_BATCH_SIZE,
-  COLUMN_WIDTH,
-  ROW_HEADER_WIDTH,
-  type SpreadsheetContext,
-  type SelectionContext,
-  type ContextMenuState
-} from './gridTypes';
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { CELL_WIDTH, CELL_HEIGHT, VIEWPORT_BUFFER, CellData, defaultStyle } from "./gridTypes";
+import { setCell } from "../../../lib/api/apiClient";
+import { columnIndexToLetter } from "../../../utils/utils";
 
-export const useGrid = () => {
-  // State for visible rows
-  const [visibleRows, setVisibleRows] = useState<number>(ROW_BATCH_SIZE);
-  const [isLoadingRows, setIsLoadingRows] = useState<boolean>(false);
-  const [isLoadingColumns, setIsLoadingColumns] = useState<boolean>(false);
-  const [viewportWidth, setViewportWidth] = useState<number>(0);
-  const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
-    visible: false,
-    position: { x: 0, y: 0 },
-    cellId: null
-  });
+// TODO: add check on double click to avoid sending empty values to backend
+export function useGrid(workbookId: string, sheetName: string, initialCellMap:Map<string, CellData>) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef({ x: 0, y: 0 });
+  const [scroll, setScroll] = useState({ x: 0, y: 0 });
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const rafRef = useRef<number | undefined>(undefined);
 
-  const rowObserverRef = useRef<IntersectionObserver | null>(null);
-  const columnObserverRef = useRef<IntersectionObserver | null>(null);
-  const rowLoadingTriggerRef = useRef<HTMLTableRowElement>(null);
-  const columnLoadingTriggerRef = useRef<HTMLTableCellElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
+  // Measure container size
+  useEffect(() => {
+    if (!scrollContainerRef.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setSize({ width, height });
+    });
 
-  /**
-   * Virtualization
-   */
-  function getColumnName(index: number) {
-    let columnName = '';
-    while (index >= 0) {
-      columnName = String.fromCharCode(65 + (index % 26)) + columnName;
-      index = Math.floor(index / 26) - 1;
-    }
-    return columnName;
-  }
-
-  const columns = Array.from({ length: 100 }, (_, i) => getColumnName(i));
-  // console.log(columns.length)
-
-  const rowVirtualizer = useVirtualizer({
-    count: 100,
-    getScrollElement: () => gridRef.current,
-    estimateSize: () => 22, //height of row cell
-    overscan: 10
-  })
-
-  const columnVirtualizer = useVirtualizer({
-    horizontal: true,
-    // count: columns.length,
-    count: 50,
-    getScrollElement: () => gridRef.current,
-    estimateSize: () => 75, // width of column cell
-    overscan: 10
-  })
-
-  const virtualRows = rowVirtualizer.getVirtualItems()
-  const virtualCols = columnVirtualizer.getVirtualItems()
-
-  // const {
-  //   selectedCell,
-  //   setSelectedCell,
-  //   getActiveSheet,
-  //   getCell,
-  //   zoom,
-  //   addColumns,
-  //   setColumnCount,
-  //   getTotalColumns,
-  //   getColumnWidth,
-  //   updateColumnWidth
-  // } = useSpreadsheet();
-
-  // const {
-  //   startSelection,
-  //   updateSelection,
-  //   endSelection,
-  //   isSelected,
-  //   selectedCells
-  // } = useSelection();
-
-  // Debug: Log when Grid receives new active sheet
-  // useEffect(() => {
-  //   console.log('Grid component - Active sheet updated:', {
-  //     activeSheetId: activeSheet?.id,
-  //     activeSheetName: activeSheet?.name,
-  //     columnsCount: columns?.length,
-  //     hasColumns: !!columns
-  //   });
-  // }, [activeSheet?.id, activeSheet?.name, columns]);
-
-  // Handler for mouse down on grid (to start tracking)
-  const handleGridMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return; // Only handle left clicks
-
-    // Don't start selection if clicking on a resize handle
-    if ((e.target as HTMLElement).closest('.resize-handle')) {
-      return;
-    }
-
-    setIsMouseDown(true);
+    observer.observe(scrollContainerRef.current);
+    return () => observer.disconnect();
   }, []);
 
-  // Handler for mouse up on grid (to end tracking)
-  // const handleGridMouseUp = useCallback((e: React.MouseEvent) => {
-  //   if (e.button !== 0) return; // Only handle left clicks
-  //   setIsMouseDown(false);
-  //   endSelection();
-  // }, [endSelection]);
+  // Handle scrolling
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
-  // Check if a cell is the currently selected "active" cell
-  // const isActiveCell = useCallback((col: string, row: number) => {
-  //   return selectedCell.col === col && selectedCell.row === row;
-  // }, [selectedCell]);
+    const onScroll = () => {
+      scrollRef.current = {
+        x: container.scrollLeft,
+        y: container.scrollTop,
+      };
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(() => {
+          setScroll(scrollRef.current);
+          rafRef.current = undefined;
+        });
+      }
+    };
 
-  // Check if a column is currently highlighted
-  // const isHighlighted = useCallback((col: string) => {
-  //   return selectedCell.col === col;
-  // }, [selectedCell]);
+    container.addEventListener("scroll", onScroll);
+    return () => container.removeEventListener("scroll", onScroll);
+  }, []);
 
-  // Handle cell click
-  // const handleCellClick = useCallback((col: string, row: number, e: React.MouseEvent) => {
-  //   // Set as active cell
-  //   setSelectedCell({ col, row });
-  //
-  //   if (e.shiftKey && selectedCell) {
-  //     // If shift is held, select range from active cell to clicked cell
-  //     startSelection(selectedCell.col, selectedCell.row);
-  //     updateSelection(col, row);
-  //     endSelection();
-  //   } else if (e.button === 0) {
-  //     // Start a new selection if this is a left click
-  //     startSelection(col, row);
-  //   }
-  // }, [setSelectedCell, startSelection, updateSelection, endSelection, selectedCell]);
+  // Calculate visible dimensions
+  const visibleCols = Math.ceil(size.width / CELL_WIDTH) + VIEWPORT_BUFFER;
+  const visibleRows = Math.ceil(size.height / CELL_HEIGHT) + VIEWPORT_BUFFER;
 
-  // Handle cell hover - for selection updating during drag
-  // const handleCellHover = useCallback((col: string, row: number) => {
-  //   if (isMouseDown) {
-  //     updateSelection(col, row);
-  //   }
-  // }, [isMouseDown, updateSelection]);
+  // Update pool positions based on scroll
+  const startCol = Math.floor(scroll.x / CELL_WIDTH);
+  const startRow = Math.floor(scroll.y / CELL_HEIGHT);
 
-  // Handle column resize
-  // const handleColumnResize = useCallback((col: string, newWidth: number) => {
-  //   updateColumnWidth(col, newWidth);
-  // }, [updateColumnWidth]);
+  // Pre-create the pool of cells
+  const cellPool = useMemo(() => {
+    const pool = [];
+    for (let i = 0; i < visibleRows * visibleCols; i++) {
+      pool.push({ row: 0, col: 0 });
+    }
+    return pool;
+  }, [visibleCols, visibleRows]);
 
-  // Add window-level event listeners for mouse up (in case mouse is released outside the grid)
-  // useEffect(() => {
-  //   const handleWindowMouseUp = () => {
-  //     if (isMouseDown) {
-  //       setIsMouseDown(false);
-  //       endSelection();
-  //     }
-  //   };
-  //
-  //   window.addEventListener('mouseup', handleWindowMouseUp);
-  //
-  //   return () => {
-  //     window.removeEventListener('mouseup', handleWindowMouseUp);
-  //   };
-  // }, [isMouseDown, endSelection]);
+  for (let i = 0; i < cellPool.length; i++) {
+    const rowOffset = Math.floor(i / visibleCols);
+    const colOffset = i % visibleCols;
+    cellPool[i].row = startRow + rowOffset;
+    cellPool[i].col = startCol + colOffset;
+  }
 
-  return {
-    gridRef,
-    virtualRows,
-    virtualCols,
-    rowVirtualizer,
-    columnVirtualizer,
-    isMouseDown,
-    contextMenu,
-    columns,
-    isLoadingColumns,
-    columnLoadingTriggerRef,
-    // generateRows,
-    handleGridMouseDown,
-    // handleGridMouseUp,
-    // isActiveCell,
-    // isHighlighted,
-    // handleCellClick,
-    // handleCellHover,
-    // handleColumnResize,
+  const scrollX = scrollContainerRef.current?.scrollLeft ?? 0;
+  const scrollY = scrollContainerRef.current?.scrollTop ?? 0;
+
+  const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
+  const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [cellMap, setCellMap] = useState(initialCellMap);
+
+  useEffect(() => {
+    setCellMap(initialCellMap);
+  }, [initialCellMap]);
+
+  const handleCellClick = (row: number, col: number) => {
+    setSelectedCell({ row, col });
   };
-};
+
+  const handleCellDoubleClick = (row: number, col: number) => {
+    setEditingCell({ row, col });
+    const addr = `${columnIndexToLetter(col)}${row + 1}`;
+    setEditValue(cellMap.get(addr)?.value ?? "");
+  };
+
+  const handleEditCommit = async () => {
+    if (!editingCell) return;
+    const addr = `${columnIndexToLetter(editingCell.col)}${editingCell.row + 1}`;
+
+    // Update frontend map
+    setCellMap(prev => {
+      const newMap = new Map(prev);
+      newMap.set(addr, {
+        value: editValue,
+        formula: "",
+        style: defaultStyle,
+      });
+      return newMap;
+    });
+
+    // Clear input immediately to prevent flash
+    setEditingCell(null);
+    setEditValue("");
+
+    // Send to backend
+    await setCell(workbookId, {
+      sheet: sheetName,
+      address: addr,
+      value: editValue
+    });
+
+    setEditingCell(null);
+  };
+
+  return{
+    scrollContainerRef,
+    scrollRef,
+    scroll,
+    setScroll,
+    size,
+    setSize,
+    rafRef,
+    cellPool,
+    cellMap,
+    setCellMap,
+    scrollX,
+    scrollY,
+    visibleCols,
+    visibleRows,
+    startCol,
+    startRow,
+    selectedCell,
+    setSelectedCell,
+    editingCell,
+    setEditingCell,
+    editValue,
+    setEditValue,
+    handleCellClick,
+    handleCellDoubleClick,
+    handleEditCommit
+  }
+}

@@ -1,65 +1,66 @@
-// Number of rows to render initially and when loading more
-import { CellDataBySheet } from "../Cell/cellTypes";
+const CELL_WIDTH = 100;
+const CELL_HEIGHT = 25;
+const HEADER_HEIGHT = 30;
+const HEADER_WIDTH = 50;
+const TOTAL_ROWS = 100000;
+const TOTAL_COLS = 100000;
+const VIEWPORT_BUFFER = 3;
 
-const ROW_BATCH_SIZE = 20;
-// Number of rows to preload before reaching the bottom
-const PRELOAD_THRESHOLD = 5;
-// Column width in pixels (from ColumnHeader component)
-const COLUMN_WIDTH = 128; // w-32 = 128px
-// Row header width
-const ROW_HEADER_WIDTH = 40; // w-10 = 40px
-
-interface CellPosition {
-  col: string;
-  row: number;
-}
-
-interface ContextMenuState {
-  visible: boolean;
-  position: { x: number; y: number };
-  cellId: string | null;
-}
-
-interface GridProps {
+type GridProps = {
   workbookId: string;
-  workbookSheets: string[]
-  sheetData: CellDataBySheet;
-  isEditing: boolean;
-  onEditingChange: (isEditing: boolean) => void;
-}
-
-interface SpreadsheetContext {
-  selectedCell: CellPosition;
-  setSelectedCell: (cell: CellPosition) => void;
-  getActiveSheet: () => { columns: string[] };
-  getCell: (col: string, row: number) => { value?: string; formatted?: string; type?: string };
-  zoom: number;
-  addColumns: (count: number) => void;
-  setColumnCount: (count: number) => void;
-  getTotalColumns: () => number;
-  getColumnWidth: (col: string) => number;
-  updateColumnWidth: (col: string, width: number) => void;
-}
-
-interface SelectionContext {
-  startSelection: (col: string, row: number) => void;
-  updateSelection: (col: string, row: number) => void;
-  endSelection: () => void;
-  isSelected: (col: string, row: number) => boolean;
-  selectedCells: CellPosition[];
-}
-
-export type {
-  CellPosition,
-  ContextMenuState,
-  GridProps,
-  SpreadsheetContext,
-  SelectionContext
+  sheetName: string;
+  initialCellMap: Map<string, CellData>
 };
 
+type CellStyle = {
+  fontBold: boolean;
+  fontItalic: boolean;
+  fontSize: number;
+  fontFamily: string;
+  fontColor: string;
+  backgroundColor: string;
+  alignment: "left" | "center" | "right";
+  borderStyle: string;
+  borderColor: string;
+  numberFormat: string;
+};
+
+const defaultStyle: CellStyle = {
+  fontBold: false,
+  fontItalic: false,
+  fontSize: 11,
+  fontFamily: "Calibri",
+  fontColor: "#000000",
+  backgroundColor: "#FFFFFF",
+  alignment: "left",
+  borderStyle: "",
+  borderColor: "#000000",
+  numberFormat: "General"
+};
+
+type CellData = {
+  value: string;
+  formula?: string;
+  style?: CellStyle;
+};
+
+// TODO: move these to a more suitable file
+// Map for a single sheet: "A1" -> CellData
+type SheetCellMap = Map<string, CellData>;
+
+// Map for all sheets: "Sheet1" -> SheetCellMap
+type CellDataBySheet = Record<string, SheetCellMap>;
 export {
-  ROW_BATCH_SIZE,
-  PRELOAD_THRESHOLD,
-  COLUMN_WIDTH,
-  ROW_HEADER_WIDTH
+  CELL_WIDTH,
+  CELL_HEIGHT,
+  HEADER_HEIGHT,
+  HEADER_WIDTH,
+  TOTAL_ROWS,
+  TOTAL_COLS,
+  VIEWPORT_BUFFER,
+  CellStyle,
+  defaultStyle,
+  CellData,
+  GridProps,
+  CellDataBySheet
 };
