@@ -1,9 +1,9 @@
 const CELL_WIDTH = 100;
-const CELL_HEIGHT = 25;
-const HEADER_HEIGHT = 30;
-const HEADER_WIDTH = 50;
+const CELL_HEIGHT = 20;
+const HEADER_HEIGHT = 20;
+const HEADER_WIDTH = 40;
 const TOTAL_ROWS = 100000;
-const TOTAL_COLS = 100000;
+const TOTAL_COLS = 1000;
 const VIEWPORT_BUFFER = 3;
 
 type GridProps = {

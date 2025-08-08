@@ -65,37 +65,37 @@ const Header = () => {
         />
 
         {/* Import Button */}
-        <button
-          className="flex items-center space-x-1 sm:space-x-2 text-sm border border-gray-400 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg px-2 sm:px-4 py-2 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-          // onClick={handleImportClick}
-          // disabled={isImporting}
-        >
-          <Upload size={16} className="sm:w-[18px] sm:h-[18px]" />
-          {/*<span className="hidden sm:inline">{isImporting ? 'Importing...' : 'Import'}</span>*/}
-          <span className="hidden sm:inline">{'Import'}</span>
-        </button>
+        {/*<button*/}
+        {/*  className="flex items-center space-x-1 sm:space-x-2 text-sm border border-gray-400 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg px-2 sm:px-4 py-2 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"*/}
+        {/*  // onClick={handleImportClick}*/}
+        {/*  // disabled={isImporting}*/}
+        {/*>*/}
+        {/*  <Upload size={16} className="sm:w-[18px] sm:h-[18px]" />*/}
+        {/*  /!*<span className="hidden sm:inline">{isImporting ? 'Importing...' : 'Import'}</span>*!/*/}
+        {/*  <span className="hidden sm:inline">{'Import'}</span>*/}
+        {/*</button>*/}
 
-        {/* Export Button */}
-        <button
-          className="flex items-center space-x-1 sm:space-x-2 text-sm border border-gray-400 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg px-2 sm:px-4 py-2 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-          // onClick={handleFileExport}
-          // disabled={isExporting}
-        >
-          <Download size={16} className="sm:w-[18px] sm:h-[18px]" />
-          {/*<span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export'}</span>*/}
-          <span className="hidden sm:inline">{'Export'}</span>
-        </button>
+        {/*/!* Export Button *!/*/}
+        {/*<button*/}
+        {/*  className="flex items-center space-x-1 sm:space-x-2 text-sm border border-gray-400 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg px-2 sm:px-4 py-2 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"*/}
+        {/*  // onClick={handleFileExport}*/}
+        {/*  // disabled={isExporting}*/}
+        {/*>*/}
+        {/*  <Download size={16} className="sm:w-[18px] sm:h-[18px]" />*/}
+        {/*  /!*<span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export'}</span>*!/*/}
+        {/*  <span className="hidden sm:inline">{'Export'}</span>*/}
+        {/*</button>*/}
 
         {/* Vertical divider */}
-        <div className="hidden sm:block h-7 w-px bg-gray-300 dark:bg-gray-700 mx-3" />
+        {/*<div className="hidden sm:block h-7 w-px bg-gray-300 dark:bg-gray-700 mx-3" />*/}
 
         {/* Theme Toggle */}
-        <ThemeToggle />
+        {/*<ThemeToggle />*/}
 
         {/* User Avatar */}
-        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
-          <User size={16} className="sm:w-[18px] sm:h-[18px]" />
-        </div>
+        {/*<div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">*/}
+        {/*  <User size={16} className="sm:w-[18px] sm:h-[18px]" />*/}
+        {/*</div>*/}
       </div>
     </div>
   );
