@@ -27,6 +27,8 @@ const Grid: React.FC<GridProps> = ({ workbookId, sheetName, initialCellMap }) =>
     scrollY,
     visibleCols,
     visibleRows,
+    startCol,
+    startRow,
     selectedCell,
     editingCell,
     editValue,
@@ -51,15 +53,15 @@ const Grid: React.FC<GridProps> = ({ workbookId, sheetName, initialCellMap }) =>
   return (
     <div className="relative w-full h-full">
       {/* ---------------------------------------------------------------------- */}
-      /*                     Corner cell (intersection of headers)               */
-      /* ---------------------------------------------------------------------- */
+      {/*                     Corner cell (intersection of headers)               */}
+      {/* ---------------------------------------------------------------------- */}
       <div
         className="absolute top-0 left-0 bg-gray-100 dark:bg-gray-800 border-b border-r border-gray-300 dark:border-gray-700"
         style={{ width: HEADER_WIDTH, height: HEADER_HEIGHT }}
       />
       {/* ---------------------------------------------------------------------- */}
-      /*                      Virtualized column headers                         */
-      /* ---------------------------------------------------------------------- */
+      {/*                      Virtualized column headers                         */}
+      {/* ---------------------------------------------------------------------- */}
       <div
         className="absolute top-0 "
         style={{
@@ -69,31 +71,32 @@ const Grid: React.FC<GridProps> = ({ workbookId, sheetName, initialCellMap }) =>
           overflow: "hidden"
         }}
       >
-        {Array.from({ length: visibleCols }).map((_, col) => {
-          const isHighlighted = getHighlightedCols().includes(col);
+        {Array.from({ length: visibleCols }).map((_, i) => {
+          const colIndex = startCol + i;
+          const isHighlighted = getHighlightedCols().includes(colIndex);
 
           return (
             <div
-              key={col}
-              onMouseDown={() => handleColHeaderMouseDown(col)}
+              key={colIndex}
+              onMouseDown={() => handleColHeaderMouseDown(colIndex)}
               className={`absolute border-r border-b border-gray-300 dark:border-gray-700 text-center text-xs text-gray-600 cursor-pointer
         ${isHighlighted ? "bg-blue-100 dark:bg-blue-800" : "bg-gray-50 dark:bg-gray-800"}`}
               style={{
-                transform: `translateX(${col * CELL_WIDTH - scrollX}px)`,
+                transform: `translateX(${colIndex * CELL_WIDTH - scrollX}px)`,
                 width: CELL_WIDTH,
                 height: HEADER_HEIGHT,
                 lineHeight: `${HEADER_HEIGHT}px`
               }}
             >
-              {columnIndexToLetter(col)}
+              {columnIndexToLetter(colIndex)}
             </div>
           );
         })}
       </div>
 
       {/* ---------------------------------------------------------------------- */}
-      /*                      Virtualized row headers                           */
-      /* ---------------------------------------------------------------------- */
+      {/*                      Virtualized row headers                           */}
+      {/* ---------------------------------------------------------------------- */}
       <div
         className="absolute left-0 "
         style={{
@@ -103,31 +106,32 @@ const Grid: React.FC<GridProps> = ({ workbookId, sheetName, initialCellMap }) =>
           overflow: "hidden"
         }}
       >
-        {Array.from({ length: visibleRows }).map((_, row) => {
-          const isHighlighted = getHighlightedRows().includes(row);
+        {Array.from({ length: visibleRows }).map((_, i) => {
+          const rowIndex = startRow + i;
+          const isHighlighted = getHighlightedRows().includes(rowIndex);
 
           return (
             <div
-              key={row}
-              onMouseDown={() => handleRowHeaderMouseDown(row)}
+              key={rowIndex}
+              onMouseDown={() => handleRowHeaderMouseDown(rowIndex)}
               className={`absolute border-b border-r border-gray-300 dark:border-gray-700 text-center text-xs text-gray-600 cursor-pointer
         ${isHighlighted ? "bg-blue-100 dark:bg-blue-800" : "bg-gray-50 dark:bg-gray-800"}`}
               style={{
-                transform: `translateY(${row * CELL_HEIGHT - scrollY}px)`,
+                transform: `translateY(${rowIndex * CELL_HEIGHT - scrollY}px)`,
                 width: HEADER_WIDTH,
                 height: CELL_HEIGHT,
                 lineHeight: `${CELL_HEIGHT}px`
               }}
             >
-              {row + 1}
+              {rowIndex + 1}
             </div>
           );
         })}
       </div>
 
       {/* ---------------------------------------------------------------------- */}
-      /*                      Scrollable grid container                          */
-      /* ---------------------------------------------------------------------- */
+      {/*                      Scrollable grid container                          */}
+      {/* ---------------------------------------------------------------------- */}
       <div
         className="absolute"
         style={{
