@@ -205,7 +205,7 @@ const Grid: React.FC<GridProps> = ({ workbookId, sheetName, initialCellMap }) =>
             {/* Editing input */}
             {editingCell && (
               <input
-                className="absolute border-[3px] rounded-none outline-none focus:outline-none"
+                className="absolute border-[3px] rounded-none outline-none focus:outline-none text-sm"
                 style={{
                   top: editingCell.row * CELL_HEIGHT,
                   left: editingCell.col * CELL_WIDTH,
