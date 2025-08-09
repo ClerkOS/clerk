@@ -1,17 +1,47 @@
-import { useState, useRef, useEffect, useMemo } from "react";
-import { CELL_WIDTH, CELL_HEIGHT, VIEWPORT_BUFFER, CellData, defaultStyle } from "./gridTypes";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CELL_HEIGHT, CELL_WIDTH, CellData, defaultStyle, TOTAL_COLS, TOTAL_ROWS, VIEWPORT_BUFFER } from "./gridTypes";
 import { setCell } from "../../../lib/api/apiClient";
 import { columnIndexToLetter } from "../../../utils/utils";
 
+/**
+ * Hook: useGrid
+ * Manages spreadsheet grid rendering, scrolling, cell editing, and selection logic.
+ *
+ * @param workbookId - The unique ID of the workbook (used for backend updates)
+ * @param sheetName - Name of the active sheet
+ * @param initialCellMap - Initial data for the grid cells
+ *
+ * Handles:
+ *  - Virtualized cell pool for smooth scrolling
+ *  - Container size tracking
+ *  - Scroll state management
+ *  - Cell and range selection
+ *  - Row/column selection
+ *  - Cell editing and committing changes to backend
+ */
 // TODO: add check on double click to avoid sending empty values to backend
-export function useGrid(workbookId: string, sheetName: string, initialCellMap:Map<string, CellData>) {
+export function useGrid(workbookId: string, sheetName: string, initialCellMap: Map<string, CellData>) {
+  /** -------------------------
+   *  Scroll and size tracking
+   *  -------------------------
+   */
+
+    // Reference to the scroll container DOM element
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Stores latest scroll position outside React state for performance
   const scrollRef = useRef({ x: 0, y: 0 });
+
+  // React state for scroll position (used for re-render)
   const [scroll, setScroll] = useState({ x: 0, y: 0 });
+
+  // Current visible container size
   const [size, setSize] = useState({ width: 0, height: 0 });
+
+  // requestAnimationFrame ID for throttled scroll updates
   const rafRef = useRef<number | undefined>(undefined);
 
-  // Measure container size
+  // Measure container size using ResizeObserver
   useEffect(() => {
     if (!scrollContainerRef.current) return;
     const observer = new ResizeObserver(([entry]) => {
@@ -23,7 +53,7 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap:Ma
     return () => observer.disconnect();
   }, []);
 
-  // Handle scrolling
+  // Listen to scroll events, update scroll state with rAF throttling
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -31,7 +61,7 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap:Ma
     const onScroll = () => {
       scrollRef.current = {
         x: container.scrollLeft,
-        y: container.scrollTop,
+        y: container.scrollTop
       };
       if (!rafRef.current) {
         rafRef.current = requestAnimationFrame(() => {
@@ -45,15 +75,20 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap:Ma
     return () => container.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Calculate visible dimensions
+  /** -------------------------
+   *  Virtualization math
+   *  -------------------------
+   */
+
+    // Number of rows/cols visible at once + buffer
   const visibleCols = Math.ceil(size.width / CELL_WIDTH) + VIEWPORT_BUFFER;
   const visibleRows = Math.ceil(size.height / CELL_HEIGHT) + VIEWPORT_BUFFER;
 
-  // Update pool positions based on scroll
+  // Which row/col indexes to start rendering from
   const startCol = Math.floor(scroll.x / CELL_WIDTH);
   const startRow = Math.floor(scroll.y / CELL_HEIGHT);
 
-  // Pre-create the pool of cells
+  // Pre-create the cell pool (reuse DOM nodes instead of creating new ones)
   const cellPool = useMemo(() => {
     const pool = [];
     for (let i = 0; i < visibleRows * visibleCols; i++) {
@@ -62,6 +97,7 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap:Ma
     return pool;
   }, [visibleCols, visibleRows]);
 
+  // Update pool's actual row/col coordinates
   for (let i = 0; i < cellPool.length; i++) {
     const rowOffset = Math.floor(i / visibleCols);
     const colOffset = i % visibleCols;
@@ -69,55 +105,120 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap:Ma
     cellPool[i].col = startCol + colOffset;
   }
 
+  // Current raw scroll values
   const scrollX = scrollContainerRef.current?.scrollLeft ?? 0;
   const scrollY = scrollContainerRef.current?.scrollTop ?? 0;
 
+  /** -------------------------
+   *  Selection & editing state
+   *  -------------------------
+   */
+
+    // Single selected cell
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
+
+  // "cell" | "row" | "col" - type of selection
+  const [selectionMode, setSelectionMode] = useState<"cell" | "row" | "col">("cell");
+
+  // Selected row/column indexes (for header highlighting)
+  const [selectedRow, setSelectedRow] = useState<number | null>(null);
+  const [selectedCol, setSelectedCol] = useState<number | null>(null);
+
+  // Range selection tracking
+  const [selectionStart, setSelectionStart] = useState<{ row: number; col: number } | null>(null);
+  const [selectionEnd, setSelectionEnd] = useState<{ row: number; col: number } | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+
+  // Editing state
   const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null);
   const [editValue, setEditValue] = useState("");
+
+  // Data for the grid
   const [cellMap, setCellMap] = useState(initialCellMap);
 
+  // Sync cellMap with incoming props
   useEffect(() => {
     setCellMap(initialCellMap);
   }, [initialCellMap]);
 
-  const handleCellClick = (row: number, col: number) => {
-    setSelectedCell({ row, col });
-  };
+  // Stop selection when mouse is released anywhere
+  useEffect(() => {
+    const handleGlobalMouseUp = () => setIsSelecting(false);
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+    return () => window.removeEventListener("mouseup", handleGlobalMouseUp);
+  }, []);
 
+  /** -------------------------
+   *  Event handlers
+   *  -------------------------
+   */
+
+    // Single-click cell selection
+  const handleCellClick = (row: number, col: number) => {
+      setSelectionMode("cell");
+      setSelectedCell({ row, col });
+      setSelectedRow(null);
+      setSelectedCol(null);
+    };
+
+  // Double-click to enter edit mode
   const handleCellDoubleClick = (row: number, col: number) => {
     setEditingCell({ row, col });
     const addr = `${columnIndexToLetter(col)}${row + 1}`;
     setEditValue(cellMap.get(addr)?.value ?? "");
   };
 
+  // Mouse down on column header -> select entire column
+  const handleColHeaderMouseDown = (col: number) => {
+    setSelectionStart({ row: 0, col });
+    setSelectionEnd({ row: TOTAL_ROWS - 1, col });
+    setSelectionMode("col");
+    setSelectedCol(col);
+    setSelectedRow(null);
+    setSelectedCell(null);
+    setIsSelecting(true);
+  };
+
+  // Mouse down on row header -> select entire row
+  const handleRowHeaderMouseDown = (row: number) => {
+    setSelectionStart({ row, col: 0 });
+    setSelectionEnd({ row, col: TOTAL_COLS - 1 });
+    setSelectionMode("row");
+    setSelectedRow(row);
+    setSelectedCol(null);
+    setSelectedCell(null);
+    setIsSelecting(true);
+  };
+
+  // Commit edited value to frontend + backend
   const handleEditCommit = async () => {
     if (!editingCell) return;
     const addr = `${columnIndexToLetter(editingCell.col)}${editingCell.row + 1}`;
     const prevValue = cellMap.get(addr)?.value ?? "";
 
-    if (editValue === prevValue){
+    // Skip if value didn't change
+    if (editValue === prevValue) {
       setEditingCell(null);
       setEditValue("");
       return;
     }
 
-    // Update frontend map
+    // Update local state
     setCellMap(prev => {
       const newMap = new Map(prev);
       newMap.set(addr, {
         value: editValue,
         formula: "",
-        style: defaultStyle,
+        style: defaultStyle
       });
       return newMap;
     });
 
-    // Clear input immediately to prevent flash
+    // Exit edit mode
     setEditingCell(null);
     setEditValue("");
 
-    // Send to backend
+    // Push change to backend
     await setCell(workbookId, {
       sheet: sheetName,
       address: addr,
@@ -125,7 +226,61 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap:Ma
     });
   };
 
-  return{
+  // Start range selection
+  const handleMouseDown = (row: number, col: number) => {
+    setSelectionMode("cell");
+    setSelectedCell({ row, col });
+    setSelectedRow(null);
+    setSelectedCol(null);
+    setSelectionStart({ row, col });
+    setSelectionEnd({ row, col });
+    setIsSelecting(true);
+  };
+
+  // Expand range while dragging
+  const handleMouseEnter = (row: number, col: number) => {
+    if (isSelecting) {
+      setSelectionEnd({ row, col });
+    }
+  };
+
+  // Stop selection
+  const handleMouseUp = () => {
+    setIsSelecting(false);
+  };
+
+  /** -------------------------
+   *  Helpers
+   *  -------------------------
+   */
+
+    // Check if a cell is in the current selection range
+  const isCellSelected = (row: number, col: number) => {
+      if (!selectionStart || !selectionEnd) return false;
+      const minRow = Math.min(selectionStart.row, selectionEnd.row);
+      const maxRow = Math.max(selectionStart.row, selectionEnd.row);
+      const minCol = Math.min(selectionStart.col, selectionEnd.col);
+      const maxCol = Math.max(selectionStart.col, selectionEnd.col);
+      return row >= minRow && row <= maxRow && col >= minCol && col <= maxCol;
+    };
+
+  // Return array of highlighted row indexes
+  const getHighlightedRows = () => {
+    if (!selectionStart || !selectionEnd) return [];
+    const minRow = Math.min(selectionStart.row, selectionEnd.row);
+    const maxRow = Math.max(selectionStart.row, selectionEnd.row);
+    return Array.from({ length: maxRow - minRow + 1 }, (_, i) => minRow + i);
+  };
+
+  // Return array of highlighted column indexes
+  const getHighlightedCols = () => {
+    if (!selectionStart || !selectionEnd) return [];
+    const minCol = Math.min(selectionStart.col, selectionEnd.col);
+    const maxCol = Math.max(selectionStart.col, selectionEnd.col);
+    return Array.from({ length: maxCol - minCol + 1 }, (_, i) => minCol + i);
+  };
+
+  return {
     scrollContainerRef,
     scrollRef,
     scroll,
@@ -148,8 +303,21 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap:Ma
     setEditingCell,
     editValue,
     setEditValue,
+    selectionMode,
+    selectedRow,
+    selectedCol,
+    selectionStart,
+    selectionEnd,
     handleCellClick,
+    handleColHeaderMouseDown,
     handleCellDoubleClick,
-    handleEditCommit
-  }
+    handleRowHeaderMouseDown,
+    handleEditCommit,
+    handleMouseDown,
+    handleMouseUp,
+    handleMouseEnter,
+    isCellSelected,
+    getHighlightedRows,
+    getHighlightedCols
+  };
 }
