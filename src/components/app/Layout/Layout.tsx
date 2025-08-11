@@ -9,6 +9,7 @@ import Spreadsheet from "../../spreadsheet/Sheet/Sheet";
 import Conversation from "../Conversation/Conversation";
 import React, { useState } from "react";
 import { RangeSelection } from "../Conversation/conversationTypes";
+import BlurWrapper from "../BlurWrapper/BlurWrapper";
 
 export function Layout({ children }: { children: React.ReactNode }) {
 
@@ -87,17 +88,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
           <StatusBar />
         </div>
-        {showFormulaBuilder && <FormulaBuilder onWidthChange={setPanelWidth} />}
-        {showChartBuilder && <ChartBuilder onWidthChange={setPanelWidth} />}
-        {showTablesPanel && <TableBuilder onWidthChange={setPanelWidth} />}
-        {showAIPanel && (
-          <Conversation
-            onWidthChange={setPanelWidth}
-            selectedRange={selectedRangeForAI}
-            setSelectedRange={setSelectedRangeForAI}
-          />
+        {showFormulaBuilder && (
+          <BlurWrapper>
+            <FormulaBuilder onWidthChange={setPanelWidth} />
+          </BlurWrapper>
         )}
-
+        {showChartBuilder && (
+          <BlurWrapper>
+            <ChartBuilder onWidthChange={setPanelWidth} />
+          </BlurWrapper>
+        )}
+        {showTablesPanel && (
+          <BlurWrapper>
+            <TableBuilder onWidthChange={setPanelWidth} />
+          </BlurWrapper>
+        )}
+        {showAIPanel && (
+          <BlurWrapper>
+            <Conversation
+              onWidthChange={setPanelWidth}
+              selectedRange={selectedRangeForAI}
+              setSelectedRange={setSelectedRangeForAI}
+            />
+          </BlurWrapper>
+        )}
       </div>
     </div>
   );

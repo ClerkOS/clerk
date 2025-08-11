@@ -6,6 +6,7 @@ const Conversation: React.FC<ConversationProps> = () => {
 
   const isAnalyzing = false
   const isGenerating = false
+  const [width, setWidth] = useState<number>(340);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -24,7 +25,8 @@ const Conversation: React.FC<ConversationProps> = () => {
   return (
     <div
       className="flex flex-col h-full border-l dark:border-gray-700 dark:bg-gray-800 border-gray-200 bg-white"
-      style={{ width: "440px" }}
+      // style={{ width: "440px" }}
+      style={{ width: `${width}px` }}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b dark:border-gray-700 border-gray-200">
