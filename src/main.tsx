@@ -6,6 +6,7 @@ import "./index.css";
 import { ThemeProvider } from "./components/providers/ThemeProvider";
 import { ActiveSheetProvider } from "./components/providers/SheetProvider";
 import { ActiveCellProvider } from "./components/providers/ActiveCellProvider";
+import { WorkbookIdProvider } from "./components/providers/WorkbookProvider";
 
 // TODO: Add providers here
 // function App() {
@@ -22,11 +23,11 @@ if (!rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <ThemeProvider>
-        <ActiveSheetProvider>
-          <ActiveCellProvider>
+        <WorkbookIdProvider>
+          <ActiveSheetProvider>
             <App />
-          </ActiveCellProvider>
-        </ActiveSheetProvider>
+          </ActiveSheetProvider>
+        </WorkbookIdProvider>
       </ThemeProvider>
     </StrictMode>
   );

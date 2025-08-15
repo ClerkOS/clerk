@@ -3,11 +3,12 @@ import { Notification } from "./sheetTypes";
 import { CellData, CellDataBySheet } from "../Grid/gridTypes";
 import { Position } from "../../app/ContextMenu/contextMenuTypes";
 import { createWorkbook, getWorkbook, importWorkbook } from "../../../lib/api/apiClient";
+import { useWorkbookId } from "../../providers/WorkbookProvider";
 
 export const useSheet = () => {
   const [notification, setNotification] = useState<Notification | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [workbookId, setWorkbookId] = useState<string>("");
+  const { workbookId, setWorkbookId } = useWorkbookId();
   const [isWorkbookLoaded, setIsWorkbookLoaded] = useState<boolean>(false);
   const [sheets, setSheets] = useState<string[]>([]);
   const [cellDataBySheet, setCellDataBySheet] = useState<CellDataBySheet>({});
@@ -34,8 +35,8 @@ export const useSheet = () => {
       if (!importResponse.data.success) return;
 
       const newWorkbookId = importResponse.data.data.workbook_id;
-      console.log("workbookId:", newWorkbookId);
       setWorkbookId(newWorkbookId);
+      console.log("workbookId:", workbookId);
       setSheets(importResponse.data.data.sheets);
 
       const getResponse = await getWorkbook(newWorkbookId);

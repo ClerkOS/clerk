@@ -20,7 +20,7 @@ const StatusBar = () => {
 
   return (
     <div
-      className="flex items-center justify-between px-4 sm:px-6 py-0.5 text-xs bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200"
+      className="flex items-center justify-between px-4 sm:px-6 py-0 text-xs bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
       {/* Left side - Sheet Switcher */}
@@ -56,7 +56,7 @@ const StatusBar = () => {
           className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors touch-target"
           title="Reset Zoom"
         >
-          {/*<Maximize2 size={14} className="m-auto"/>*/}
+          <Maximize2 size={14} className="m-auto"/>
         </button>
       </div>
     </div>

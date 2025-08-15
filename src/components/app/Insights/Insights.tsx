@@ -1,77 +1,27 @@
 import React, { useState } from "react";
 import { ArrowUp, Bot, Plus, User, FileText, Pi, Volume2, Omega } from "lucide-react";
-import { ConversationProps, Message } from "./conversationTypes";
-import { getCompletion } from "../../../lib/api/apiClient";
-import { useSheet } from "../../spreadsheet/Sheet/useSheet";
-import { useActiveSheet } from "../../providers/SheetProvider";
-import { useWorkbookId } from "../../providers/WorkbookProvider";
+import { InsightProps, Message } from "./insightTypes";
 
-const Conversation: React.FC<ConversationProps> = () => {
+const Insights: React.FC<InsightProps> = () => {
 
-  const { workbookId, } = useWorkbookId();
-  const { activeSheet } = useActiveSheet();
-  const sheet = activeSheet ? activeSheet : "Sheet1"
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(true);
+  const isAnalyzing = false;
+  const isGenerating = false;
+  const showSuggestions = true;
   const [width, setWidth] = useState<number>(360);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [userInput, setUserInput] = useState("")
-
-  const handleSend: React.FormEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-
-    if (!userInput.trim()) return;
-
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: userInput,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setUserInput("")
-    setIsGenerating(true)
-
-    try{
-      console.log("bookId:", workbookId)
-      const response = await getCompletion(workbookId, sheet, userMessage.content)
-      console.log(response.data)
-
-      const assistantMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: `I'll create some sample data for you in the sheet. Let me add a table with sample information.
-
-I've created a sample data table named "SampleData" in your sheet. The table contains 5 rows of employee information with the following columns:
-
-Name
-Age
-City
-Salary
-
-The data includes information for John Smith, Sarah Johnson, Michael Brown, Emily Davis, and David Wilson with their respective ages, cities, and salaries.
-
-You can now use this data for analysis, calculations, or visualization. Would you like me to perform any specific operations on this data?
-        `,
-        timestamp: new Date()
-      }
-
-      setIsGenerating(false)
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (err) {
-      console.error("Error fetching response:", err);
-      const assistantMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: "Error generating response",
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, assistantMessage]);
-    } finally {
-      setIsGenerating(false);
-    }
-  }
+  const [messages, setMessages] = useState<Message[]>([
+    // {
+    //   id: 1,
+    //   role: "assistant",
+    //   content: "Hello! I'm your personal spreadsheet assistant. I can manipulate your spreadsheet based on your natural language requests. Please import a spreadsheet file or add data to a new one to get started!",
+    //   timestamp: new Date()
+    // }
+    // {
+    //   id: 2,
+    //   role: 'user',
+    //   content: 'Add a col to sum the total for each row in the table',
+    //   timestamp: new Date()
+    // }
+  ]);
 
   return (
     <div
@@ -86,6 +36,13 @@ You can now use this data for analysis, calculations, or visualization. Would yo
           <h3 className="font-semibold dark:text-white text-gray-900">
             {/*Clerk Assistant*/}
           </h3>
+          {isAnalyzing && (
+            <div className="flex space-x-1">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+            </div>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <button
@@ -98,8 +55,14 @@ You can now use this data for analysis, calculations, or visualization. Would yo
         </div>
       </div>
 
+      {/* Resize handle */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-blue-500"
+        // onMouseDown={handleMouseDown}
+      />
+
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-1 space-y-4 relative">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 relative"  >
         {/* Initial Chat State */}
         {messages.length === 0 && !isGenerating && (
           <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4 pointer-events-none">
@@ -160,55 +123,76 @@ You can now use this data for analysis, calculations, or visualization. Would yo
           return (
             <div
               key={message.id}
-              className={`w-full px-0.5 pt-0`} // full width, padding left/right
+              className={`flex ${isUser ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`w-full px-2 py-1 rounded-[0.2rem] whitespace-pre-wrap text-sm text-left
-                  ${isUser
-                    ? "bg-gray-100 text-gray-700" // user style
-                    : "bg-white text-gray-800"    // bot style
-                    }`}
+                className={`max-w-[85%] rounded-lg p-3 ${
+                  isUser
+                    ? "bg-blue-600 text-white"
+                    : "dark:bg-gray-700 dark:text-gray-100 bg-gray-100 text-gray-900"
+                }`}
               >
-                {message.content}
+                <div
+                  className={`flex items-start space-x-2 ${
+                    isUser ? "flex-row-reverse space-x-reverse" : ""
+                  }`}
+                >
+                  {isUser ? (
+                    <User className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <Bot className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  )}
+                  <div className="text-left">
+                    <div className="whitespace-pre-wrap text-sm">
+                      {message.content}
+                    </div>
+                    {/*<div className="text-xs mt-2 opacity-70 dark:text-gray-400 text-gray-500">*/}
+                    {/*  {message.timestamp.toLocaleTimeString()}*/}
+                    {/*</div>*/}
+                  </div>
+                </div>
               </div>
             </div>
           );
         })}
+        {isGenerating && (
+          <div className="flex justify-start">
+            <div className="max-w-[85%] rounded-lg p-3 dark:bg-gray-700 dark:text-gray-100 bg-gray-100 text-gray-900">
+              <div className="flex items-center space-x-2">
+                <Bot className="w-4 h-4" />
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                       style={{ animationDelay: "0.1s" }}></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                       style={{ animationDelay: "0.2s" }}></div>
+                </div>
+                {/*<span className="text-sm">Generating code...</span>*/}
+              </div>
+            </div>
+          </div>
+        )}
+        {/*<div ref={messagesEndRef} />*/}
       </div>
 
-      {/* Generating animation */}
-      {isGenerating && (
-        <div className="px-4 pb-2 flex space-x-1">
-          <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-          <div
-            className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-            style={{ animationDelay: "0.1s" }}
-          ></div>
-          <div
-            className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-            style={{ animationDelay: "0.2s" }}
-          ></div>
-        </div>
-      )}
-
       {/* Input */}
-      <div className="p-2 ">
+      <div className="p-4 ">
         <form
-          onSubmit={handleSend}
+          // onSubmit={handleSubmit}
           className="flex flex-col border rounded-lg overflow-hidden border-gray-200 "
         >
-          <div className="flex justify-start items-center px-2 py-1 bg-gray-50 dark:bg-gray-800">
-            <button
-              type="submit"
-              className={`p-0.5 rounded-none transition-colors border border-gray-100  bg-gray-50 text-gray-700`}
-            >
-              <Plus size={14}/>
-            </button>
-          </div>
+          {/*<div className="flex justify-start items-center px-2 py-1 bg-gray-50 dark:bg-gray-800">*/}
+          {/*  <button*/}
+          {/*    type="submit"*/}
+          {/*    className={`p-0.5 rounded-none transition-colors border border-gray-100  bg-gray-50 text-gray-700`}*/}
+          {/*  >*/}
+          {/*    <Plus size={14}/>*/}
+          {/*  </button>*/}
+          {/*</div>*/}
           <textarea
-            rows={2}
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
+            rows={3}
+            // value={input}
+            // onChange={(e) => setInput(e.target.value)}
             placeholder="Ask anything"
             className="w-full resize-none pr-12 pl-3 py-2  rounded-lg text-sm focus:outline-none  dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-gray-50 border-gray-50 text-gray-900 placeholder-gray-500"
             disabled={isGenerating}
@@ -228,14 +212,8 @@ You can now use this data for analysis, calculations, or visualization. Would yo
           </div>
         </form>
       </div>
-
-      {/* Resize handle */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-blue-500"
-        // onMouseDown={handleMouseDown}
-      />
     </div>
   );
 };
 
-export default Conversation;
+export default Insights;

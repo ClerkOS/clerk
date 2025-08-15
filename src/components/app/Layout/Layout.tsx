@@ -10,6 +10,8 @@ import Conversation from "../Conversation/Conversation";
 import React, { useState } from "react";
 import { RangeSelection } from "../Conversation/conversationTypes";
 import BlurWrapper from "../BlurWrapper/BlurWrapper";
+import { motion, AnimatePresence } from "framer-motion";
+import Insights from "../Insights/Insights";
 
 export function Layout({ children }: { children: React.ReactNode }) {
 
@@ -19,6 +21,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [showChartBuilder, setShowChartBuilder] = useState(false);
   const [showTablesPanel, setShowTablesPanel] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [showInsightsPanel, setShowInsightsPanel] = useState(false);
   const [selectedRangeForAI, setSelectedRangeForAI] = useState<RangeSelection | null>(null);
 
   const toggleCommandPalette = () => {
@@ -50,6 +53,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
     if (showFormulaBuilder) setShowFormulaBuilder(false);
     if (showChartBuilder) setShowChartBuilder(false);
     if (showTablesPanel) setShowTablesPanel(false);
+    if (showInsightsPanel) setShowInsightsPanel(false);
+  };
+
+  const toggleInsightsPanel = () => {
+    setShowInsightsPanel(!showInsightsPanel);
+    if (showFormulaBuilder) setShowFormulaBuilder(false);
+    if (showChartBuilder) setShowChartBuilder(false);
+    if (showTablesPanel) setShowTablesPanel(false);
+    if (showAIPanel) setShowAIPanel(false);
   };
 
   const handleOpenAIWithRange = (range: string) => {
@@ -73,7 +85,47 @@ export function Layout({ children }: { children: React.ReactNode }) {
           onChartClick={toggleChartBuilder}
           onTableClick={toggleTablesPanel}
           onAIClick={toggleAIPanel}
+          onInsightsClick={toggleInsightsPanel}
         />
+
+        {/*<AnimatePresence>*/}
+        {/*  {showInsightsPanel && (*/}
+        {/*    <motion.div*/}
+        {/*      key="ai-panel"*/}
+        {/*      initial={{ x: "-100%", opacity: 0 }} // start off screen at left*/}
+        {/*      animate={{ x: 0, opacity: 1 }} // slide into place*/}
+        {/*      exit={{ x: "-100%", opacity: 0 }} // slide back out to left*/}
+        {/*      transition={{ duration: 0.3, ease: "easeInOut" }}*/}
+        {/*      className="h-full"*/}
+        {/*    >*/}
+        {/*      <Insights*/}
+        {/*        onWidthChange={setPanelWidth}*/}
+        {/*        selectedRange={selectedRangeForAI}*/}
+        {/*        setSelectedRange={setSelectedRangeForAI}*/}
+        {/*      />*/}
+        {/*    </motion.div>*/}
+        {/*  )}*/}
+        {/*</AnimatePresence>*/}
+
+        <AnimatePresence>
+          {showAIPanel && (
+            <motion.div
+              key="ai-panel"
+              initial={{ x: "-100%", opacity: 0 }} // start off screen at left
+              animate={{ x: 0, opacity: 1 }} // slide into place
+              exit={{ x: "-100%", opacity: 0 }} // slide back out to left
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="h-full"
+            >
+              <Conversation
+                onWidthChange={setPanelWidth}
+                selectedRange={selectedRangeForAI}
+                setSelectedRange={setSelectedRangeForAI}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
 
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex-1 overflow-auto min-h-0">
@@ -88,30 +140,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
           <StatusBar />
         </div>
-        {showFormulaBuilder && (
-          <BlurWrapper>
-            <FormulaBuilder onWidthChange={setPanelWidth} />
-          </BlurWrapper>
-        )}
-        {showChartBuilder && (
-          <BlurWrapper>
-            <ChartBuilder onWidthChange={setPanelWidth} />
-          </BlurWrapper>
-        )}
-        {showTablesPanel && (
-          <BlurWrapper>
-            <TableBuilder onWidthChange={setPanelWidth} />
-          </BlurWrapper>
-        )}
-        {showAIPanel && (
-          <BlurWrapper>
-            <Conversation
-              onWidthChange={setPanelWidth}
-              selectedRange={selectedRangeForAI}
-              setSelectedRange={setSelectedRangeForAI}
-            />
-          </BlurWrapper>
-        )}
+
+
       </div>
     </div>
   );
