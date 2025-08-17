@@ -46,11 +46,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
             onContextMenu={handleContextMenu}
           >
             {isWorkbookLoaded ? (
-              <Grid
-                workbookId={workbookId}
-                sheetName={activeSheet ?? "Sheet1"}
-                initialCellMap={cellDataBySheet["Sheet1"] ?? new Map()}
-              />
+              <Grid/>
             ) : (
               <EmptyState
                 onFileUpload={handleImportWorkbook}

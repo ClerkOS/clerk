@@ -7,9 +7,8 @@ const TOTAL_COLS = 1000;
 const VIEWPORT_BUFFER = 3;
 
 type GridProps = {
-  workbookId: string;
-  sheetName: string;
-  initialCellMap: Map<string, CellData>
+  // workbookId: string;
+  // sheetName: string;
 };
 
 type CellStyle = {

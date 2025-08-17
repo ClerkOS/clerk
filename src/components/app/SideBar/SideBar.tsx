@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, BarChart, Calculator, Bot, Zap, WandSparkles } from 'lucide-react';
+import { Table, BarChart, Calculator, Bot, Zap, WandSparkles, ChartLine } from 'lucide-react';
 import Tooltip from '../../ui/ToolTip';
 
 
@@ -21,8 +21,8 @@ const SideBar: React.FC<SidebarProps>  = ({ onFormulaClick, onChartClick, onTabl
     // { id: 'table', icon: <Table size={18} className="m-auto" />, label: 'Tables', onClick: onTableClick },
     // { id: 'chart', icon: <BarChart size={18} className="m-auto" />, label: 'Charts', onClick: onChartClick },
     // { id: 'calculator', icon: <Calculator size={18} className="m-auto" />, label: 'Formulas', onClick: onFormulaClick },
-    // { id: 'insights', icon: <Zap size={18} className="m-auto" />, label: 'Insights', onClick: onInsightsClick },
-    { id: 'ai', icon: <WandSparkles size={18} className="m-auto" />, label: 'AI Assistant', onClick: onAIClick },
+    { id: 'ai', icon: <Zap size={18} className="m-auto" />, label: 'Clerk Assistant', onClick: onAIClick },
+    { id: 'insights', icon: <ChartLine size={18} className="m-auto" />, label: 'Data Insights', onClick: onInsightsClick },
   ];
 
   return (

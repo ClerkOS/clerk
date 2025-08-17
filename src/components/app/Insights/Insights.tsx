@@ -7,7 +7,7 @@ const Insights: React.FC<InsightProps> = () => {
   const isAnalyzing = false;
   const isGenerating = false;
   const showSuggestions = true;
-  const [width, setWidth] = useState<number>(360);
+  const [width, setWidth] = useState<number>(320);
   const [messages, setMessages] = useState<Message[]>([
     // {
     //   id: 1,
@@ -67,9 +67,9 @@ const Insights: React.FC<InsightProps> = () => {
         {messages.length === 0 && !isGenerating && (
           <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4 pointer-events-none">
             {/* Prompt text */}
-            <span className="text-gray-900 dark:text-gray-500 text-[1.2rem] font-medium text-center break-words max-w-[300px]">
-              What do you want to do with your data?
-            </span>
+            {/*<span className="text-gray-900 dark:text-gray-500 text-[1.2rem] font-medium text-center break-words max-w-[300px]">*/}
+            {/*  What do you want to do with your data?*/}
+            {/*</span>*/}
 
             {/* Suggestions */}
             <div className="space-y-2 w-full max-w-xs pointer-events-auto text-left">
@@ -102,6 +102,32 @@ const Insights: React.FC<InsightProps> = () => {
               </div>
 
               {/* Suggestion 3 */}
+              <div
+                className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <Omega className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <div className="ml-3">
+                  <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    Create a formula
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Explain the formula(s) you want in English. We'll generate them for you.
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <Omega className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <div className="ml-3">
+                  <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    Create a formula
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Explain the formula(s) you want in English. We'll generate them for you.
+                  </div>
+                </div>
+              </div>
+
               <div
                 className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                 <Omega className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />

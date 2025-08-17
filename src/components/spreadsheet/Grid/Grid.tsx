@@ -17,7 +17,7 @@ import { columnIndexToLetter } from "../../../utils/utils";
  *  - sheetName: string — current sheet name
  *  - initialCellMap: Map<string, CellData> — preloaded cell data
  */
-const Grid: React.FC<GridProps> = ({ workbookId, sheetName, initialCellMap }) => {
+const Grid: React.FC = () => {
   const {
     scrollContainerRef,
     size,
@@ -48,7 +48,7 @@ const Grid: React.FC<GridProps> = ({ workbookId, sheetName, initialCellMap }) =>
     isCellSelected,
     getHighlightedRows,
     getHighlightedCols
-  } = useGrid(workbookId, sheetName, initialCellMap);
+  } = useGrid();
 
   return (
     <div className="relative w-full h-full">

@@ -1,106 +1,34 @@
 import React, { useRef, useState } from "react";
-import { ArrowUp, FileText, Omega, Pi, Plus } from "lucide-react";
+import { ArrowUp, FileText, Omega, Pi, Plus, ChartNoAxesCombined, WandSparkles } from "lucide-react";
 import { ConversationProps, Message } from "./conversationTypes";
 import { getCompletion } from "../../../lib/api/apiClient";
 import { useActiveSheet } from "../../providers/SheetProvider";
 import { useWorkbookId } from "../../providers/WorkbookProvider";
 import { type } from "node:os";
+import { useConversation } from "./useConversation";
 
 const Conversation: React.FC<ConversationProps> = () => {
 
-   const { workbookId } = useWorkbookId();
-   const { activeSheet } = useActiveSheet();
-   const sheet = activeSheet ? activeSheet : "Sheet1";
-   const [isGenerating, setIsGenerating] = useState(false);
-   const [showSuggestions, setShowSuggestions] = useState(true);
-   const [width, setWidth] = useState<number>(360);
-   const [messages, setMessages] = useState<Message[]>([]);
-   const [userInput, setUserInput] = useState("");
-   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setUserInput(e.target.value);
-
-      const textarea = textareaRef.current;
-      if (textarea) {
-         textarea.style.height = "auto"; // reset
-         textarea.style.height = `${textarea.scrollHeight}px`; // grow text area as user prompt grows
-      }
-   };
-
-   const handleKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-         e.preventDefault();
-         handleSend(e as unknown as React.FormEvent<HTMLFormElement>);
-      }
-   };
-
-   const handleSend: React.FormEventHandler<HTMLFormElement> = async (e) => {
-      e.preventDefault();
-
-      if (!userInput.trim()) return;
-
-      const userMessage: Message = {
-         id: crypto.randomUUID(),
-         role: "user",
-         content: userInput,
-         timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, userMessage]);
-      setUserInput("");
-      setIsGenerating(true);
-
-      try {
-         const response = await getCompletion(workbookId, sheet, userMessage.content);
-         console.log(response.data.data);
-         const results = response.data.data.results;
-
-         if (Array.isArray(results)) {
-            // map each step result to a different assistant message
-            const assistantMessages: Message[] = results.map((step: any) => ({
-               id: crypto.randomUUID(),
-               role: "assistant",
-               content: parseStepOutput(step),
-               timestamp: new Date()
-            }));
-            setMessages(prev => [...prev, ...assistantMessages]);
-         } else{
-            // fallback message:
-            const assistantMessage: Message = {
-               id: crypto.randomUUID(),
-               role: "assistant",
-               content: "Sorry, i couldn't generate results that time. Please refresh or try again later.",
-               timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, assistantMessage]);
-         }
-      } catch (err) {
-         console.error("Error fetching response:", err);
-         const assistantMessage: Message = {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: "Error generating response",
-            timestamp: new Date()
-         };
-         setMessages(prev => [...prev, assistantMessage]);
-      } finally {
-         setIsGenerating(false);
-      }
-   };
-
-   function parseStepOutput(step: any) {
-      switch (step.type){
-         case "insights":
-            return step.output.insights
-         case "summary":
-            return step.output.summary
-         case "table":
-            return "Applying edits to table"
-         default:
-            return step.output
-      }
-   }
+   const {
+      workbookId,
+      sheet,
+      isGenerating,
+      setIsGenerating,
+      showSuggestions,
+      setShowSuggestions,
+      width,
+      setWidth,
+      messages,
+      setMessages,
+      userInput,
+      setUserInput,
+      textareaRef,
+      handleInputChange,
+      handleKeyDown,
+      handleSend,
+      parseStepOutput,
+      applyTableEdits
+   } = useConversation()
 
    return (
      <div
@@ -143,13 +71,13 @@ const Conversation: React.FC<ConversationProps> = () => {
                    {/* Suggestion 1 */}
                    <div
                      className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                      <FileText className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <WandSparkles className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                       <div className="ml-3">
                          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Summarize the data in the sheet
+                            Generate sample data
                          </div>
                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Get an overview of the data and key insights.
+                            Create sample data and explore Clerk.
                          </div>
                       </div>
                    </div>
@@ -157,13 +85,13 @@ const Conversation: React.FC<ConversationProps> = () => {
                    {/* Suggestion 2 */}
                    <div
                      className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                      <Pi className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <FileText className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                       <div className="ml-3">
                          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Explain a formula
+                            Summarize the data in the sheet
                          </div>
                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Get an explanation of a complex spreadsheet formula in simple language.
+                            Get an overview of your data.
                          </div>
                       </div>
                    </div>
@@ -171,16 +99,33 @@ const Conversation: React.FC<ConversationProps> = () => {
                    {/* Suggestion 3 */}
                    <div
                      className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                      <Omega className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <ChartNoAxesCombined className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                       <div className="ml-3">
                          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Create a formula
+                            Get insights
                          </div>
                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Explain the formula(s) you want in English. We'll generate them for you.
+                            See important observations and recommendations about your data.
                          </div>
                       </div>
                    </div>
+
+                   {/* Suggestion 4 */}
+                   <div
+                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                      <Pi className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div className="ml-3">
+                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            Work with formulae
+                         </div>
+                         <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Explain the formula(s) you want in English or understand complex formula(s).
+                         </div>
+                      </div>
+                   </div>
+
+
+
                 </div>
              </div>
            )}
@@ -195,7 +140,7 @@ const Conversation: React.FC<ConversationProps> = () => {
                    <div
                      className={`w-full px-2 py-1 rounded-[0.2rem] whitespace-pre-wrap text-sm text-left select-text
                   ${isUser
-                       ? "bg-gray-100 text-gray-700" // user style
+                       ? "bg-gray-100 text-gray-700 pt-3 pb-2" // user style
                        : "bg-white text-gray-800"    // bot style
                      }`}
                    >

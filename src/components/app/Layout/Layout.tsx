@@ -126,7 +126,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           )}
         </AnimatePresence>
 
-
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex-1 overflow-auto min-h-0">
             <main className="h-full">
@@ -140,6 +139,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
           <StatusBar />
         </div>
+
 
 
       </div>

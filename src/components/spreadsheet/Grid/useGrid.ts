@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CELL_HEIGHT, CELL_WIDTH, CellData, defaultStyle, TOTAL_COLS, TOTAL_ROWS, VIEWPORT_BUFFER } from "./gridTypes";
 import { setCell } from "../../../lib/api/apiClient";
 import { columnIndexToLetter } from "../../../utils/utils";
+import { useCellMap } from "../../providers/CellMapProvider";
+import { useWorkbookId } from "../../providers/WorkbookProvider";
+import { useActiveSheet } from "../../providers/SheetProvider";
 
 /**
  * Hook: useGrid
@@ -9,7 +12,6 @@ import { columnIndexToLetter } from "../../../utils/utils";
  *
  * @param workbookId - The unique ID of the workbook (used for backend updates)
  * @param sheetName - Name of the active sheet
- * @param initialCellMap - Initial data for the grid cells
  *
  * Handles:
  *  - Virtualized cell pool for smooth scrolling
@@ -20,7 +22,7 @@ import { columnIndexToLetter } from "../../../utils/utils";
  *  - Cell editing and committing changes to backend
  */
 // TODO: add check on double click to avoid sending empty values to backend
-export function useGrid(workbookId: string, sheetName: string, initialCellMap: Map<string, CellData>) {
+export function useGrid() {
   /** -------------------------
    *  Scroll and size tracking
    *  -------------------------
@@ -133,13 +135,20 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap: M
   const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null);
   const [editValue, setEditValue] = useState("");
 
+  // workbook and sheet context
+  const { workbookId } = useWorkbookId();
+  const { activeSheet } = useActiveSheet();
+
   // Data for the grid
-  const [cellMap, setCellMap] = useState(initialCellMap);
+  const { cellDataBySheet, setCellDataBySheet } = useCellMap();
+  const sheetName = activeSheet ?? "Sheet1"
+  // console.log("cellDataBySheet", cellDataBySheet)
+  const [cellMap, setCellMap] = useState(cellDataBySheet[sheetName]);
 
   // Sync cellMap with incoming props
   useEffect(() => {
-    setCellMap(initialCellMap);
-  }, [initialCellMap]);
+    setCellMap(cellDataBySheet[sheetName]);
+  }, [cellDataBySheet[sheetName]]);
 
   // Stop selection when mouse is released anywhere
   useEffect(() => {
@@ -190,7 +199,7 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap: M
     setIsSelecting(true);
   };
 
-  // Commit edited value to frontend + backend
+  // Commit edited single cell value to frontend + backend
   const handleEditCommit = async () => {
     if (!editingCell) return;
     const addr = `${columnIndexToLetter(editingCell.col)}${editingCell.row + 1}`;
@@ -203,16 +212,21 @@ export function useGrid(workbookId: string, sheetName: string, initialCellMap: M
       return;
     }
 
-    // Update local state
-    setCellMap(prev => {
-      const newMap = new Map(prev);
-      newMap.set(addr, {
-        value: editValue,
-        formula: "",
-        style: defaultStyle
-      });
-      return newMap;
+// --- Update local state ---
+    const newCellMap = new Map(cellMap);
+    newCellMap.set(addr, {
+      value: editValue,
+      formula: "",
+      style: defaultStyle,
     });
+    setCellMap(newCellMap);
+
+    // --- Update global context state ---
+    setCellDataBySheet(prev => ({
+      ...prev,
+      [sheetName]: new Map(newCellMap),
+    }));
+
 
     // Exit edit mode
     setEditingCell(null);

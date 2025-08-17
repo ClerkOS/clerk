@@ -50,7 +50,7 @@ export async function setCell(workbookId: string, payload: SetCellPayload) {
 }
 
 export async function batchSetCells(workbookId: string, payload: BatchSetCellPayload) {
-  return api.post(`/cells/${workbookId}`, payload);
+  return api.post(`/cell/batch/${workbookId}`, payload);
 }
 
 export async function getCell(workbookId: string, sheet: string, address: number) {
