@@ -12,7 +12,7 @@ export function useConversation() {
    const sheet = activeSheet ? activeSheet : "Sheet1";
    const [isGenerating, setIsGenerating] = useState(false);
    const [showSuggestions, setShowSuggestions] = useState(true);
-   const [width, setWidth] = useState<number>(360);
+   const [width, setWidth] = useState<number>(460);
    const [messages, setMessages] = useState<Message[]>([]);
    const [userInput, setUserInput] = useState("");
    const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -94,6 +94,25 @@ export function useConversation() {
 
    async function parseStepOutput(step: any) {
       switch (step.type) {
+         case "analysis": {
+            const output = step.output;
+            let message = "";
+
+            if (output.summary) {
+               message += `\n${output.summary}\n`;
+            }
+            if (output.insights) {
+               message += `\n${output.insights}\n`;
+            }
+            if (output.recommendations) {
+               message += `\n${output.recommendations}\n`;
+            }
+            if (output.observations) {
+               message += `\n${output.observations}\n`;
+            }
+
+            return message.trim() || "No analysis results available.";
+         }
          case "insights":
             return step.output.insights
          case "summary":

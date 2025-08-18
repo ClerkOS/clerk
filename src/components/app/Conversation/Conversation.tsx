@@ -32,7 +32,7 @@ const Conversation: React.FC<ConversationProps> = () => {
 
    return (
      <div
-       className="flex flex-col h-full border-r dark:border-gray-700 dark:bg-gray-800 border-gray-200 bg-white"
+       className="flex flex-col h-full border-l dark:border-gray-700 dark:bg-gray-800 border-gray-200 bg-white"
        style={{ width: `${width}px` }}
      >
         {/* Header */}
@@ -67,7 +67,7 @@ const Conversation: React.FC<ConversationProps> = () => {
             </span>
 
                 {/* Suggestions */}
-                <div className="space-y-2 w-full max-w-xs pointer-events-auto text-left">
+                <div className="space-y-2 w-full max-w-96 pointer-events-auto text-left">
                    {/* Suggestion 1 */}
                    <div
                      className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
@@ -140,7 +140,7 @@ const Conversation: React.FC<ConversationProps> = () => {
                    <div
                      className={`w-full px-2 py-1 rounded-[0.2rem] whitespace-pre-wrap text-sm text-left select-text
                   ${isUser
-                       ? "bg-gray-100 text-gray-700 pt-3 pb-2" // user style
+                       ? "bg-gray-100 text-gray-700 pt-4 pb-2 w-4" // user style
                        : "bg-white text-gray-800"    // bot style
                      }`}
                    >
