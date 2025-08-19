@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useState } from "react";
 import { CellData } from "../../spreadsheet/Grid/gridTypes";
 import { useWorkbookId } from "../../providers/WorkbookProvider";
 import { useActiveSheet } from "../../providers/SheetProvider";
@@ -55,26 +55,26 @@ export function useConversation() {
       try {
          const response = await getCompletion(workbookId, sheet, userMessage.content);
          console.log(response.data.data);
-         const results = response.data.data.results;
+         const resultsList = response.data.data.results;
 
-         if (Array.isArray(results)) {
+         if (Array.isArray(resultsList)) {
             // map each step result to a different assistant message
             const assistantMessages: Message[] = await Promise.all(
-              results.map(async (step: any) => ({
+              resultsList.map(async (stepResult: any) => ({
                  id: crypto.randomUUID(),
                  role: "assistant",
-                 content: await parseStepOutput(step),
-                 timestamp: new Date(),
+                 content: await parseStepOutput(stepResult),
+                 timestamp: new Date()
               }))
             );
             setMessages(prev => [...prev, ...assistantMessages]);
-         } else{
+         } else {
             // fallback message:
             const assistantMessage: Message = {
                id: crypto.randomUUID(),
                role: "assistant",
                content: "Sorry, i couldn't generate results that time. Please refresh or try again later.",
-               timestamp: new Date(),
+               timestamp: new Date()
             };
             setMessages(prev => [...prev, assistantMessage]);
          }
@@ -92,10 +92,10 @@ export function useConversation() {
       }
    };
 
-   async function parseStepOutput(step: any) {
-      switch (step.type) {
-         case "analysis": {
-            const output = step.output;
+   async function parseStepOutput(stepResult: any) {
+      switch (stepResult.tool) {
+         case "analyze_data": {
+            const output = stepResult.result;
             let message = "";
 
             if (output.summary) {
@@ -110,18 +110,13 @@ export function useConversation() {
             if (output.observations) {
                message += `\n${output.observations}\n`;
             }
-
             return message.trim() || "No analysis results available.";
          }
-         case "insights":
-            return step.output.insights
-         case "summary":
-            return step.output.summary
-         case "table":
-            await applyTableEdits(workbookId, sheet, step.output.edits, setCellMap, setCellDataBySheet);
-            return step.output.description
+         case "table_transform":
+            await applyTableEdits(workbookId, sheet, stepResult.edits, setCellMap, setCellDataBySheet);
+            return stepResult.description;
          default:
-            return step.output
+            return "couldn't parse step result";
       }
    }
 
@@ -141,7 +136,7 @@ export function useConversation() {
             newMap.set(edit.address, {
                value: edit.value,
                formula: edit.formula ?? "",
-               style: edit.style ?? {},
+               style: edit.style ?? {}
             });
          }
          return newMap;
@@ -155,7 +150,7 @@ export function useConversation() {
          const prevSheetMap = prev[sheetName] ?? new Map();
          return {
             ...prev,
-            [sheetName]: applyEditsToMap(prevSheetMap),
+            [sheetName]: applyEditsToMap(prevSheetMap)
          };
       });
 
@@ -163,14 +158,14 @@ export function useConversation() {
       try {
          await batchSetCells(workbookId, {
             sheet: sheetName,
-            edits,
+            edits
          });
       } catch (err) {
          console.error("Failed to apply table edits:", err);
       }
    }
 
-   return{
+   return {
       workbookId,
       sheet,
       isGenerating,
@@ -189,5 +184,5 @@ export function useConversation() {
       handleSend,
       parseStepOutput,
       applyTableEdits
-   }
+   };
 }
