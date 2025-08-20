@@ -93,9 +93,9 @@ export function useConversation() {
    };
 
    async function parseStepOutput(stepResult: any) {
+      const output = stepResult.result;
       switch (stepResult.tool) {
          case "analyze_data": {
-            const output = stepResult.result;
             let message = "";
 
             if (output.summary) {
@@ -112,9 +112,9 @@ export function useConversation() {
             }
             return message.trim() || "No analysis results available.";
          }
-         case "table_transform":
-            await applyTableEdits(workbookId, sheet, stepResult.edits, setCellMap, setCellDataBySheet);
-            return stepResult.description;
+         case "generate_table":
+            await applyTableEdits(workbookId, sheet, output.edits, setCellMap, setCellDataBySheet);
+            return output.description;
          default:
             return "couldn't parse step result";
       }
