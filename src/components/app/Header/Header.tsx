@@ -49,7 +49,7 @@ const Header = () => {
   // };
 
   return (
-    <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+    <div className="flex items-center justify-between px-4 sm:px-6 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       <div className="flex items-center space-x-2 sm:space-x-4">
         <span className="font-bold text-xl sm:text-2xl text-gray-900 dark:text-white">Clerk</span>
       </div>

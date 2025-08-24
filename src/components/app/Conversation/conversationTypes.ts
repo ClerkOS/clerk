@@ -1,5 +1,7 @@
+import * as crypto from "node:crypto";
+
 export interface Message {
-  id: number;
+  id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;

@@ -1,200 +1,232 @@
-import React, { useState } from "react";
-import { Bot, Code, Lightbulb, Send, Trash2, User } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { ArrowUp, FileText, Omega, Pi, Plus, ChartNoAxesCombined, WandSparkles, SquarePen } from "lucide-react";
 import { ConversationProps, Message } from "./conversationTypes";
+import { getCompletion } from "../../../lib/api/apiClient";
+import { useActiveSheet } from "../../providers/SheetProvider";
+import { useWorkbookId } from "../../providers/WorkbookProvider";
+import { type } from "node:os";
+import { useConversation } from "./useConversation";
 
 const Conversation: React.FC<ConversationProps> = () => {
 
-  const isAnalyzing = false
-  const isGenerating = false
-  const [width, setWidth] = useState<number>(340);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      role: 'assistant',
-      content: 'Hello! I\'m your personal spreadsheet assistant. I can manipulate your spreadsheet based on your natural language requests. Please import a spreadsheet file or add data to a new one to get started!',
-      timestamp: new Date()
-    },
-    // {
-    //   id: 2,
-    //   role: 'user',
-    //   content: 'Add a col to sum the total for each row in the table',
-    //   timestamp: new Date()
-    // }
-  ]);
+   const {
+      workbookId,
+      sheet,
+      isGenerating,
+      setIsGenerating,
+      showSuggestions,
+      setShowSuggestions,
+      width,
+      setWidth,
+      messages,
+      setMessages,
+      userInput,
+      setUserInput,
+      textareaRef,
+      handleInputChange,
+      handleKeyDown,
+      handleSend,
+      parseStepOutput,
+      applyTableEdits
+   } = useConversation()
 
-  return (
-    <div
-      className="flex flex-col h-full border-l dark:border-gray-700 dark:bg-gray-800 border-gray-200 bg-white"
-      // style={{ width: "440px" }}
-      style={{ width: `${width}px` }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b dark:border-gray-700 border-gray-200">
-        <div className="flex items-center space-x-2">
-          <Code className="w-5 h-5 text-blue-500" />
-          <h3 className="font-semibold dark:text-white text-gray-900">
-            Clerk Assistant
-          </h3>
-          {isAnalyzing && (
-            <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center space-x-2">
-          {/*{typeSuggestions.length > 0 && (*/}
-          {/*  <button*/}
-          {/*    onClick={() => setShowSuggestions(!showSuggestions)}*/}
-          {/*    className="p-1 rounded hover:bg-gray-700 dark:hover:bg-gray-100"*/}
-          {/*    title="Show suggestions"*/}
-          {/*  >*/}
-          {/*    <Lightbulb className="w-4 h-4 text-gray-300 dark:text-gray-700" />*/}
-          {/*  </button>*/}
-          {/*)}*/}
-          <button
-            // onClick={clearSelectedRange}
-            className="p-1 rounded dark:hover:bg-gray-700 hover:bg-gray-100"
-            title="Clear selected range"
-          >
-            <Trash2 className="w-4 h-4 dark:text-gray-300 text-gray-700" />
-          </button>
-          <button
-            // onClick={clearChat}
-            className="p-1 rounded dark:hover:bg-gray-700 hover:bg-gray-100"
-            title="Clear chat"
-          >
-            <Trash2 className="w-4 h-4 dark:text-gray-300 text-gray-700" />
-          </button>
-        </div>
-      </div>
-
-      {/* Resize handle */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-blue-500"
-        // onMouseDown={handleMouseDown}
-      />
-
-      {/* Type Suggestions */}
-      {/*{showSuggestions && typeSuggestions.length > 0 && (*/}
-      {/*  <div className="p-4 border-b border-gray-700 bg-gray-750 dark:border-gray-200 dark:bg-gray-50">*/}
-      {/*    <h4 className="text-sm font-medium mb-3 text-white dark:text-gray-900">*/}
-      {/*      <Lightbulb className="w-4 h-4 inline mr-2 text-blue-500" />*/}
-      {/*      Type-Aware Suggestions*/}
-      {/*    </h4>*/}
-      {/*    <div className="space-y-3">*/}
-      {/*      {typeSuggestions.map((category, index) => (*/}
-      {/*        <div key={index}>*/}
-      {/*          <h5 className="text-xs font-medium mb-2 text-gray-300 dark:text-gray-600">*/}
-      {/*            {category.category}*/}
-      {/*          </h5>*/}
-      {/*          <div className="space-y-1">*/}
-      {/*            {category.prompts.map((prompt, promptIndex) => (*/}
-      {/*              <button*/}
-      {/*                key={promptIndex}*/}
-      {/*                onClick={() => handleSuggestionClick(prompt)}*/}
-      {/*                className="block w-full text-left text-xs p-2 rounded hover:bg-blue-900 dark:hover:bg-blue-100 text-gray-300 dark:text-gray-700"*/}
-      {/*              >*/}
-      {/*                {prompt}*/}
-      {/*              </button>*/}
-      {/*            ))}*/}
-      {/*          </div>*/}
-      {/*        </div>*/}
-      {/*      ))}*/}
-      {/*    </div>*/}
-      {/*  </div>*/}
-      {/*)}*/}
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => {
-          const isUser = message.role === "user";
-          return (
-            <div
-              key={message.id}
-              className={`flex ${isUser ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-[85%] rounded-lg p-3 ${
-                  isUser
-                    ? "bg-blue-600 text-white"
-                    : "dark:bg-gray-700 dark:text-gray-100 bg-gray-100 text-gray-900"
-                }`}
+   return (
+     <div
+       className="flex flex-col h-full border-l dark:border-gray-700 dark:bg-gray-800 border-gray-200 bg-white"
+       style={{ width: `${width}px` }}
+     >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between p-[0.43rem] border-b bg-white dark:border-gray-700 border-gray-200">
+           <div className="flex items-center space-x-2">
+              {/*<Code className="w-5 h-5 text-gray-500" />*/}
+              <h3 className="font-semibold dark:text-white text-gray-900">
+                 {/*Clerk Assistant*/}
+              </h3>
+           </div>
+           <div className="flex items-center space-x-2">
+              <button
+                // onClick={clearChat}
+                className="p-1 rounded dark:hover:bg-gray-700 hover:bg-gray-100"
+                title="Clear chat"
               >
+                 <Plus className="w-4 h-4 dark:text-gray-300 text-white" />
+              </button>
+           </div>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-1 space-y-4 relative">
+           {/* Initial Chat State */}
+           {messages.length === 0 && !isGenerating && (
+             <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4 pointer-events-none">
+                {/* Prompt text */}
+                <span
+                  className="text-gray-900 dark:text-gray-500 text-[1.2rem] font-medium text-center break-words max-w-[300px]">
+              What do you want to do with your data?
+            </span>
+
+                {/* Suggestions */}
+                <div className="space-y-2 w-full max-w-96 pointer-events-auto text-left">
+                   {/* Suggestion 1 */}
+                   <div
+                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
+                      <WandSparkles className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div className="ml-3">
+                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            Generate sample data
+                         </div>
+                         <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Create sample data and explore Clerk.
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* Suggestion 2 */}
+                   <div
+                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
+                      <FileText className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div className="ml-3">
+                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            Summarize the data in the sheet
+                         </div>
+                         <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Get an overview of your data.
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* Suggestion 3 */}
+                   {/*<div*/}
+                   {/*  className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">*/}
+                   {/*   <ChartNoAxesCombined className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />*/}
+                   {/*   <div className="ml-3">*/}
+                   {/*      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">*/}
+                   {/*         Get insights*/}
+                   {/*      </div>*/}
+                   {/*      <div className="text-xs text-gray-500 dark:text-gray-400">*/}
+                   {/*         See important observations and recommendations about your data.*/}
+                   {/*      </div>*/}
+                   {/*   </div>*/}
+                   {/*</div>*/}
+
+                   {/* Suggestion 4 */}
+                   <div
+                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
+                      <Pi className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div className="ml-3">
+                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            Work with formulae
+                         </div>
+                         <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Explain the formula(s) you want in English e.g. put all names of the unique sales reps in
+                            col j.
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* Suggestion 5 */}
+                   <div
+                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
+                      <SquarePen className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div className="ml-3">
+                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            Natural language to cell edits
+                         </div>
+                         <div className="text-xs text-gray-500 dark:text-gray-400">
+                            E.g. "Add a new rows to the table" or "Calculate the average rent in row 7 col d
+                         </div>
+                      </div>
+                   </div>
+
+
+                </div>
+             </div>
+           )}
+
+           {messages.map((message) => {
+              const isUser = message.role === "user";
+              return (
                 <div
-                  className={`flex items-start space-x-2 ${
-                    isUser ? "flex-row-reverse space-x-reverse" : ""
-                  }`}
+                  key={message.id}
+                  className={`w-full px-0.5 pt-0`} // full width, padding left/right
                 >
-                  {isUser ? (
-                    <User className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  ) : (
-                    <Bot className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  )}
-                  <div className="text-left">
-                    <div className="whitespace-pre-wrap text-sm">
+                   <div
+                     className={`w-full px-2 py-1 rounded-[0.2rem] whitespace-pre-wrap text-sm text-left select-text
+                  ${isUser
+                       ? "bg-gray-100 text-gray-700 pt-4 pb-2 w-4" // user style
+                       : "bg-white text-gray-800"    // bot style
+                     }`}
+                   >
                       {message.content}
-                    </div>
-                    {/*<div className="text-xs mt-2 opacity-70 dark:text-gray-400 text-gray-500">*/}
-                    {/*  {message.timestamp.toLocaleTimeString()}*/}
-                    {/*</div>*/}
-                  </div>
+                   </div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
+              );
+           })}
+        </div>
+
+        {/* Generating animation */}
         {isGenerating && (
-          <div className="flex justify-start">
-            <div className="max-w-[85%] rounded-lg p-3 dark:bg-gray-700 dark:text-gray-100 bg-gray-100 text-gray-900">
-              <div className="flex items-center space-x-2">
-                <Bot className="w-4 h-4" />
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-                       style={{ animationDelay: "0.1s" }}></div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-                       style={{ animationDelay: "0.2s" }}></div>
-                </div>
-                {/*<span className="text-sm">Generating code...</span>*/}
-              </div>
-            </div>
+          <div className="px-4 pb-2 flex space-x-1">
+             <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+             <div
+               className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+               style={{ animationDelay: "0.1s" }}
+             ></div>
+             <div
+               className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+               style={{ animationDelay: "0.2s" }}
+             ></div>
           </div>
         )}
-        {/*<div ref={messagesEndRef} />*/}
-      </div>
 
-      {/* Input */}
-      <div className="p-4 border-t dark:border-gray-700 border-gray-200">
-        <form
-          // onSubmit={handleSubmit}
-          className="flex space-x-2"
-        >
-          <input
-            type="text"
-            // value={input}
-            // onChange={(e) => setInput(e.target.value)}
-            placeholder="Describe what you want to do with the spreadsheet..."
-            className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-            disabled={isGenerating}
-          />
-          <button
-            type="submit"
-            // disabled={!input.trim() || isGenerating}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              // isGenerating || !input.trim()
-              isGenerating 
-                ? "dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed bg-gray-300 text-gray-500"
-                : "bg-blue-500 text-white hover:bg-blue-600"
-            }`}
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
-      </div>
-    </div>
-  );
+        {/* Input */}
+        <div className="p-2 ">
+           <form
+             onSubmit={handleSend}
+             className="flex flex-col border rounded-lg overflow-hidden border-gray-200 focus-within:border-blue-500"
+           >
+              <div className="flex justify-start items-center px-2 py-1 bg-gray-50 dark:bg-gray-800">
+                 <button
+                   type="submit"
+                   className={`p-0.5 rounded-none transition-colors border border-gray-100  bg-gray-50 text-gray-700`}
+                 >
+                    <Plus size={14} />
+                 </button>
+              </div>
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                value={userInput}
+                onChange={handleInputChange}
+                placeholder="Ask anything"
+                className="w-full resize-none pr-12 pl-3 py-2 rounded-lg text-sm focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-gray-50 border-gray-50 text-gray-900 placeholder-gray-500 overflow-y-auto max-h-64"
+                disabled={isGenerating}
+                onKeyDown={handleKeyDown}
+              />
+              <div className="flex justify-end items-center px-2 py-1 bg-gray-50 dark:bg-gray-800">
+                 <button
+                   type="submit"
+                   // disabled={!input.trim() || isGenerating}
+                   className={`p-2 rounded-3xl transition-colors ${
+                     isGenerating
+                       ? "dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed bg-gray-300 text-gray-500"
+                       : "bg-blue-500 text-white hover:bg-blue-600"
+                   }`}
+                 >
+                    <ArrowUp className="w-4 h-4" />
+                 </button>
+              </div>
+           </form>
+        </div>
+
+        {/* Resize handle */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-blue-500"
+          // onMouseDown={handleMouseDown}
+        />
+     </div>
+   );
 };
 
 export default Conversation;

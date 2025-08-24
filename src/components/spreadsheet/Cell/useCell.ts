@@ -4,7 +4,6 @@ import { setCell, SetCellPayload } from "../../../lib/api/apiClient";
 import { adjustStyleForDarkMode } from "../../../utils/utils";
 import { useTheme } from "../../providers/ThemeProvider";
 import { useActiveCell } from "../../providers/ActiveCellProvider";
-import cell from "./Cell";
 
 export default function useCell({ col, row, value, formula, style, workbookId,  cellId, isActive, setActiveCellId }: UseCellProps) {
   const [isEditing, setIsEditing] = useState(false);
