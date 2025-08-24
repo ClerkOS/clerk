@@ -73,7 +73,8 @@ export function useConversation() {
             const assistantMessage: Message = {
                id: crypto.randomUUID(),
                role: "assistant",
-               content: "Sorry, i couldn't generate results that time. Please refresh or try again later.",
+               // content: "Sorry, I couldn't generate results that time. Please refresh or try again later.",
+               content: "Our servers are handling a lot of requests right now. Please refresh or try again later.",
                timestamp: new Date()
             };
             setMessages(prev => [...prev, assistantMessage]);
@@ -83,7 +84,8 @@ export function useConversation() {
          const assistantMessage: Message = {
             id: crypto.randomUUID(),
             role: "assistant",
-            content: "Error generating response",
+            // content: "Error generating response. Please refresh or try again later,",
+            content: "Our servers are handling a lot of requests right now. Please refresh or try again later,",
             timestamp: new Date()
          };
          setMessages(prev => [...prev, assistantMessage]);

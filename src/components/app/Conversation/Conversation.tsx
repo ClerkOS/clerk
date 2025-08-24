@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { ArrowUp, FileText, Omega, Pi, Plus, ChartNoAxesCombined, WandSparkles } from "lucide-react";
+import { ArrowUp, FileText, Omega, Pi, Plus, ChartNoAxesCombined, WandSparkles, SquarePen } from "lucide-react";
 import { ConversationProps, Message } from "./conversationTypes";
 import { getCompletion } from "../../../lib/api/apiClient";
 import { useActiveSheet } from "../../providers/SheetProvider";
@@ -50,7 +50,7 @@ const Conversation: React.FC<ConversationProps> = () => {
                 className="p-1 rounded dark:hover:bg-gray-700 hover:bg-gray-100"
                 title="Clear chat"
               >
-                 <Plus className="w-4 h-4 dark:text-gray-300 text-gray-700" />
+                 <Plus className="w-4 h-4 dark:text-gray-300 text-white" />
               </button>
            </div>
         </div>
@@ -70,7 +70,7 @@ const Conversation: React.FC<ConversationProps> = () => {
                 <div className="space-y-2 w-full max-w-96 pointer-events-auto text-left">
                    {/* Suggestion 1 */}
                    <div
-                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
                       <WandSparkles className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                       <div className="ml-3">
                          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -84,7 +84,7 @@ const Conversation: React.FC<ConversationProps> = () => {
 
                    {/* Suggestion 2 */}
                    <div
-                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
                       <FileText className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                       <div className="ml-3">
                          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -97,33 +97,47 @@ const Conversation: React.FC<ConversationProps> = () => {
                    </div>
 
                    {/* Suggestion 3 */}
-                   <div
-                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                      <ChartNoAxesCombined className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                      <div className="ml-3">
-                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Get insights
-                         </div>
-                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                            See important observations and recommendations about your data.
-                         </div>
-                      </div>
-                   </div>
+                   {/*<div*/}
+                   {/*  className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">*/}
+                   {/*   <ChartNoAxesCombined className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />*/}
+                   {/*   <div className="ml-3">*/}
+                   {/*      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">*/}
+                   {/*         Get insights*/}
+                   {/*      </div>*/}
+                   {/*      <div className="text-xs text-gray-500 dark:text-gray-400">*/}
+                   {/*         See important observations and recommendations about your data.*/}
+                   {/*      </div>*/}
+                   {/*   </div>*/}
+                   {/*</div>*/}
 
                    {/* Suggestion 4 */}
                    <div
-                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
                       <Pi className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                       <div className="ml-3">
                          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                             Work with formulae
                          </div>
                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Explain the formula(s) you want in English or understand complex formula(s).
+                            Explain the formula(s) you want in English e.g. put all names of the unique sales reps in
+                            col j.
                          </div>
                       </div>
                    </div>
 
+                   {/* Suggestion 5 */}
+                   <div
+                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
+                      <SquarePen className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div className="ml-3">
+                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            Natural language to cell edits
+                         </div>
+                         <div className="text-xs text-gray-500 dark:text-gray-400">
+                            E.g. "Add a new rows to the table" or "Calculate the average rent in row 7 col d
+                         </div>
+                      </div>
+                   </div>
 
 
                 </div>
