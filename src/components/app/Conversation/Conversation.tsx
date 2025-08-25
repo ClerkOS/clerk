@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { ArrowUp, FileText, Omega, Pi, Plus, ChartNoAxesCombined, WandSparkles, SquarePen } from "lucide-react";
 import { ConversationProps, Message } from "./conversationTypes";
 import { getCompletion } from "../../../lib/api/apiClient";
@@ -8,6 +8,7 @@ import { type } from "node:os";
 import { useConversation } from "./useConversation";
 
 const Conversation: React.FC<ConversationProps> = () => {
+   const messagesEndRef = useRef<HTMLDivElement>(null);
 
    const {
       workbookId,
@@ -29,6 +30,15 @@ const Conversation: React.FC<ConversationProps> = () => {
       parseStepOutput,
       applyTableEdits
    } = useConversation()
+
+   // Auto-scroll to bottom when messages change or when generating
+   const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+   };
+
+   useEffect(() => {
+      scrollToBottom();
+   }, [messages, isGenerating]);
 
    return (
      <div
@@ -163,6 +173,9 @@ const Conversation: React.FC<ConversationProps> = () => {
                 </div>
               );
            })}
+           
+           {/* Scroll target for auto-scroll */}
+           <div ref={messagesEndRef} />
         </div>
 
         {/* Generating animation */}
