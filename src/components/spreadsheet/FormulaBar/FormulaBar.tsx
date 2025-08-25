@@ -5,6 +5,7 @@ import { useWorkbookId } from '../../providers/WorkbookProvider';
 import { useActiveSheet } from '../../providers/SheetProvider';
 import { columnIndexToLetter } from '../../../utils/utils';
 import { setCell, getSheet } from '../../../lib/api/apiClient';
+import { defaultStyle } from "../Grid/gridTypes";
 
 const FormulaBar = () => {
   const { activeCellId, setActiveCellId } = useActiveCell();
@@ -57,9 +58,9 @@ const FormulaBar = () => {
     if (cellMap) {
       const newCellMap = new Map(cellMap);
       newCellMap.set(activeCellId, {
-        value: value,
-        formula: formula,
-        style: cellData?.style,
+        value,
+        formula,
+        style: cellData?.style ?? defaultStyle,
       });
       
       setCellDataBySheet(prev => ({
@@ -72,8 +73,8 @@ const FormulaBar = () => {
     await setCell(workbookId, {
       sheet: sheetName,
       address: activeCellId as string,
-      value: value,
-      ...(isFormula && { formula: formula })
+      value,
+      ...(isFormula && { formula })
     });
 
     // Refresh the sheet data from backend to get the calculated values
@@ -108,6 +109,7 @@ const FormulaBar = () => {
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      e.preventDefault()
       await handleFormulaCommit();
     } else if (e.key === 'Escape') {
       // Reset to original value

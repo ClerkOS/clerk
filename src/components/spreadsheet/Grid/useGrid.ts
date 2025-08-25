@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CELL_HEIGHT, CELL_WIDTH, defaultStyle, TOTAL_COLS, TOTAL_ROWS, VIEWPORT_BUFFER } from "./gridTypes";
-import { setCell } from "../../../lib/api/apiClient";
+import { getSheet, setCell } from "../../../lib/api/apiClient";
 import { columnIndexToLetter } from "../../../utils/utils";
 import { useCellMap } from "../../providers/CellMapProvider";
 import { useWorkbookId } from "../../providers/WorkbookProvider";
@@ -182,7 +182,14 @@ export function useGrid() {
    const handleCellDoubleClick = (row: number, col: number) => {
       setEditingCell({ row, col });
       const addr = `${columnIndexToLetter(col)}${row + 1}`;
-      setEditValue(cellMap.get(addr)?.value ?? "");
+      const cellData = cellMap.get(addr);
+
+      if (cellData?.formula) {
+         // Show it with the "=" sign
+         setEditValue(`=${cellData.formula}`);
+      } else {
+         setEditValue(cellData?.value ?? "");
+      }
    };
 
    // Mouse down on column header -> select entire column
@@ -211,21 +218,28 @@ export function useGrid() {
    const handleEditCommit = async () => {
       if (!editingCell) return;
       const addr = `${columnIndexToLetter(editingCell.col)}${editingCell.row + 1}`;
-      const prevValue = cellMap.get(addr)?.value ?? "";
+      const cellData = cellMap.get(addr);
+      const currentValue = cellData?.formula
+        ? `=${cellData.formula}`
+        : (cellData?.value ?? "");
 
       // Skip if value didn't change
-      if (editValue === prevValue) {
+      if (editValue === currentValue) {
          setEditingCell(null);
          setEditValue("");
          return;
       }
 
+      const isFormula = editValue.startsWith("=");
+      const formula = isFormula ? editValue.substring(1) : "";
+      const value = isFormula ? "" : editValue;
+
       //  Update local state
       const newCellMap = new Map(cellMap);
       newCellMap.set(addr, {
-         value: editValue,
-         formula: "",
-         style: defaultStyle
+         value,
+         formula,
+         style: cellData?.style ?? defaultStyle
       });
       setCellMap(newCellMap);
 
@@ -235,7 +249,6 @@ export function useGrid() {
          [sheetName]: new Map(newCellMap)
       }));
 
-
       // Exit edit mode
       setEditingCell(null);
       setEditValue("");
@@ -244,8 +257,35 @@ export function useGrid() {
       await setCell(workbookId, {
          sheet: sheetName,
          address: addr,
-         value: editValue
+         value: editValue,
+         ...(isFormula && { formula })
       });
+
+      // Refresh sheet data to get evaluated values
+      try {
+         const response = await getSheet(workbookId, sheetName);
+         if (response.data.success) {
+            const sheetData = response.data.data.sheet;
+            const updatedCellMap = new Map();
+
+            if (sheetData.cells) {
+               Object.entries(sheetData.cells).forEach(([cellId, cellData]: [string, any]) => {
+                  updatedCellMap.set(cellId, {
+                     value: cellData.value || "",
+                     formula: cellData.formula || "",
+                     style: cellData.style || {},
+                  });
+               });
+            }
+
+            setCellDataBySheet(prev => ({
+               ...prev,
+               [sheetName]: updatedCellMap,
+            }));
+         }
+      } catch (err) {
+         console.error("Failed to refresh sheet data:", err);
+      }
    };
 
    // Start range selection
