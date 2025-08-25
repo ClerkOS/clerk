@@ -182,6 +182,14 @@ const Grid: React.FC = () => {
                 (selectionMode === "col" && selectedCol === col) ||
                 inSelection;
 
+              // Animation highlight effect
+              const isAnimating = cellData?.style?.highlight;
+              const highlightClass = isAnimating 
+                ? "bg-yellow-200 dark:bg-yellow-700 animate-pulse scale-105" 
+                : isHighlighted 
+                  ? "bg-blue-100 dark:bg-blue-800" 
+                  : "bg-white dark:bg-gray-900";
+
               return (
                 <div
                   key={index}
@@ -189,8 +197,8 @@ const Grid: React.FC = () => {
                   onMouseDown={() => handleMouseDown(row, col)}
                   onMouseEnter={() => handleMouseEnter(row, col)}
                   onMouseUp={handleMouseUp}
-                  className={`absolute flex items-center ${justifyClass} border-b border-r border-gray-300 text-sm
-        ${isHighlighted ? "bg-blue-100 dark:bg-blue-800" : "bg-white dark:bg-gray-900"}`}
+                  className={`absolute flex items-center ${justifyClass} border-b border-r border-gray-300 text-sm transition-colors duration-150
+        ${highlightClass}`}
                   style={{
                   transform: `translate(${col * CELL_WIDTH}px, ${row * CELL_HEIGHT}px)`,
                   width: CELL_WIDTH,

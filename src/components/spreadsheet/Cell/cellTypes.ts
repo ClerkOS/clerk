@@ -53,7 +53,8 @@ interface CellData {
     alignment?: 'left' | 'center' | 'right';
     borderStyle?: 'thin' | 'medium' | 'thick';
     borderColor?: string;
-    numberFormat?: string
+    numberFormat?: string;
+    highlight?: boolean;
   };
 }
 

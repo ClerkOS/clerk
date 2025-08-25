@@ -142,6 +142,143 @@ export function useConversation() {
        React.SetStateAction<Record<string, Map<string, CellData>>>
      >
    ) {
+      // If there are multiple edits, use animated version
+      if (edits.length > 1) {
+         await applyTableEditsAnimated(workbookId, sheetName, edits, setCellMap, setCellDataBySheet);
+      } else {
+         // Single edit - apply immediately
+         await applyTableEditsImmediate(workbookId, sheetName, edits, setCellMap, setCellDataBySheet);
+      }
+   }
+
+   async function applyTableEditsAnimated(
+     workbookId: string,
+     sheetName: string,
+     edits: any[],
+     setCellMap: React.Dispatch<React.SetStateAction<Map<string, CellData>>>,
+     setCellDataBySheet: React.Dispatch<
+       React.SetStateAction<Record<string, Map<string, CellData>>>
+     >
+   ) {
+      // Push all changes to backend first
+      try {
+         await batchSetCells(workbookId, {
+            sheet: sheetName,
+            edits
+         });
+      } catch (err) {
+         console.error("Failed to apply table edits:", err);
+         return;
+      }
+
+      // Animate each cell update with delay
+      for (let i = 0; i < edits.length; i++) {
+         const edit = edits[i];
+         
+         // Update single cell with highlight effect
+         setCellMap(prev => {
+            const newMap = new Map(prev);
+            newMap.set(edit.address, {
+               value: edit.value,
+               formula: edit.formula ?? "",
+               style: { ...edit.style, highlight: true } // Add highlight effect
+            });
+            return newMap;
+         });
+
+         setCellDataBySheet(prev => {
+            const prevSheetMap = prev[sheetName] ?? new Map();
+            const newSheetMap = new Map(prevSheetMap);
+            newSheetMap.set(edit.address, {
+               value: edit.value,
+               formula: edit.formula ?? "",
+               style: { ...edit.style, highlight: true } // Add highlight effect
+            });
+            return {
+               ...prev,
+               [sheetName]: newSheetMap
+            };
+         });
+
+         // Wait before next cell update (mimics Excel autofill)
+         if (i < edits.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 150)); // 150ms delay
+         }
+      }
+
+      // Remove highlight effects after animation completes
+      setTimeout(() => {
+         setCellMap(prev => {
+            const newMap = new Map(prev);
+            edits.forEach(edit => {
+               const cellData = newMap.get(edit.address);
+               if (cellData) {
+                  newMap.set(edit.address, {
+                     ...cellData,
+                     style: { ...cellData.style, highlight: false }
+                  });
+               }
+            });
+            return newMap;
+         });
+
+         setCellDataBySheet(prev => {
+            const prevSheetMap = prev[sheetName] ?? new Map();
+            const newSheetMap = new Map(prevSheetMap);
+            edits.forEach(edit => {
+               const cellData = newSheetMap.get(edit.address);
+               if (cellData) {
+                  newSheetMap.set(edit.address, {
+                     ...cellData,
+                     style: { ...cellData.style, highlight: false }
+                  });
+               }
+            });
+            return {
+               ...prev,
+               [sheetName]: newSheetMap
+            };
+         });
+      }, 500); // Remove highlights after 500ms
+
+      // Refresh the sheet data from backend to get the calculated values
+      try {
+         const response = await getSheet(workbookId, sheetName);
+         if (response.data.success) {
+            const sheetData = response.data.data.sheet;
+            const updatedCellMap = new Map();
+            
+            if (sheetData.cells) {
+               Object.entries(sheetData.cells).forEach(([cellId, cellData]: [string, any]) => {
+                  updatedCellMap.set(cellId, {
+                     value: cellData.value || '',
+                     formula: cellData.formula || '',
+                     style: cellData.style || {}
+                  });
+               });
+            }
+            
+            // Update both local and global state with fresh data
+            setCellMap(updatedCellMap);
+            setCellDataBySheet(prev => ({
+               ...prev,
+               [sheetName]: updatedCellMap
+            }));
+         }
+      } catch (refreshErr) {
+         console.error("Failed to refresh sheet data:", refreshErr);
+      }
+   }
+
+   async function applyTableEditsImmediate(
+     workbookId: string,
+     sheetName: string,
+     edits: any[],
+     setCellMap: React.Dispatch<React.SetStateAction<Map<string, CellData>>>,
+     setCellDataBySheet: React.Dispatch<
+       React.SetStateAction<Record<string, Map<string, CellData>>>
+     >
+   ) {
       // Build updated sheet map
       const applyEditsToMap = (prevMap: Map<string, CellData>) => {
          const newMap = new Map(prevMap);
