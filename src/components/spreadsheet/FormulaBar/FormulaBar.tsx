@@ -4,7 +4,7 @@ import { useCellMap } from '../../providers/CellMapProvider';
 import { useWorkbookId } from '../../providers/WorkbookProvider';
 import { useActiveSheet } from '../../providers/SheetProvider';
 import { columnIndexToLetter } from '../../../utils/utils';
-import { setCell } from '../../../lib/api/apiClient';
+import { setCell, getSheet } from '../../../lib/api/apiClient';
 
 const FormulaBar = () => {
   const { activeCellId, setActiveCellId } = useActiveCell();
@@ -50,16 +50,16 @@ const FormulaBar = () => {
 
     // Determine if it's a formula or plain value
     const isFormula = formulaValue.startsWith('=');
-    const value = isFormula ? formulaValue.substring(1) : formulaValue;
-    const displayValue = isFormula ? value : formulaValue;
+    const formulaText = isFormula ? formulaValue.substring(1) : '';
+    const plainValue = isFormula ? '' : formulaValue;
 
     // Update local state
     if (cellMap) {
       const newCellMap = new Map(cellMap);
       newCellMap.set(activeCellId, {
-        value: displayValue,
-        formula: isFormula ? value : '',
-        style: cellData?.style ?? {},
+        value: plainValue, // For formulas, this will be calculated by the backend
+        formula: formulaText,
+        style: cellData?.style,
       });
       
       setCellDataBySheet(prev => ({
@@ -71,10 +71,37 @@ const FormulaBar = () => {
     // Push change to backend
     await setCell(workbookId, {
       sheet: sheetName,
-      address: activeCellId,
-      value: displayValue,
-      formula: isFormula ? value : undefined
+      address: activeCellId as string,
+      value: plainValue,
+      ...(isFormula && { formula: formulaText })
     });
+
+    // Refresh the sheet data from backend to get the calculated values
+    try {
+      const response = await getSheet(workbookId, sheetName);
+      if (response.data.success) {
+        const sheetData = response.data.data.sheet;
+        const updatedCellMap = new Map();
+        
+        if (sheetData.cells) {
+          Object.entries(sheetData.cells).forEach(([cellId, cellData]: [string, any]) => {
+            updatedCellMap.set(cellId, {
+              value: cellData.value || '',
+              formula: cellData.formula || '',
+              style: cellData.style || {}
+            });
+          });
+        }
+        
+        // Update global context with fresh data
+        setCellDataBySheet(prev => ({
+          ...prev,
+          [sheetName]: updatedCellMap
+        }));
+      }
+    } catch (refreshErr) {
+      console.error("Failed to refresh sheet data:", refreshErr);
+    }
 
     setIsEditing(false);
   };

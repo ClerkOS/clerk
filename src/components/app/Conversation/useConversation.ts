@@ -3,7 +3,7 @@ import { CellData } from "../../spreadsheet/Grid/gridTypes";
 import { useWorkbookId } from "../../providers/WorkbookProvider";
 import { useActiveSheet } from "../../providers/SheetProvider";
 import { Message } from "./conversationTypes";
-import { batchSetCells, getCompletion } from "../../../lib/api/apiClient";
+import { batchSetCells, getCompletion, getSheet } from "../../../lib/api/apiClient";
 import { useCellMap } from "../../providers/CellMapProvider";
 
 export function useConversation() {
@@ -117,6 +117,17 @@ export function useConversation() {
          case "generate_table":
             await applyTableEdits(workbookId, sheet, output.edits, setCellMap, setCellDataBySheet);
             return output.description;
+         case "generate_formula":
+            // Apply the generated formulas to the sheet
+            if (output.target_cells && output.target_cells.length > 0) {
+               const edits = output.target_cells.map((cell: any) => ({
+                  address: cell.address,
+                  value: "", // Will be calculated by the formula
+                  formula: cell.formula,
+               }));
+               await applyTableEdits(workbookId, sheet, edits, setCellMap, setCellDataBySheet);
+            }
+            return output.description;
          default:
             return "couldn't parse step result";
       }
@@ -162,6 +173,34 @@ export function useConversation() {
             sheet: sheetName,
             edits
          });
+         
+         // Refresh the sheet data from backend to get the calculated values
+         try {
+            const response = await getSheet(workbookId, sheetName);
+            if (response.data.success) {
+               const sheetData = response.data.data.sheet;
+               const updatedCellMap = new Map();
+               
+               if (sheetData.cells) {
+                  Object.entries(sheetData.cells).forEach(([cellId, cellData]: [string, any]) => {
+                     updatedCellMap.set(cellId, {
+                        value: cellData.value || '',
+                        formula: cellData.formula || '',
+                        style: cellData.style || {}
+                     });
+                  });
+               }
+               
+               // Update both local and global state with fresh data
+               setCellMap(updatedCellMap);
+               setCellDataBySheet(prev => ({
+                  ...prev,
+                  [sheetName]: updatedCellMap
+               }));
+            }
+         } catch (refreshErr) {
+            console.error("Failed to refresh sheet data:", refreshErr);
+         }
       } catch (err) {
          console.error("Failed to apply table edits:", err);
       }
