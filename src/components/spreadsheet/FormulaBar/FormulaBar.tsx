@@ -12,7 +12,7 @@ const FormulaBar = () => {
   const { workbookId } = useWorkbookId();
   const { activeSheet } = useActiveSheet();
   
-  const [formulaValue, setFormulaValue] = useState('');
+  const [formulaBarValue, setFormulaBarValue] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
   const sheetName = activeSheet ?? "Sheet1";
@@ -23,16 +23,16 @@ const FormulaBar = () => {
     if (activeCellId && cellMap) {
       const cellData = cellMap.get(activeCellId);
       const displayValue = cellData?.formula ? `=${cellData.formula}` : (cellData?.value ?? '');
-      setFormulaValue(displayValue);
+      setFormulaBarValue(displayValue);
       setIsEditing(false);
     } else {
-      setFormulaValue('');
+      setFormulaBarValue('');
       setIsEditing(false);
     }
   }, [activeCellId, cellMap]);
 
   const handleFormulaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormulaValue(e.target.value);
+    setFormulaBarValue(e.target.value);
     setIsEditing(true);
   };
 
@@ -43,22 +43,22 @@ const FormulaBar = () => {
     const currentValue = cellData?.formula ? `=${cellData.formula}` : (cellData?.value ?? '');
     
     // Skip if value didn't change
-    if (formulaValue === currentValue) {
+    if (formulaBarValue === currentValue) {
       setIsEditing(false);
       return;
     }
 
     // Determine if it's a formula or plain value
-    const isFormula = formulaValue.startsWith('=');
-    const formulaText = isFormula ? formulaValue.substring(1) : '';
-    const plainValue = isFormula ? '' : formulaValue;
+    const isFormula = formulaBarValue.startsWith('=');
+    const formula = isFormula ? formulaBarValue.substring(1) : '';
+    const value = isFormula ? '' : formulaBarValue;
 
     // Update local state
     if (cellMap) {
       const newCellMap = new Map(cellMap);
       newCellMap.set(activeCellId, {
-        value: plainValue, // For formulas, this will be calculated by the backend
-        formula: formulaText,
+        value: value,
+        formula: formula,
         style: cellData?.style,
       });
       
@@ -72,8 +72,8 @@ const FormulaBar = () => {
     await setCell(workbookId, {
       sheet: sheetName,
       address: activeCellId as string,
-      value: plainValue,
-      ...(isFormula && { formula: formulaText })
+      value: value,
+      ...(isFormula && { formula: formula })
     });
 
     // Refresh the sheet data from backend to get the calculated values
@@ -84,7 +84,7 @@ const FormulaBar = () => {
         const updatedCellMap = new Map();
         
         if (sheetData.cells) {
-          Object.entries(sheetData.cells).forEach(([cellId, cellData]: [string, any]) => {
+          Object.entries(sheetData.cells).forEach(([cellId, cellData]: [string, any]) =>{
             updatedCellMap.set(cellId, {
               value: cellData.value || '',
               formula: cellData.formula || '',
@@ -99,27 +99,29 @@ const FormulaBar = () => {
           [sheetName]: updatedCellMap
         }));
       }
-    } catch (refreshErr) {
-      console.error("Failed to refresh sheet data:", refreshErr);
+    } catch (err) {
+      console.error("Failed to refresh sheet data:", err);
     }
 
     setIsEditing(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleFormulaCommit();
+      await handleFormulaCommit();
     } else if (e.key === 'Escape') {
       // Reset to original value
-      const cellData = cellMap?.get(activeCellId);
+      const cellData = cellMap?.get(activeCellId ?? '');
       const displayValue = cellData?.formula ? `=${cellData.formula}` : (cellData?.value ?? '');
-      setFormulaValue(displayValue);
+      setFormulaBarValue(displayValue);
       setIsEditing(false);
     }
   };
 
-  const handleBlur = () => {
-    handleFormulaCommit();
+  const handleBlur = async () => {
+    if (isEditing) {
+      await handleFormulaCommit();
+    }
   };
 
   return (
@@ -132,8 +134,8 @@ const FormulaBar = () => {
       </span>
       <input
         type="text"
-        className="flex-1 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-xs sm:text-sm"
-        value={formulaValue}
+        className="flex-1 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-blue-700 dark:text-gray-100 text-xs sm:text-sm"
+        value={formulaBarValue}
         onChange={handleFormulaChange}
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}

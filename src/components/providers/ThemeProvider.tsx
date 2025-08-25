@@ -18,13 +18,17 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const getInitialTheme = (): Theme => {
     if (typeof window !== 'undefined' && window.localStorage) {
       const storedPrefs = window.localStorage.getItem('color-theme');
-      if (storedPrefs === 'light' || storedPrefs === 'dark') {
-        return storedPrefs;
+      // if (storedPrefs === 'light' || storedPrefs === 'dark') {
+      //   return storedPrefs;
+      // }
+      if (storedPrefs === 'light') {
+        return 'light';
       }
 
       const userMedia = window.matchMedia('(prefers-color-scheme: dark)');
       if (userMedia.matches) {
-        return 'dark';
+        // return 'dark';
+        return 'light';
       }
     }
 
