@@ -5,6 +5,7 @@ import { columnIndexToLetter } from "../../../utils/utils";
 import { useCellMap } from "../../providers/CellMapProvider";
 import { useWorkbookId } from "../../providers/WorkbookProvider";
 import { useActiveSheet } from "../../providers/SheetProvider";
+import { useActiveCell } from "../../providers/ActiveCellProvider";
 
 /**
  * Hook: useGrid
@@ -139,6 +140,9 @@ export function useGrid() {
   const { workbookId } = useWorkbookId();
   const { activeSheet } = useActiveSheet();
 
+  // Active cell context
+  const { setActiveCellId } = useActiveCell();
+
   // Data for the grid
   const { cellDataBySheet, setCellDataBySheet } = useCellMap();
   const sheetName = activeSheet ?? "Sheet1"
@@ -168,6 +172,10 @@ export function useGrid() {
       setSelectedCell({ row, col });
       setSelectedRow(null);
       setSelectedCol(null);
+      
+      // Update active cell ID for formula bar
+      const cellId = `${columnIndexToLetter(col)}${row + 1}`;
+      setActiveCellId(cellId);
     };
 
   // Double-click to enter edit mode
@@ -249,6 +257,10 @@ export function useGrid() {
     setSelectionStart({ row, col });
     setSelectionEnd({ row, col });
     setIsSelecting(true);
+    
+    // Update active cell ID for formula bar
+    const cellId = `${columnIndexToLetter(col)}${row + 1}`;
+    setActiveCellId(cellId);
   };
 
   // Expand range while dragging

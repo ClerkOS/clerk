@@ -26,9 +26,11 @@ if (!rootElement.innerHTML) {
       <ThemeProvider>
         <WorkbookIdProvider>
           <ActiveSheetProvider>
-          <CellMapProvider>
-            <App />
-          </CellMapProvider>
+            <CellMapProvider>
+              <ActiveCellProvider>
+                <App />
+              </ActiveCellProvider>
+            </CellMapProvider>
           </ActiveSheetProvider>
         </WorkbookIdProvider>
       </ThemeProvider>
