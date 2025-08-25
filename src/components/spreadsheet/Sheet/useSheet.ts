@@ -14,6 +14,7 @@ export const useSheet = () => {
   const [isWorkbookLoaded, setIsWorkbookLoaded] = useState<boolean>(false);
   const [sheets, setSheets] = useState<string[]>([]);
   const { cellDataBySheet, setCellDataBySheet } = useCellMap();
+  const { setActiveSheet } = useActiveSheet();
   const [contextMenu, setContextMenu] = useState<Position | null>(null);
 
 
@@ -23,6 +24,12 @@ export const useSheet = () => {
       if (response.data.success) {
         console.log("workbookId:", response.data.data.workbook_id);
         setWorkbookId(response.data.data.workbook_id);
+        
+        // Set default sheets for new workbook
+        const defaultSheets = ["Sheet1", "Sheet2", "Sheet3"];
+        setSheets(defaultSheets);
+        setActiveSheet(defaultSheets[0]); // Set first sheet as active
+        
         setIsWorkbookLoaded(true);
       }
     } catch (error) {
@@ -39,7 +46,14 @@ export const useSheet = () => {
       console.log("workbookId:", newWorkbookId);
       setWorkbookId(newWorkbookId);
       console.log("workbookId:", workbookId);
-      setSheets(importResponse.data.data.sheets);
+      
+      const importedSheets = importResponse.data.data.sheets;
+      setSheets(importedSheets);
+
+      // Set the first sheet as active if sheets exist
+      if (importedSheets.length > 0) {
+        setActiveSheet(importedSheets[0]);
+      }
 
       const getResponse = await getWorkbook(newWorkbookId);
       if (getResponse.data.success) {

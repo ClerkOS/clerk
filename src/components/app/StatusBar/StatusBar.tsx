@@ -2,8 +2,10 @@ import React from 'react';
 // import { useSpreadsheet } from '../../context/SpreadsheetContext.jsx';
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import SheetSwitcher from '../SheetSwitcher/SheetSwitcher';
+import { useActiveSheet } from '../../providers/SheetProvider';
 
 const StatusBar = () => {
+  const { setActiveSheet } = useActiveSheet();
   // const { zoom, setZoom } = useSpreadsheet();
 
   // const handleZoomIn = () => {
@@ -25,7 +27,7 @@ const StatusBar = () => {
     >
       {/* Left side - Sheet Switcher */}
       <div className="flex items-center space-x-4">
-        {/*<SheetSwitcher />*/}
+        <SheetSwitcher setCurrentSheet={setActiveSheet} />
       </div>
 
       {/* Right side - zoom controls */}
