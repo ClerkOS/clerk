@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { CellData } from "../../spreadsheet/Grid/gridTypes";
 import { useWorkbookId } from "../../providers/WorkbookProvider";
 import { useActiveSheet } from "../../providers/SheetProvider";
@@ -16,8 +16,18 @@ export function useConversation() {
    const [messages, setMessages] = useState<Message[]>([]);
    const [userInput, setUserInput] = useState("");
    const textareaRef = useRef<HTMLTextAreaElement>(null);
+   const messagesEndRef = useRef<HTMLDivElement>(null);
    const { cellDataBySheet, setCellDataBySheet } = useCellMap();
    const [cellMap, setCellMap] = useState(cellDataBySheet[sheet]);
+
+   // Auto-scroll to bottom when messages change or when generating
+   const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+   };
+
+   useEffect(() => {
+      scrollToBottom();
+   }, [messages, isGenerating]);
 
    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setUserInput(e.target.value);
@@ -117,17 +127,6 @@ export function useConversation() {
          case "generate_table":
             await applyTableEdits(workbookId, sheet, output.edits, setCellMap, setCellDataBySheet);
             return output.description;
-         case "generate_formula":
-            // Apply the generated formulas to the sheet
-            if (output.target_cells && output.target_cells.length > 0) {
-               const edits = output.target_cells.map((cell: any) => ({
-                  address: cell.address,
-                  value: "", // Will be calculated by the formula
-                  formula: cell.formula,
-               }));
-               await applyTableEdits(workbookId, sheet, edits, setCellMap, setCellDataBySheet);
-            }
-            return output.description;
          default:
             return "couldn't parse step result";
       }
@@ -142,204 +141,90 @@ export function useConversation() {
        React.SetStateAction<Record<string, Map<string, CellData>>>
      >
    ) {
-      // If there are multiple edits, use animated version
-      if (edits.length > 1) {
-         await applyTableEditsAnimated(workbookId, sheetName, edits, setCellMap, setCellDataBySheet);
-      } else {
-         // Single edit - apply immediately
-         await applyTableEditsImmediate(workbookId, sheetName, edits, setCellMap, setCellDataBySheet);
-      }
-   }
-
-   async function applyTableEditsAnimated(
-     workbookId: string,
-     sheetName: string,
-     edits: any[],
-     setCellMap: React.Dispatch<React.SetStateAction<Map<string, CellData>>>,
-     setCellDataBySheet: React.Dispatch<
-       React.SetStateAction<Record<string, Map<string, CellData>>>
-     >
-   ) {
-      // Push all changes to backend first
-      try {
-         await batchSetCells(workbookId, {
-            sheet: sheetName,
-            edits
-         });
-      } catch (err) {
-         console.error("Failed to apply table edits:", err);
-         return;
-      }
-
-      // Animate each cell update with delay
-      for (let i = 0; i < edits.length; i++) {
-         const edit = edits[i];
-         
-         // Update single cell with highlight effect
-         setCellMap(prev => {
-            const newMap = new Map(prev);
-            newMap.set(edit.address, {
-               value: edit.value,
-               formula: edit.formula ?? "",
-               style: { ...edit.style, highlight: true } // Add highlight effect
-            });
-            return newMap;
-         });
-
-         setCellDataBySheet(prev => {
-            const prevSheetMap = prev[sheetName] ?? new Map();
-            const newSheetMap = new Map(prevSheetMap);
-            newSheetMap.set(edit.address, {
-               value: edit.value,
-               formula: edit.formula ?? "",
-               style: { ...edit.style, highlight: true } // Add highlight effect
-            });
-            return {
-               ...prev,
-               [sheetName]: newSheetMap
-            };
-         });
-
-         // Wait before next cell update (mimics Excel autofill)
-         if (i < edits.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 150)); // 150ms delay
+      // Build updated sheet map
+      const applyEditsToMap = (prevMap: Map<string, CellData>) => {
+         const newMap = new Map(prevMap);
+         for (const edit of edits) {
+            // Only update locally for non-formula cells
+            if (!edit.formula || !edit.formula.startsWith('=')) {
+               newMap.set(edit.address, {
+                  value: edit.value,
+                  formula: edit.formula ?? "",
+                  style: edit.style ?? {}
+               });
+            }
+            // For formula cells, we'll wait for the backend response
          }
-      }
+         return newMap;
+      };
 
-      // Remove highlight effects after animation completes
-      setTimeout(() => {
-         setCellMap(prev => {
-            const newMap = new Map(prev);
-            edits.forEach(edit => {
-               const cellData = newMap.get(edit.address);
-               if (cellData) {
-                  newMap.set(edit.address, {
-                     ...cellData,
-                     style: { ...cellData.style, highlight: false }
-                  });
-               }
-            });
-            return newMap;
-         });
+      // Only update non-formula cells immediately
+      const hasNonFormulaCells = edits.some(edit => !edit.formula || !edit.formula.startsWith('='));
 
+      if (hasNonFormulaCells) {
+         setCellMap(prev => applyEditsToMap(prev));
          setCellDataBySheet(prev => {
             const prevSheetMap = prev[sheetName] ?? new Map();
-            const newSheetMap = new Map(prevSheetMap);
-            edits.forEach(edit => {
-               const cellData = newSheetMap.get(edit.address);
-               if (cellData) {
-                  newSheetMap.set(edit.address, {
-                     ...cellData,
-                     style: { ...cellData.style, highlight: false }
-                  });
-               }
-            });
             return {
                ...prev,
-               [sheetName]: newSheetMap
+               [sheetName]: applyEditsToMap(prevSheetMap)
             };
          });
-      }, 500); // Remove highlights after 500ms
+      }
 
-      // Refresh the sheet data from backend to get the calculated values
+      // Process edits to handle formulas correctly
+      const processedEdits = edits.map(edit => {
+         // Check if value is actually a formula
+         if (edit.value && edit.value.startsWith('=')) {
+            return {
+               ...edit,
+               value: edit.value, // Keep the full formula as value
+               formula: edit.value.substring(1) // Extract formula without = sign
+            };
+         }
+         // If formula field exists and starts with =, fix it
+         else if (edit.formula && edit.formula.startsWith('=')) {
+            return {
+               ...edit,
+               value: edit.formula, // Move formula to value field
+               formula: edit.formula.substring(1) // Remove = sign from formula field
+            };
+         }
+         return edit;
+      });
+
+      // Push changes to backend
+      await batchSetCells(workbookId, {
+         sheet: sheetName,
+         edits: processedEdits
+      });
+
+      // Refresh sheet data to get evaluated values
       try {
          const response = await getSheet(workbookId, sheetName);
          if (response.data.success) {
             const sheetData = response.data.data.sheet;
             const updatedCellMap = new Map();
-            
+
             if (sheetData.cells) {
                Object.entries(sheetData.cells).forEach(([cellId, cellData]: [string, any]) => {
                   updatedCellMap.set(cellId, {
-                     value: cellData.value || '',
-                     formula: cellData.formula || '',
+                     value: cellData.value || "",
+                     formula: cellData.formula || "",
                      style: cellData.style || {}
                   });
                });
             }
-            
-            // Update both local and global state with fresh data
+
+            // Update local and global state with fresh data
             setCellMap(updatedCellMap);
             setCellDataBySheet(prev => ({
                ...prev,
                [sheetName]: updatedCellMap
             }));
          }
-      } catch (refreshErr) {
-         console.error("Failed to refresh sheet data:", refreshErr);
-      }
-   }
-
-   async function applyTableEditsImmediate(
-     workbookId: string,
-     sheetName: string,
-     edits: any[],
-     setCellMap: React.Dispatch<React.SetStateAction<Map<string, CellData>>>,
-     setCellDataBySheet: React.Dispatch<
-       React.SetStateAction<Record<string, Map<string, CellData>>>
-     >
-   ) {
-      // Build updated sheet map
-      const applyEditsToMap = (prevMap: Map<string, CellData>) => {
-         const newMap = new Map(prevMap);
-         for (const edit of edits) {
-            newMap.set(edit.address, {
-               value: edit.value,
-               formula: edit.formula ?? "",
-               style: edit.style ?? {}
-            });
-         }
-         return newMap;
-      };
-
-      // Update local map immediately
-      setCellMap(prev => applyEditsToMap(prev));
-
-      // Update global context map immediately
-      setCellDataBySheet(prev => {
-         const prevSheetMap = prev[sheetName] ?? new Map();
-         return {
-            ...prev,
-            [sheetName]: applyEditsToMap(prevSheetMap)
-         };
-      });
-
-      // Push changes to backend
-      try {
-         await batchSetCells(workbookId, {
-            sheet: sheetName,
-            edits
-         });
-         
-         // Refresh the sheet data from backend to get the calculated values
-         try {
-            const response = await getSheet(workbookId, sheetName);
-            if (response.data.success) {
-               const sheetData = response.data.data.sheet;
-               const updatedCellMap = new Map();
-               
-               if (sheetData.cells) {
-                  Object.entries(sheetData.cells).forEach(([cellId, cellData]: [string, any]) => {
-                     updatedCellMap.set(cellId, {
-                        value: cellData.value || '',
-                        formula: cellData.formula || '',
-                        style: cellData.style || {}
-                     });
-                  });
-               }
-               
-               // Update both local and global state with fresh data
-               setCellMap(updatedCellMap);
-               setCellDataBySheet(prev => ({
-                  ...prev,
-                  [sheetName]: updatedCellMap
-               }));
-            }
-         } catch (refreshErr) {
-            console.error("Failed to refresh sheet data:", refreshErr);
-         }
       } catch (err) {
-         console.error("Failed to apply table edits:", err);
+         console.error("Failed to refresh sheet data:", err);
       }
    }
 
@@ -361,6 +246,7 @@ export function useConversation() {
       handleKeyDown,
       handleSend,
       parseStepOutput,
-      applyTableEdits
+      applyTableEdits,
+      messagesEndRef
    };
 }

@@ -6,9 +6,10 @@ import { useActiveSheet } from "../../providers/SheetProvider";
 import { useWorkbookId } from "../../providers/WorkbookProvider";
 import { type } from "node:os";
 import { useConversation } from "./useConversation";
+import MessageBubble from "../Message/Message";
 
 const Conversation: React.FC<ConversationProps> = () => {
-   const messagesEndRef = useRef<HTMLDivElement>(null);
+
 
    const {
       workbookId,
@@ -28,17 +29,9 @@ const Conversation: React.FC<ConversationProps> = () => {
       handleKeyDown,
       handleSend,
       parseStepOutput,
-      applyTableEdits
+      applyTableEdits,
+      messagesEndRef
    } = useConversation()
-
-   // Auto-scroll to bottom when messages change or when generating
-   const scrollToBottom = () => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-   };
-
-   useEffect(() => {
-      scrollToBottom();
-   }, [messages, isGenerating]);
 
    return (
      <div
@@ -154,25 +147,10 @@ const Conversation: React.FC<ConversationProps> = () => {
              </div>
            )}
 
-           {messages.map((message) => {
-              const isUser = message.role === "user";
-              return (
-                <div
-                  key={message.id}
-                  className={`w-full px-0.5 pt-0`} // full width, padding left/right
-                >
-                   <div
-                     className={`w-full px-2 py-1 rounded-[0.2rem] whitespace-pre-wrap text-sm text-left select-text
-                  ${isUser
-                       ? "bg-gray-100 text-gray-700 pt-4 pb-2 w-4" // user style
-                       : "bg-white text-gray-800"    // bot style
-                     }`}
-                   >
-                      {message.content}
-                   </div>
-                </div>
-              );
-           })}
+            {/* Message bubbles */}
+           {messages.map((message) => (
+             <MessageBubble key={message.id} message={message} />
+           ))}
            
            {/* Scroll target for auto-scroll */}
            <div ref={messagesEndRef} />
