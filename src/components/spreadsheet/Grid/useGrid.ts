@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CELL_HEIGHT, CELL_WIDTH, defaultStyle, TOTAL_COLS, TOTAL_ROWS, VIEWPORT_BUFFER } from "./gridTypes";
 import { getSheet, setCell } from "../../../lib/api/apiClient";
 import { columnIndexToLetter } from "../../../utils/utils";
@@ -6,6 +6,7 @@ import { useCellMap } from "../../providers/CellMapProvider";
 import { useWorkbookId } from "../../providers/WorkbookProvider";
 import { useActiveSheet } from "../../providers/SheetProvider";
 import { useActiveCell } from "../../providers/ActiveCellProvider";
+import { useAnimateCell } from "../../providers/AnimatingCellProvider";
 
 /**
  * Hook: useGrid
@@ -148,6 +149,9 @@ export function useGrid() {
    const sheetName = activeSheet ?? "Sheet1";
    // console.log("cellDataBySheet", cellDataBySheet)
    const [cellMap, setCellMap] = useState(cellDataBySheet[sheetName]);
+
+    // For triggering cell animations
+   const {animatingCells} = useAnimateCell()
 
    // Sync cellMap with incoming props
    useEffect(() => {
@@ -346,6 +350,7 @@ export function useGrid() {
       return Array.from({ length: maxCol - minCol + 1 }, (_, i) => minCol + i);
    };
 
+
    return {
       scrollContainerRef,
       scrollRef,
@@ -384,6 +389,8 @@ export function useGrid() {
       handleMouseEnter,
       isCellSelected,
       getHighlightedRows,
-      getHighlightedCols
+      getHighlightedCols,
+      animatingCells,
+      // triggerCellAnimations
    };
 }

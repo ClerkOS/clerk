@@ -8,6 +8,7 @@ import { ActiveSheetProvider } from "./components/providers/SheetProvider";
 import { ActiveCellProvider } from "./components/providers/ActiveCellProvider";
 import { WorkbookIdProvider } from "./components/providers/WorkbookProvider";
 import { CellMapProvider } from "./components/providers/CellMapProvider";
+import { AnimateCellProvider } from "./components/providers/AnimatingCellProvider";
 
 // TODO: Add providers here
 // function App() {
@@ -27,9 +28,11 @@ if (!rootElement.innerHTML) {
         <WorkbookIdProvider>
           <ActiveSheetProvider>
             <CellMapProvider>
-              <ActiveCellProvider>
-                <App />
-              </ActiveCellProvider>
+              <AnimateCellProvider>
+                <ActiveCellProvider>
+                  <App />
+                </ActiveCellProvider>
+              </AnimateCellProvider>
             </CellMapProvider>
           </ActiveSheetProvider>
         </WorkbookIdProvider>

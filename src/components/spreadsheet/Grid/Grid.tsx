@@ -47,20 +47,21 @@ const Grid: React.FC = () => {
     handleMouseEnter,
     isCellSelected,
     getHighlightedRows,
-    getHighlightedCols
+    getHighlightedCols,
+    animatingCells,
   } = useGrid();
 
   return (
     <div className="relative w-full h-full">
       {/* ---------------------------------------------------------------------- */}
-      {/*                     Corner cell (intersection of headers)               */}
+      {/*                     Corner cell (intersection of headers)              */}
       {/* ---------------------------------------------------------------------- */}
       <div
         className="absolute top-0 left-0 bg-gray-100 dark:bg-gray-800 border-b border-r border-gray-300 dark:border-gray-700"
         style={{ width: HEADER_WIDTH, height: HEADER_HEIGHT }}
       />
       {/* ---------------------------------------------------------------------- */}
-      {/*                      Virtualized column headers                         */}
+      {/*                      Virtualized column headers                        */}
       {/* ---------------------------------------------------------------------- */}
       <div
         className="absolute top-0 "
@@ -159,7 +160,8 @@ const Grid: React.FC = () => {
               const value = cellData?.value ?? "";
               const isNumber = !isNaN(Number(value)) && value.trim() !== "";
               const justifyClass = isNumber ? "justify-end" : "justify-start";
-              const inSelection = isCellSelected(row, col);
+               const baseClass = "absolute flex items-center border-b border-r border-gray-300 text-sm";
+               const inSelection = isCellSelected(row, col);
 
               // Compute selection borders for range highlight
               let borderStyles: React.CSSProperties = {};
@@ -182,19 +184,38 @@ const Grid: React.FC = () => {
                 (selectionMode === "col" && selectedCol === col) ||
                 inSelection;
 
-              // Animation highlight effect
-              // const highlightClass = isHighlighted
-              //   ? "bg-blue-100 dark:bg-yellow-700 animate-pulse scale-105" : "bg-white dark:bg-gray-900";
+               const isAnimating = animatingCells.has(addr);
+               // animatingCells.add("A1")
+               // animatingCells.add("A2")
+               // animatingCells.add("A3")
+               // animatingCells.add("A4")
+               // animatingCells.add("A5")
+               // const isAnimating = true;
+               // if (animatingCells.size > 0){
+               //    console.log("Grid render - animatingCells size:", animatingCells.size);
+               //    console.log("Grid render - animatingCells contents:", Array.from(animatingCells));
+               // }
 
-              return (
+               const getBackgroundClass = () => {
+                  if (isAnimating) {
+                     return "bg-blue-100 shadow-lg border-blue-300";
+                  } else if (isHighlighted) {
+                     return "bg-blue-100 animate-pulse scale-105 shadow-lg border-blue-300";
+                  } else {
+                     return "bg-white dark:bg-gray-900";
+                  }
+               };
+
+               const animatingClasses = getBackgroundClass();
+
+               return (
                 <div
                   key={index}
                   onDoubleClick={() => handleCellDoubleClick(row, col)}
                   onMouseDown={() => handleMouseDown(row, col)}
                   onMouseEnter={() => handleMouseEnter(row, col)}
                   onMouseUp={handleMouseUp}
-                  className={`absolute flex items-center ${justifyClass} border-b border-r border-gray-300 text-sm
-        ${isHighlighted ? "bg-blue-100 dark:bg-blue-800" : "bg-white dark:bg-gray-900"}`}
+                  className={`${baseClass} ${justifyClass} ${animatingClasses}`}
                   style={{
                   transform: `translate(${col * CELL_WIDTH}px, ${row * CELL_HEIGHT}px)`,
                   width: CELL_WIDTH,
