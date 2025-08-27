@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CELL_HEIGHT, CELL_WIDTH, defaultStyle, TOTAL_COLS, TOTAL_ROWS, VIEWPORT_BUFFER } from "./gridTypes";
 import { getSheet, setCell } from "../../../lib/api/apiClient";
 import { columnIndexToLetter } from "../../../utils/utils";
-import { useCellMap } from "../../providers/CellMapProvider";
-import { useWorkbookId } from "../../providers/WorkbookProvider";
-import { useActiveSheet } from "../../providers/SheetProvider";
+// import { useCellMap } from "../../providers/CellMapProvider";
+// import { useWorkbookId } from "../../providers/WorkbookProvider";
+// import { useActiveSheet } from "../../providers/ActiveSheetProvider";
 import { useActiveCell } from "../../providers/ActiveCellProvider";
 import { useAnimateCell } from "../../providers/AnimatingCellProvider";
+import { useWorkbook } from "../../providers/WorkbookProvider";
 
 /**
  * Hook: useGrid
@@ -137,18 +138,15 @@ export function useGrid() {
    const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null);
    const [editValue, setEditValue] = useState("");
 
-   // workbook and sheet context
-   const { workbookId } = useWorkbookId();
-   const { activeSheet } = useActiveSheet();
+   // workbook, sheet, and cell map context
+   const { workbookId, activeSheet, cellDataBySheet, setCellDataBySheet, } = useWorkbook()
 
    // Active cell context
    const { setActiveCellId } = useActiveCell();
 
    // Data for the grid
-   const { cellDataBySheet, setCellDataBySheet } = useCellMap();
-   const sheetName = activeSheet ?? "Sheet1";
-   // console.log("cellDataBySheet", cellDataBySheet)
-   const [cellMap, setCellMap] = useState(cellDataBySheet[sheetName]);
+   const sheetName = activeSheet ?? "SheetTest";
+   const [cellMap, setCellMap] = useState(activeSheet ? cellDataBySheet?.[sheetName] : new Map());
 
     // For triggering cell animations
    const {animatingCells} = useAnimateCell()

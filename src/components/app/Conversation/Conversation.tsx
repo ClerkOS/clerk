@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { ArrowUp, FileText, Omega, Pi, Plus, ChartNoAxesCombined, WandSparkles, SquarePen } from "lucide-react";
 import { ConversationProps, Message } from "./conversationTypes";
 import { getCompletion } from "../../../lib/api/apiClient";
-import { useActiveSheet } from "../../providers/SheetProvider";
+import { useActiveSheet } from "../../providers/ActiveSheetProvider";
 import { useWorkbookId } from "../../providers/WorkbookProvider";
 import { type } from "node:os";
 import { useConversation } from "./useConversation";

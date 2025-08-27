@@ -1,17 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useActiveCell } from '../../providers/ActiveCellProvider';
-import { useCellMap } from '../../providers/CellMapProvider';
-import { useWorkbookId } from '../../providers/WorkbookProvider';
-import { useActiveSheet } from '../../providers/SheetProvider';
 import { columnIndexToLetter } from '../../../utils/utils';
 import { setCell, getSheet } from '../../../lib/api/apiClient';
 import { defaultStyle } from "../Grid/gridTypes";
+import { useWorkbook } from "../../providers/WorkbookProvider";
 
 const FormulaBar = () => {
+  const {
+    workbookId,
+    sheets,
+    activeSheet,
+    cellDataBySheet,
+    setCellDataBySheet,
+    isWorkbookLoaded,
+    createWorkbook,
+    importWorkbook,
+    setActiveSheet,
+  } = useWorkbook()
+
   const { activeCellId, setActiveCellId } = useActiveCell();
-  const { cellDataBySheet, setCellDataBySheet } = useCellMap();
-  const { workbookId } = useWorkbookId();
-  const { activeSheet } = useActiveSheet();
+  // const { cellDataBySheet, setCellDataBySheet } = useCellMap();
+  // const { workbookId } = useWorkbookId();
+  // const { activeSheet } = useActiveSheet();
   
   const [formulaBarValue, setFormulaBarValue] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -125,14 +135,19 @@ const FormulaBar = () => {
       await handleFormulaCommit();
     }
   };
+  // sm:px-1 sm:py-0.5
+
+  if (!activeSheet) {
+    return null;
+  }
 
   return (
     <div
       className="flex items-center w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
     >
-      <span className="cell-ref bg-gray-100 border border-gray-200 rounded px-3 sm:px-6 py-1 sm:py-2 text-blue-600 font-mono mr-2 sm:mr-4 text-xs sm:text-base">
-        {activeCellId || ''}
+      <span className="cell-ref bg-gray-100 border border-gray-200 rounded px-2 py-0.5 text-blue-600 font-mono mr-2 sm:mr-2 text-sm sm:text-base">
+        {activeCellId || "-"}
       </span>
       <input
         type="text"

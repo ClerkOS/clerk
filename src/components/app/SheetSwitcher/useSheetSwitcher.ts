@@ -1,22 +1,34 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Sheet, DeleteConfirmation, DropdownPosition, SheetSwitcherProps } from './sheetSwitcherTypes';
-import { useActiveSheet } from "../../providers/SheetProvider";
+import { useActiveSheet } from "../../providers/ActiveSheetProvider";
 import { useSheet } from "../../spreadsheet/Sheet/useSheet";
+import { useWorkbook } from "../../providers/WorkbookProvider";
 
 export const useSheetSwitcher = (props: SheetSwitcherProps) => {
   const {
-    // sheets,
-    currentSheetId,
-    setCurrentSheet,
-    addSheet,
-    renameSheet,
-    deleteSheet,
-    isLoading,
-    error
-  } = props;
+    workbookId,
+    sheets,
+    activeSheet,
+    cellDataBySheet,
+    isWorkbookLoaded,
+    createWorkbook,
+    importWorkbook,
+    setActiveSheet,
+  } = useWorkbook()
 
-  const {sheets} = useSheet()
-  const { activeSheet } = useActiveSheet();
+  // const {
+  //   // sheets,
+  //   currentSheetId,
+  //   setCurrentSheet,
+  //   addSheet,
+  //   renameSheet,
+  //   deleteSheet,
+  //   isLoading,
+  //   error
+  // } = props;
+
+  // const {sheets} = useSheet()
+  // const { activeSheet } = useActiveSheet();
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [renaming, setRenaming] = useState<boolean>(false);
   const [nameInput, setNameInput] = useState<string>(activeSheet || '');
@@ -31,7 +43,7 @@ export const useSheetSwitcher = (props: SheetSwitcherProps) => {
 
   useEffect(() => {
     setNameInput(activeSheet || '');
-  }, [currentSheetId, activeSheet]);
+  }, [activeSheet]);
 
   useEffect(() => {
     if (renaming && inputRef.current) {
@@ -78,47 +90,47 @@ export const useSheetSwitcher = (props: SheetSwitcherProps) => {
     setDropdownOpen(!dropdownOpen);
   }, [dropdownOpen, calculateDropdownPosition]);
 
-  const handleRename = useCallback(async () => {
-    if (!currentSheetId || !nameInput.trim() || nameInput === activeSheet) {
-      setRenaming(false);
-      return;
-    }
+  // const handleRename = useCallback(async () => {
+  //   if (!currentSheetId || !nameInput.trim() || nameInput === activeSheet) {
+  //     setRenaming(false);
+  //     return;
+  //   }
+  //
+  //   try {
+  //     await renameSheet(currentSheetId, nameInput.trim());
+  //   } catch (error) {
+  //     console.error('Failed to rename sheet:', error);
+  //     setNameInput(activeSheet || '');
+  //   }
+  //   setRenaming(false);
+  // }, [currentSheetId, activeSheet, nameInput, renameSheet]);
 
-    try {
-      await renameSheet(currentSheetId, nameInput.trim());
-    } catch (error) {
-      console.error('Failed to rename sheet:', error);
-      setNameInput(activeSheet || '');
-    }
-    setRenaming(false);
-  }, [currentSheetId, activeSheet, nameInput, renameSheet]);
+  // const handleDeleteSheet = useCallback((e: React.MouseEvent, sheetId: string) => {
+  //   e.stopPropagation();
+  //   if (sheets.length <= 1) return;
+  //
+  //   const sheetToDelete = sheets.find((s) => s === sheetId);
+  //   if (sheetToDelete) {
+  //     setDeleteConfirmation({ sheetId, sheetName: sheetToDelete });
+  //   }
+  // }, [sheets]);
 
-  const handleDeleteSheet = useCallback((e: React.MouseEvent, sheetId: string) => {
-    e.stopPropagation();
-    if (sheets.length <= 1) return;
+  // const confirmDelete = useCallback(async () => {
+  //   if (!deleteConfirmation) return;
+  //
+  //   try {
+  //     await deleteSheet(deleteConfirmation.sheetId);
+  //     setDropdownOpen(false);
+  //   } catch (error) {
+  //     console.error('Failed to delete sheet:', error);
+  //   } finally {
+  //     setDeleteConfirmation(null);
+  //   }
+  // }, [deleteConfirmation, deleteSheet]);
 
-    const sheetToDelete = sheets.find((s) => s === sheetId);
-    if (sheetToDelete) {
-      setDeleteConfirmation({ sheetId, sheetName: sheetToDelete });
-    }
-  }, [sheets]);
-
-  const confirmDelete = useCallback(async () => {
-    if (!deleteConfirmation) return;
-
-    try {
-      await deleteSheet(deleteConfirmation.sheetId);
-      setDropdownOpen(false);
-    } catch (error) {
-      console.error('Failed to delete sheet:', error);
-    } finally {
-      setDeleteConfirmation(null);
-    }
-  }, [deleteConfirmation, deleteSheet]);
-
-  const cancelDelete = useCallback(() => {
-    setDeleteConfirmation(null);
-  }, []);
+  // const cancelDelete = useCallback(() => {
+  //   setDeleteConfirmation(null);
+  // }, []);
 
   const handleAddSheet = useCallback(async () => {
     try {

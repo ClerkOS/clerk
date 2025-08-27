@@ -1,16 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { CellData } from "../../spreadsheet/Grid/gridTypes";
-import { useWorkbookId } from "../../providers/WorkbookProvider";
-import { useActiveSheet } from "../../providers/SheetProvider";
 import { Message } from "./conversationTypes";
 import { batchSetCells, getCompletion, getSheet } from "../../../lib/api/apiClient";
-import { useCellMap } from "../../providers/CellMapProvider";
 import { useGrid } from "../../spreadsheet/Grid/useGrid";
 import { useAnimateCell } from "../../providers/AnimatingCellProvider";
+import { useWorkbook } from "../../providers/WorkbookProvider";
 
 export function useConversation() {
-  const { workbookId } = useWorkbookId();
-  const { activeSheet } = useActiveSheet();
+  const { workbookId, activeSheet, cellDataBySheet, setCellDataBySheet, } = useWorkbook()
   const sheet = activeSheet ? activeSheet : "Sheet1";
   const [isGenerating, setIsGenerating] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
@@ -19,7 +16,6 @@ export function useConversation() {
   const [userInput, setUserInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { cellDataBySheet, setCellDataBySheet } = useCellMap();
   const [cellMap, setCellMap] = useState(cellDataBySheet[sheet]);
   const { triggerCellAnimations } = useAnimateCell();
 

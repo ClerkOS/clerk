@@ -2,10 +2,22 @@ import React from 'react';
 import { ChevronDown, Plus, X, Loader2 } from 'lucide-react';
 import { useSheetSwitcher } from './useSheetSwitcher';
 import { SheetSwitcherProps } from './sheetSwitcherTypes';
-import { useActiveSheet } from "../../providers/SheetProvider";
+import { useActiveSheet } from "../../providers/ActiveSheetProvider";
 import { useSheet } from "../../spreadsheet/Sheet/useSheet";
+import { useWorkbook } from "../../providers/WorkbookProvider";
 
 const SheetSwitcher: React.FC<SheetSwitcherProps> = (props) => {
+  const {
+    workbookId,
+    sheets,
+    activeSheet,
+    cellDataBySheet,
+    isWorkbookLoaded,
+    createWorkbook,
+    importWorkbook,
+    setActiveSheet,
+  } = useWorkbook()
+
   const {
     dropdownOpen,
     setDropdownOpen,
@@ -32,8 +44,9 @@ const SheetSwitcher: React.FC<SheetSwitcherProps> = (props) => {
     handleAddSheetFromDropdown
   } = useSheetSwitcher(props);
 
-  const {sheets} = useSheet()
-  const { activeSheet } = useActiveSheet();
+  // const {sheets} = useSheet()
+  // console.log(sheets)
+  // const { activeSheet, setActiveSheet } = useActiveSheet();
   const activeSheetIndex = sheets.findIndex((sheet) => sheet === activeSheet);
 
   if (isLoading) {
@@ -146,7 +159,7 @@ const SheetSwitcher: React.FC<SheetSwitcherProps> = (props) => {
                       ? 'text-blue-600 dark:text-blue-400 font-medium'
                       : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                   }`}
-                  onClick={() => { props.setCurrentSheet(sheet); setDropdownOpen(false); }}
+                  onClick={() => { setActiveSheet(sheet); setDropdownOpen(false); }}
                 >
                   {sheet}
                 </button>
