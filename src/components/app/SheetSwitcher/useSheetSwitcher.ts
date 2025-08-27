@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Sheet, DeleteConfirmation, DropdownPosition, SheetSwitcherProps } from './sheetSwitcherTypes';
-import { useActiveSheet } from "../../providers/ActiveSheetProvider";
-import { useSheet } from "../../spreadsheet/Sheet/useSheet";
 import { useWorkbook } from "../../providers/WorkbookProvider";
 
 export const useSheetSwitcher = (props: SheetSwitcherProps) => {
@@ -132,21 +130,21 @@ export const useSheetSwitcher = (props: SheetSwitcherProps) => {
   //   setDeleteConfirmation(null);
   // }, []);
 
-  const handleAddSheet = useCallback(async () => {
-    try {
-      setIsAddingSheet(true);
-      await addSheet();
-      setDropdownOpen(false);
-    } catch (error) {
-      console.error('Failed to add sheet:', error);
-    } finally {
-      setIsAddingSheet(false);
-    }
-  }, [addSheet]);
-
-  const handleAddSheetFromDropdown = useCallback(async () => {
-    await handleAddSheet();
-  }, [handleAddSheet]);
+  // const handleAddSheet = useCallback(async () => {
+  //   try {
+  //     setIsAddingSheet(true);
+  //     await addSheet();
+  //     setDropdownOpen(false);
+  //   } catch (error) {
+  //     console.error('Failed to add sheet:', error);
+  //   } finally {
+  //     setIsAddingSheet(false);
+  //   }
+  // }, [addSheet]);
+  //
+  // const handleAddSheetFromDropdown = useCallback(async () => {
+  //   await handleAddSheet();
+  // }, [handleAddSheet]);
 
   return {
     activeSheet,
@@ -161,17 +159,17 @@ export const useSheetSwitcher = (props: SheetSwitcherProps) => {
     dropdownRef,
     buttonRef,
     quickAddButtonRef,
-    isLoading,
-    error,
+    // isLoading,
+    // error,
     sheets,
     handleDropdownToggle,
     setNameInput,
     setRenaming,
-    handleRename,
-    handleDeleteSheet,
-    confirmDelete,
-    cancelDelete,
-    handleAddSheet,
-    handleAddSheetFromDropdown
+    // handleRename,
+    // handleDeleteSheet,
+    // confirmDelete,
+    // cancelDelete,
+    // handleAddSheet,
+    // handleAddSheetFromDropdown
   };
 };
