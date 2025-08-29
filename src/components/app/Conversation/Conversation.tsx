@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+it aimport React, { useRef, useState, useEffect } from "react";
 import { ArrowUp, FileText, Omega, Pi, Plus, ChartNoAxesCombined, WandSparkles, SquarePen } from "lucide-react";
 import { ConversationProps, Message } from "./conversationTypes";
 import { useConversation } from "./useConversation";
