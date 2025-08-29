@@ -128,6 +128,48 @@ export function useConversation() {
                await applyTableEdits(workbookId, sheet, edits, setCellMap, setCellDataBySheet);
             }
             return output.description;
+         case "structured_calculation":
+            // Handle structured calculation results
+            let message = `Calculated ${output.operation} of column ${output.column}`;
+            if (output.result !== undefined) {
+               message += `: **${output.result}**`;
+            }
+            if (output.rows_matched) {
+               message += ` (${output.rows_matched} rows matched)`;
+            }
+            if (output.target_cell) {
+               message += ` → Result written to cell ${output.target_cell}`;
+               // Refresh the sheet to show the written result
+               try {
+                  const response = await getSheet(workbookId, sheet);
+                  if (response.data.success) {
+                     const sheetData = response.data.data.sheet;
+                     const updatedCellMap = new Map();
+                     
+                     if (sheetData.cells) {
+                        Object.entries(sheetData.cells).forEach(([cellId, cellData]: [string, any]) => {
+                           updatedCellMap.set(cellId, {
+                              value: cellData.value || '',
+                              formula: cellData.formula || '',
+                              style: cellData.style || {}
+                           });
+                        });
+                     }
+                     
+                     setCellMap(updatedCellMap);
+                     setCellDataBySheet(prev => ({
+                        ...prev,
+                        [sheet]: updatedCellMap
+                     }));
+                  }
+               } catch (refreshErr) {
+                  console.error("Failed to refresh sheet data:", refreshErr);
+               }
+            }
+            if (output.warnings && output.warnings.length > 0) {
+               message += `\n⚠️ Warnings: ${output.warnings.join(', ')}`;
+            }
+            return message;
          default:
             return "couldn't parse step result";
       }
