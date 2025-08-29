@@ -208,9 +208,7 @@ export function useConversation() {
             console.error("Failed to refresh sheet data:", refreshErr);
           }
         }
-        if (output.warnings && output.warnings.length > 0) {
-          message += `\n⚠️ Warnings: ${output.warnings.join(', ')}`;
-        }
+
         return { content: message };
       default:
         return { content: "couldn't parse step result" };
