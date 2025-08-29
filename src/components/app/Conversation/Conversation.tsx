@@ -33,11 +33,11 @@ const Conversation: React.FC<ConversationProps> = () => {
 
    return (
      <div
-       className="flex flex-col h-full border-l border-gray-200 bg-gray-50/30"
+       className="flex flex-col h-full border-l border-gray-200/40 bg-gradient-to-b from-gray-50/40 via-white/20 to-gray-50/30 backdrop-blur-sm"
        style={{ width: `${width}px` }}
      >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/90 to-gray-50/90 backdrop-blur-md shadow-sm">
            <div className="flex items-center space-x-0">
                              <svg 
                  version="1.0" 
@@ -68,7 +68,7 @@ const Conversation: React.FC<ConversationProps> = () => {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 relative">
+        <div className="flex-1 overflow-y-auto px-4 py-6 relative bg-gradient-to-b from-transparent to-white/10">
            {/* Initial Chat State */}
            {messages.length === 0 && !isGenerating && (
              <div className="absolute inset-0 flex flex-col items-center justify-center space-y-6 pointer-events-none px-4">
@@ -186,7 +186,7 @@ const Conversation: React.FC<ConversationProps> = () => {
         )}
 
         {/* Input */}
-        <div className="p-4 border-t border-gray-200 bg-white">
+        <div className="p-4 border-t border-gray-200/50 bg-gradient-to-r from-white/95 to-gray-50/95 backdrop-blur-md shadow-lg">
            <form onSubmit={handleSend} className="relative">
               <div className="flex items-end space-x-2">
                  <div className="flex-1 relative">
@@ -196,17 +196,17 @@ const Conversation: React.FC<ConversationProps> = () => {
                       value={userInput}
                       onChange={handleInputChange}
                       placeholder="Ask anything about your data..."
-                      className="w-full resize-none pl-4 pr-12 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-gray-400 text-gray-900 overflow-y-auto max-h-32"
+                      className="w-full resize-none pl-4 pr-12 py-3 text-sm border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-gray-400 text-gray-900 overflow-y-auto max-h-32 bg-white/80 backdrop-blur-sm shadow-sm"
                       disabled={isGenerating}
                       onKeyDown={handleKeyDown}
                     />
                     <button
                       type="submit"
                       disabled={!userInput.trim() || isGenerating}
-                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all ${
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all duration-200 ${
                         userInput.trim() && !isGenerating
-                          ? "bg-blue-500 text-white hover:bg-blue-600 shadow-sm"
-                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md backdrop-blur-sm"
+                          : "bg-gray-100/80 text-gray-400 cursor-not-allowed backdrop-blur-sm"
                       }`}
                     >
                        <ArrowUp className="w-4 h-4" />

@@ -57,7 +57,7 @@ const Grid: React.FC = () => {
       {/*                     Corner cell (intersection of headers)              */}
       {/* ---------------------------------------------------------------------- */}
       <div
-        className="absolute top-0 left-0 bg-gray-100 dark:bg-gray-800 border-b border-r border-gray-300 dark:border-gray-700"
+        className="absolute top-0 left-0 bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-r border-gray-200 dark:border-gray-600"
         style={{ width: HEADER_WIDTH, height: HEADER_HEIGHT }}
       />
       {/* ---------------------------------------------------------------------- */}
@@ -80,8 +80,8 @@ const Grid: React.FC = () => {
             <div
               key={colIndex}
               onMouseDown={() => handleColHeaderMouseDown(colIndex)}
-              className={`absolute border-r border-b border-gray-300 dark:border-gray-700 text-center text-xs text-gray-600 cursor-pointer
-        ${isHighlighted ? "bg-blue-100 dark:bg-blue-800" : "bg-gray-50 dark:bg-gray-800"}`}
+              className={`absolute border-r border-b border-gray-200 dark:border-gray-600 text-center text-xs text-gray-600 cursor-pointer transition-colors duration-150 hover:bg-gray-100/50
+        ${isHighlighted ? "bg-blue-100 dark:bg-blue-800" : "bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm"}`}
               style={{
                 transform: `translateX(${colIndex * CELL_WIDTH - scrollX}px)`,
                 width: CELL_WIDTH,
@@ -115,8 +115,8 @@ const Grid: React.FC = () => {
             <div
               key={rowIndex}
               onMouseDown={() => handleRowHeaderMouseDown(rowIndex)}
-              className={`absolute border-b border-r border-gray-300 dark:border-gray-700 text-center text-xs text-gray-600 cursor-pointer
-        ${isHighlighted ? "bg-blue-100 dark:bg-blue-800" : "bg-gray-50 dark:bg-gray-800"}`}
+              className={`absolute border-b border-r border-gray-200 dark:border-gray-600 text-center text-xs text-gray-600 cursor-pointer transition-colors duration-150 hover:bg-gray-100/50
+        ${isHighlighted ? "bg-blue-100 dark:bg-blue-800" : "bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm"}`}
               style={{
                 transform: `translateY(${rowIndex * CELL_HEIGHT - scrollY}px)`,
                 width: HEADER_WIDTH,
@@ -160,7 +160,7 @@ const Grid: React.FC = () => {
               const value = cellData?.value ?? "";
               const isNumber = !isNaN(Number(value)) && value.trim() !== "";
               const justifyClass = isNumber ? "justify-end" : "justify-start";
-               const baseClass = "absolute flex items-center border-b border-r border-gray-300 text-sm";
+               const baseClass = "absolute flex items-center border-b border-r border-gray-200 text-sm px-3 py-2 transition-colors duration-150 hover:bg-gray-50/50";
                const inSelection = isCellSelected(row, col);
 
               // Compute selection borders for range highlight
@@ -202,7 +202,9 @@ const Grid: React.FC = () => {
                   } else if (isHighlighted) {
                      return "bg-blue-100 animate-pulse scale-105 shadow-lg border-blue-300";
                   } else {
-                     return "bg-white dark:bg-gray-900";
+                     // Alternating row colors for better readability
+                     const isEvenRow = row % 2 === 0;
+                     return isEvenRow ? "bg-white dark:bg-gray-900" : "bg-gray-50/30 dark:bg-gray-800/50";
                   }
                };
 
@@ -230,7 +232,7 @@ const Grid: React.FC = () => {
             {/* Editing input */}
             {editingCell && (
               <input
-                className="absolute border-[3px] rounded-none outline-none focus:outline-none text-sm"
+                className="absolute border-[3px] border-blue-400 rounded-none outline-none focus:outline-none text-sm px-3 py-2 bg-white shadow-lg"
                 style={{
                   top: editingCell.row * CELL_HEIGHT,
                   left: editingCell.col * CELL_WIDTH,

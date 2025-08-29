@@ -44,8 +44,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               <div
                 className={`px-4 py-3 rounded-2xl whitespace-pre-wrap text-sm leading-relaxed select-text ${
                   isUser
-                    ? "bg-blue-500 text-white rounded-br-lg"
-                    : "bg-white border border-gray-200 text-gray-800 rounded-bl-lg shadow-sm"
+                    ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-lg shadow-lg backdrop-blur-sm"
+                    : "bg-white/90 border border-gray-200/50 text-gray-800 rounded-bl-lg shadow-sm backdrop-blur-sm"
                 }`}
               >
                  {content}
@@ -56,14 +56,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 <div className="mt-3 flex items-center space-x-2">
                   <button
                     onClick={handleApply}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-lg hover:bg-blue-600 transition-colors"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md backdrop-blur-sm"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Apply</span>
                   </button>
                   <button
                     onClick={handleDecline}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-gray-500 text-white text-xs font-medium rounded-lg hover:bg-gray-600 transition-colors"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-gray-400 to-gray-500 text-white text-xs font-medium rounded-lg hover:from-gray-500 hover:to-gray-600 transition-all duration-200 shadow-md backdrop-blur-sm"
                   >
                     <X className="w-3.5 h-3.5" />
                     <span>Decline</span>
