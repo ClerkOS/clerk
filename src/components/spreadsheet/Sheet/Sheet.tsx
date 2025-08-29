@@ -7,29 +7,12 @@ import FormulaBar from "../FormulaBar/FormulaBar";
 import ContextMenu from "../../app/ContextMenu/ContextMenu";
 import { useSheet } from "./useSheet";
 import { type SpreadsheetProps } from "./sheetTypes";
-import { useActiveSheet } from "../../providers/SheetProvider";
 import Grid from "../Grid/Grid";
-// import { handleFileUpload, validateFile } from '../../services/fileService.js';
-// import { useWorkbookOperations } from '../../features/useWorkbookOperations.js';
-// import ContextMenu from '../ai/ContextMenu.jsx';
-
+import { useWorkbook } from "../../providers/WorkbookProvider";
 
 const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWidth = 320, onOpenAIWithRange }) => {
-  const {
-    workbookId,
-    isWorkbookLoaded,
-    handleCreateWorkbook,
-    handleImportWorkbook,
-    sheets,
-    cellDataBySheet,
-    contextMenu,
-    handleContextMenu,
-    handleCloseContextMenu
-  } = useSheet();
-
-  const { activeSheet, setActiveSheet } = useActiveSheet();
-  const sheetData = activeSheet ? cellDataBySheet?.[activeSheet] : new Map;
-
+  const { contextMenu, handleContextMenu, handleCloseContextMenu } = useSheet();
+  const { isWorkbookLoaded, createWorkbook, importWorkbook, } = useWorkbook()
 
   return (
     <>
@@ -49,8 +32,8 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({ isPanelOpen = false, panelWid
               <Grid/>
             ) : (
               <EmptyState
-                onFileUpload={handleImportWorkbook}
-                onCreateNewWorkbook={handleCreateWorkbook}
+                onFileUpload={importWorkbook}
+                onCreateNewWorkbook={createWorkbook}
                 error={null}
               />
             )}

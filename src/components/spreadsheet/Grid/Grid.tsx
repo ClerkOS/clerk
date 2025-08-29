@@ -47,20 +47,21 @@ const Grid: React.FC = () => {
     handleMouseEnter,
     isCellSelected,
     getHighlightedRows,
-    getHighlightedCols
+    getHighlightedCols,
+    animatingCells,
   } = useGrid();
 
   return (
     <div className="relative w-full h-full">
       {/* ---------------------------------------------------------------------- */}
-      {/*                     Corner cell (intersection of headers)               */}
+      {/*                     Corner cell (intersection of headers)              */}
       {/* ---------------------------------------------------------------------- */}
       <div
         className="absolute top-0 left-0 bg-gray-100 dark:bg-gray-800 border-b border-r border-gray-300 dark:border-gray-700"
         style={{ width: HEADER_WIDTH, height: HEADER_HEIGHT }}
       />
       {/* ---------------------------------------------------------------------- */}
-      {/*                      Virtualized column headers                         */}
+      {/*                      Virtualized column headers                        */}
       {/* ---------------------------------------------------------------------- */}
       <div
         className="absolute top-0 "
@@ -157,21 +158,10 @@ const Grid: React.FC = () => {
               const addr = `${columnIndexToLetter(col)}${row + 1}`;
               const cellData = cellMap.get(addr);
               const value = cellData?.value ?? "";
-              
-              // Determine content type for better formatting
               const isNumber = !isNaN(Number(value)) && value.trim() !== "";
-              const isDate = !isNaN(Date.parse(value)) && value.trim() !== "";
-              const isCurrency = value.startsWith('$') || value.includes('$');
-              const isPercentage = value.includes('%');
-              
-              // Alignment based on content type
-              let justifyClass = "justify-start";
-              if (isNumber || isCurrency || isPercentage) {
-                justifyClass = "justify-end";
-              } else if (isDate) {
-                justifyClass = "justify-center";
-              }
-              const inSelection = isCellSelected(row, col);
+              const justifyClass = isNumber ? "justify-end" : "justify-start";
+               const baseClass = "absolute flex items-center border-b border-r border-gray-300 text-sm";
+               const inSelection = isCellSelected(row, col);
 
               // Compute selection borders for range highlight
               let borderStyles: React.CSSProperties = {};
@@ -194,77 +184,60 @@ const Grid: React.FC = () => {
                 (selectionMode === "col" && selectedCol === col) ||
                 inSelection;
 
-              // Animation highlight effect
-              const isAnimating = cellData?.style?.highlight;
-              const highlightClass = isAnimating 
-                ? "bg-yellow-200 dark:bg-yellow-700 animate-pulse scale-105" 
-                : isHighlighted 
-                  ? "bg-blue-100 dark:bg-blue-800" 
-                  : "bg-white dark:bg-gray-900";
+               const isAnimating = animatingCells.has(addr);
+               // animatingCells.add("A1")
+               // animatingCells.add("A2")
+               // animatingCells.add("A3")
+               // animatingCells.add("A4")
+               // animatingCells.add("A5")
+               // const isAnimating = true;
+               // if (animatingCells.size > 0){
+               //    console.log("Grid render - animatingCells size:", animatingCells.size);
+               //    console.log("Grid render - animatingCells contents:", Array.from(animatingCells));
+               // }
 
-              // Determine text display properties
-              const isLongText = value.length > 12;
-              const shouldWrap = value.length > 20;
-              const displayValue = isLongText && !shouldWrap ? value.substring(0, 10) + '...' : value;
-              
-              // Text styling based on content type
-              let textClass = "text-sm";
-              if (isNumber || isCurrency || isPercentage) {
-                textClass = "font-mono text-xs";
-              } else if (isDate) {
-                textClass = "text-xs";
-              } else if (shouldWrap) {
-                textClass = "text-xs leading-tight";
-              }
-              
-              // Cell content styling
-              const contentClass = shouldWrap 
-                ? "flex flex-col justify-start items-start w-full h-full p-1 overflow-hidden"
-                : `flex items-center ${justifyClass} w-full h-full px-2 py-1 overflow-hidden`;
+               const getBackgroundClass = () => {
+                  if (isAnimating) {
+                     return "bg-blue-100 shadow-lg border-blue-300";
+                  } else if (isHighlighted) {
+                     return "bg-blue-100 animate-pulse scale-105 shadow-lg border-blue-300";
+                  } else {
+                     return "bg-white dark:bg-gray-900";
+                  }
+               };
 
-              return (
+               const animatingClasses = getBackgroundClass();
+
+               return (
                 <div
                   key={index}
                   onDoubleClick={() => handleCellDoubleClick(row, col)}
                   onMouseDown={() => handleMouseDown(row, col)}
                   onMouseEnter={() => handleMouseEnter(row, col)}
                   onMouseUp={handleMouseUp}
-                  className={`absolute border-b border-r border-gray-300 transition-colors duration-150 ${highlightClass}`}
+                  className={`${baseClass} ${justifyClass} ${animatingClasses}`}
                   style={{
-                    transform: `translate(${col * CELL_WIDTH}px, ${row * CELL_HEIGHT}px)`,
-                    width: CELL_WIDTH,
-                    height: CELL_HEIGHT,
+                  transform: `translate(${col * CELL_WIDTH}px, ${row * CELL_HEIGHT}px)`,
+                  width: CELL_WIDTH,
+                  height: CELL_HEIGHT,
                     ...borderStyles
-                  }}
-                  title={isLongText ? value : undefined} // Show full text on hover
+                }}
                 >
-                  <div className={contentClass}>
-                    {shouldWrap ? (
-                      <div className={`${textClass} break-words hyphens-auto`}>
-                        {value}
-                      </div>
-                    ) : (
-                      <span className={`${textClass} truncate`}>
-                        {displayValue}
-                      </span>
-                    )}
-                  </div>
+                  {value}
                 </div>
               );
             })}
             {/* Editing input */}
             {editingCell && (
               <input
-                className="absolute border-[3px] rounded-none outline-none focus:outline-none text-sm px-2 py-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                className="absolute border-[3px] rounded-none outline-none focus:outline-none text-sm"
                 style={{
                   top: editingCell.row * CELL_HEIGHT,
                   left: editingCell.col * CELL_WIDTH,
                   width: CELL_WIDTH,
                   height: CELL_HEIGHT,
                   borderColor: "#488cfa",
-                  borderRadius: 0,
-                  fontSize: "14px",
-                  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                  borderRadius: 0
                 }}
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}

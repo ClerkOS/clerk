@@ -97,7 +97,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onFileUpload, onCreateNewWorkbo
               {isDragging ? 'Drop it here' : 'Upload your file'}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-              Drag and drop your CSV or Excel file here, or click to browse
+              Drag and drop your Excel file here, or click to browse
             </p>
 
             <div className="flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-gray-500">

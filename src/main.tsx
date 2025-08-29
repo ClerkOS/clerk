@@ -1,13 +1,11 @@
 import React, { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-
 import "./index.css";
 import { ThemeProvider } from "./components/providers/ThemeProvider";
-import { ActiveSheetProvider } from "./components/providers/SheetProvider";
 import { ActiveCellProvider } from "./components/providers/ActiveCellProvider";
-import { WorkbookIdProvider } from "./components/providers/WorkbookProvider";
-import { CellMapProvider } from "./components/providers/CellMapProvider";
+import { AnimateCellProvider } from "./components/providers/AnimatingCellProvider";
+import { WorkbookProvider } from "./components/providers/WorkbookProvider";
 
 // TODO: Add providers here
 // function App() {
@@ -20,20 +18,18 @@ import { CellMapProvider } from "./components/providers/CellMapProvider";
 
 const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <StrictMode>
-      <ThemeProvider>
-        <WorkbookIdProvider>
-          <ActiveSheetProvider>
-            <CellMapProvider>
-              <ActiveCellProvider>
-                <App />
-              </ActiveCellProvider>
-            </CellMapProvider>
-          </ActiveSheetProvider>
-        </WorkbookIdProvider>
-      </ThemeProvider>
-    </StrictMode>
-  );
+   const root = ReactDOM.createRoot(rootElement);
+   root.render(
+     <StrictMode>
+        <ThemeProvider>
+           <WorkbookProvider>
+              <AnimateCellProvider>
+                 <ActiveCellProvider>
+                    <App />
+                 </ActiveCellProvider>
+              </AnimateCellProvider>
+           </WorkbookProvider>
+        </ThemeProvider>
+     </StrictMode>
+   );
 }

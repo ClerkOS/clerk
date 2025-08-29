@@ -48,7 +48,9 @@ type CellData = {
 type SheetCellMap = Map<string, CellData>;
 
 // Map for all sheets: "Sheet1" -> SheetCellMap
-type CellDataBySheet = Record<string, SheetCellMap>;
+// type CellDataBySheet = Record<string, SheetCellMap>;
+
+type CellDataBySheet = Record<string, Map<string, CellData>>;
 export {
   CELL_WIDTH,
   CELL_HEIGHT,

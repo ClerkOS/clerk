@@ -2,10 +2,21 @@ import React from 'react';
 import { ChevronDown, Plus, X, Loader2 } from 'lucide-react';
 import { useSheetSwitcher } from './useSheetSwitcher';
 import { SheetSwitcherProps } from './sheetSwitcherTypes';
-import { useActiveSheet } from "../../providers/SheetProvider";
 import { useSheet } from "../../spreadsheet/Sheet/useSheet";
+import { useWorkbook } from "../../providers/WorkbookProvider";
 
 const SheetSwitcher: React.FC<SheetSwitcherProps> = (props) => {
+  const {
+    workbookId,
+    sheets,
+    activeSheet,
+    cellDataBySheet,
+    isWorkbookLoaded,
+    createWorkbook,
+    importWorkbook,
+    setActiveSheet,
+  } = useWorkbook()
+
   const {
     dropdownOpen,
     setDropdownOpen,
@@ -18,40 +29,41 @@ const SheetSwitcher: React.FC<SheetSwitcherProps> = (props) => {
     dropdownRef,
     buttonRef,
     quickAddButtonRef,
-    isLoading,
-    error,
+    // isLoading,
+    // error,
     // sheets,
     handleDropdownToggle,
     setNameInput,
     setRenaming,
-    handleRename,
-    handleDeleteSheet,
-    confirmDelete,
-    cancelDelete,
-    handleAddSheet,
-    handleAddSheetFromDropdown
+    // handleRename,
+    // handleDeleteSheet,
+    // confirmDelete,
+    // cancelDelete,
+    // handleAddSheet,
+    // handleAddSheetFromDropdown
   } = useSheetSwitcher(props);
 
-  const {sheets} = useSheet()
-  const { activeSheet } = useActiveSheet();
+  // const {sheets} = useSheet()
+  // console.log(sheets)
+  // const { activeSheet, setActiveSheet } = useActiveSheet();
   const activeSheetIndex = sheets.findIndex((sheet) => sheet === activeSheet);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-        <Loader2 size={14} className="animate-spin text-gray-500 dark:text-gray-400" />
-        <span className="text-gray-500 dark:text-gray-400">Loading sheets...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-        <span className="text-red-600 dark:text-red-400">Failed to load sheets</span>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+  //       <Loader2 size={14} className="animate-spin text-gray-500 dark:text-gray-400" />
+  //       <span className="text-gray-500 dark:text-gray-400">Loading sheets...</span>
+  //     </div>
+  //   );
+  // }
+  //
+  // if (error) {
+  //   return (
+  //     <div className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+  //       <span className="text-red-600 dark:text-red-400">Failed to load sheets</span>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="flex items-center space-x-1">
@@ -102,11 +114,11 @@ const SheetSwitcher: React.FC<SheetSwitcherProps> = (props) => {
               className="bg-transparent outline-none text-sm font-medium text-gray-900 dark:text-white min-w-[80px] max-w-[120px]"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
-              onBlur={handleRename}
-              onKeyDown={async (e) => {
-                if (e.key === 'Enter') await handleRename();
-                if (e.key === 'Escape') { setRenaming(false); setNameInput(activeSheet || ''); }
-              }}
+              // onBlur={handleRename}
+              // onKeyDown={async (e) => {
+              //   if (e.key === 'Enter') await handleRename();
+              //   if (e.key === 'Escape') { setRenaming(false); setNameInput(activeSheet || ''); }
+              // }}
               maxLength={20}
             />
           ) : (
@@ -146,53 +158,53 @@ const SheetSwitcher: React.FC<SheetSwitcherProps> = (props) => {
                       ? 'text-blue-600 dark:text-blue-400 font-medium'
                       : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                   }`}
-                  onClick={() => { props.setCurrentSheet(sheet); setDropdownOpen(false); }}
+                  onClick={() => { setActiveSheet(sheet); setDropdownOpen(false); }}
                 >
                   {sheet}
                 </button>
-                {sheets.length > 1 && (
-                  <button
-                    className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 transition-all duration-200"
-                    onClick={(e) => handleDeleteSheet(e, sheet)}
-                    title="Delete sheet"
-                  >
-                    <X size={12} className="text-red-500 dark:text-red-400" />
-                  </button>
-                )}
+                {/*{sheets.length > 1 && (*/}
+                {/*  <button*/}
+                {/*    className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 transition-all duration-200"*/}
+                {/*    onClick={(e) => handleDeleteSheet(e, sheet)}*/}
+                {/*    title="Delete sheet"*/}
+                {/*  >*/}
+                {/*    <X size={12} className="text-red-500 dark:text-red-400" />*/}
+                {/*  </button>*/}
+                {/*)}*/}
               </div>
             ))}
 
-            <div className="border-t border-gray-200 dark:border-gray-700 mt-1 pt-1">
-              <button
-                className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-50"
-                onClick={handleAddSheetFromDropdown}
-                disabled={isAddingSheet}
-              >
-                {isAddingSheet ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Plus size={14} />
-                )}
-                <span>{isAddingSheet ? 'Adding...' : 'Add sheet'}</span>
-              </button>
-            </div>
+            {/*<div className="border-t border-gray-200 dark:border-gray-700 mt-1 pt-1">*/}
+            {/*  <button*/}
+            {/*    className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-50"*/}
+            {/*    // onClick={handleAddSheetFromDropdown}*/}
+            {/*    disabled={isAddingSheet}*/}
+            {/*  >*/}
+            {/*    {isAddingSheet ? (*/}
+            {/*      <Loader2 size={14} className="animate-spin" />*/}
+            {/*    ) : (*/}
+            {/*      <Plus size={14} />*/}
+            {/*    )}*/}
+            {/*    <span>{isAddingSheet ? 'Adding...' : 'Add sheet'}</span>*/}
+            {/*  </button>*/}
+            {/*</div>*/}
           </div>
         )}
       </div>
 
-      <button
-        ref={quickAddButtonRef}
-        className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
-        onClick={handleAddSheet}
-        title="Add new sheet"
-        disabled={isAddingSheet}
-      >
-        {isAddingSheet ? (
-          <Loader2 size={16} className="animate-spin" />
-        ) : (
-          <Plus size={16} />
-        )}
-      </button>
+      {/*<button*/}
+      {/*  ref={quickAddButtonRef}*/}
+      {/*  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50"*/}
+      {/*  // onClick={handleAddSheet}*/}
+      {/*  title="Add new sheet"*/}
+      {/*  disabled={isAddingSheet}*/}
+      {/*>*/}
+      {/*  {isAddingSheet ? (*/}
+      {/*    <Loader2 size={16} className="animate-spin" />*/}
+      {/*  ) : (*/}
+      {/*    <Plus size={16} />*/}
+      {/*  )}*/}
+      {/*</button>*/}
     </div>
   );
 };

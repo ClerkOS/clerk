@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@formatjs/intl-segmenter": "^11.7.10",
     "@revolist/react-datagrid": "^4.16.0",
     "@revolist/revogrid": "^4.16.0",
     "@tanstack/react-query": "^5.81.5",
