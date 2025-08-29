@@ -157,8 +157,20 @@ const Grid: React.FC = () => {
               const addr = `${columnIndexToLetter(col)}${row + 1}`;
               const cellData = cellMap.get(addr);
               const value = cellData?.value ?? "";
+              
+              // Determine content type for better formatting
               const isNumber = !isNaN(Number(value)) && value.trim() !== "";
-              const justifyClass = isNumber ? "justify-end" : "justify-start";
+              const isDate = !isNaN(Date.parse(value)) && value.trim() !== "";
+              const isCurrency = value.startsWith('$') || value.includes('$');
+              const isPercentage = value.includes('%');
+              
+              // Alignment based on content type
+              let justifyClass = "justify-start";
+              if (isNumber || isCurrency || isPercentage) {
+                justifyClass = "justify-end";
+              } else if (isDate) {
+                justifyClass = "justify-center";
+              }
               const inSelection = isCellSelected(row, col);
 
               // Compute selection borders for range highlight
@@ -190,6 +202,26 @@ const Grid: React.FC = () => {
                   ? "bg-blue-100 dark:bg-blue-800" 
                   : "bg-white dark:bg-gray-900";
 
+              // Determine text display properties
+              const isLongText = value.length > 12;
+              const shouldWrap = value.length > 20;
+              const displayValue = isLongText && !shouldWrap ? value.substring(0, 10) + '...' : value;
+              
+              // Text styling based on content type
+              let textClass = "text-sm";
+              if (isNumber || isCurrency || isPercentage) {
+                textClass = "font-mono text-xs";
+              } else if (isDate) {
+                textClass = "text-xs";
+              } else if (shouldWrap) {
+                textClass = "text-xs leading-tight";
+              }
+              
+              // Cell content styling
+              const contentClass = shouldWrap 
+                ? "flex flex-col justify-start items-start w-full h-full p-1 overflow-hidden"
+                : `flex items-center ${justifyClass} w-full h-full px-2 py-1 overflow-hidden`;
+
               return (
                 <div
                   key={index}
@@ -197,30 +229,42 @@ const Grid: React.FC = () => {
                   onMouseDown={() => handleMouseDown(row, col)}
                   onMouseEnter={() => handleMouseEnter(row, col)}
                   onMouseUp={handleMouseUp}
-                  className={`absolute flex items-center ${justifyClass} border-b border-r border-gray-300 text-sm transition-colors duration-150
-        ${highlightClass}`}
+                  className={`absolute border-b border-r border-gray-300 transition-colors duration-150 ${highlightClass}`}
                   style={{
-                  transform: `translate(${col * CELL_WIDTH}px, ${row * CELL_HEIGHT}px)`,
-                  width: CELL_WIDTH,
-                  height: CELL_HEIGHT,
+                    transform: `translate(${col * CELL_WIDTH}px, ${row * CELL_HEIGHT}px)`,
+                    width: CELL_WIDTH,
+                    height: CELL_HEIGHT,
                     ...borderStyles
-                }}
+                  }}
+                  title={isLongText ? value : undefined} // Show full text on hover
                 >
-                  {value}
+                  <div className={contentClass}>
+                    {shouldWrap ? (
+                      <div className={`${textClass} break-words hyphens-auto`}>
+                        {value}
+                      </div>
+                    ) : (
+                      <span className={`${textClass} truncate`}>
+                        {displayValue}
+                      </span>
+                    )}
+                  </div>
                 </div>
               );
             })}
             {/* Editing input */}
             {editingCell && (
               <input
-                className="absolute border-[3px] rounded-none outline-none focus:outline-none text-sm"
+                className="absolute border-[3px] rounded-none outline-none focus:outline-none text-sm px-2 py-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 style={{
                   top: editingCell.row * CELL_HEIGHT,
                   left: editingCell.col * CELL_WIDTH,
                   width: CELL_WIDTH,
                   height: CELL_HEIGHT,
                   borderColor: "#488cfa",
-                  borderRadius: 0
+                  borderRadius: 0,
+                  fontSize: "14px",
+                  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
                 }}
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
