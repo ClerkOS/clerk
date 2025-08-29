@@ -1,10 +1,18 @@
 import * as crypto from "node:crypto";
 
+export interface PendingAction {
+  type: 'formula' | 'data' | 'calculation';
+  data: any;
+  description: string;
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  pendingAction?: PendingAction;
+  actionStatus?: 'pending' | 'applied' | 'declined';
 }
 
 export interface RangeSelection {

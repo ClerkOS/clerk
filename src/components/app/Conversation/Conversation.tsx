@@ -1,10 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { ArrowUp, FileText, Omega, Pi, Plus, ChartNoAxesCombined, WandSparkles, SquarePen } from "lucide-react";
 import { ConversationProps, Message } from "./conversationTypes";
-import { getCompletion } from "../../../lib/api/apiClient";
-import { useActiveSheet } from "../../providers/ActiveSheetProvider";
-import { useWorkbookId } from "../../providers/WorkbookProvider";
-import { type } from "node:os";
 import { useConversation } from "./useConversation";
 import MessageBubble from "../Message/Message";
 
@@ -30,117 +26,125 @@ const Conversation: React.FC<ConversationProps> = () => {
       handleSend,
       parseStepOutput,
       applyTableEdits,
-      messagesEndRef
+      messagesEndRef,
+      handleApplyAction,
+      handleDeclineAction
    } = useConversation()
 
    return (
      <div
-       className="flex flex-col h-full border-l dark:border-gray-700 dark:bg-gray-800 border-gray-200 bg-white"
+       className="flex flex-col h-full border-l border-gray-200 bg-gray-50/30"
        style={{ width: `${width}px` }}
      >
         {/* Header */}
-        <div
-          className="flex items-center justify-between p-[0.43rem] border-b bg-white dark:border-gray-700 border-gray-200">
-           <div className="flex items-center space-x-2">
-              {/*<Code className="w-5 h-5 text-gray-500" />*/}
-              <h3 className="font-semibold dark:text-white text-gray-900">
-                 {/*Clerk Assistant*/}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+           <div className="flex items-center space-x-0">
+                             <svg 
+                 version="1.0" 
+                 xmlns="http://www.w3.org/2000/svg" 
+                 width="24" 
+                 height="24" 
+                 viewBox="50 50 400 400" 
+                 preserveAspectRatio="xMidYMid meet"
+                 className="text-gray-900 mt-1 mr-1.5"
+               >
+                  <g transform="translate(0.000000,500.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none">
+                     <path d="M2340 4109 c-156 -22 -293 -77 -433 -171 -72 -49 -224 -198 -264 -260 -103 -161 -154 -292 -180 -466 -13 -90 -14 -125 -5 -222 17 -171 70 -335 144 -448 15 -24 28 -45 28 -48 0 -11 119 -150 161 -189 127 -116 295 -206 474 -253 59 -15 179 -32 229 -32 45 0 207 23 266 39 235 60 474 228 609 430 51 74 112 202 134 281 23 80 47 240 47 314 0 132 -47 324 -111 450 -111 218 -290 394 -502 491 -75 34 -158 65 -192 71 -136 24 -295 29 -405 13z m382 -143 c161 -41 284 -112 410 -235 176 -174 271 -396 227 -532 -49 -152 -165 -286 -309 -356 -79 -38 -189 -73 -228 -73 -9 0 -85 -69 -169 -152 l-153 -152 -42 40 c-24 22 -95 90 -158 150 -63 61 -169 160 -235 221 -66 61 -138 129 -160 152 -21 23 -44 41 -49 41 -17 0 -86 -73 -86 -91 0 -9 19 -34 43 -54 23 -21 80 -74 128 -119 47 -45 107 -101 135 -125 49 -45 240 -222 361 -335 l64 -60 77 75 c313 301 279 274 366 298 188 53 353 172 447 321 27 42 29 43 24 15 -2 -16 -6 -46 -9 -65 -31 -271 -239 -548 -509 -680 -146 -71 -232 -91 -392 -92 -261 -1 -465 83 -647 265 -63 63 -149 179 -175 237 -50 113 -53 122 -53 192 0 125 40 209 148 317 62 62 96 86 172 124 52 25 127 54 165 63 l70 16 157 156 156 155 44 -44 c46 -47 154 -149 412 -394 88 -82 169 -151 181 -153 23 -3 85 56 85 82 0 8 -19 31 -42 51 -48 43 -241 221 -298 275 -40 38 -229 215 -324 304 l-60 55 -25 -19 c-14 -11 -99 -93 -189 -183 -161 -163 -163 -164 -226 -180 -80 -20 -206 -79 -271 -128 -60 -45 -142 -129 -179 -184 -22 -32 -26 -35 -22 -15 3 14 8 43 10 65 31 291 280 598 583 720 98 39 181 53 324 54 103 1 144 -4 221 -23z"/>
+                     <path d="M2405 3254 c-111 -62 -140 -217 -59 -313 89 -106 288 -76 338 51 35 86 9 192 -60 244 -33 25 -47 29 -113 32 -56 2 -84 -2 -106 -14z"/>
+                  </g>
+               </svg>
+              <h3 className="font-medium text-gray-900 text-sm">
+                 Clerk AI
               </h3>
            </div>
-           <div className="flex items-center space-x-2">
+           <div className="flex items-center space-x-1">
               <button
-                // onClick={clearChat}
-                className="p-1 rounded dark:hover:bg-gray-700 hover:bg-gray-100"
-                title="Clear chat"
+                className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+                title="New conversation"
               >
-                 <Plus className="w-4 h-4 dark:text-gray-300 text-white" />
+                 <Plus className="w-4 h-4 text-gray-500" />
               </button>
            </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-1 space-y-4 relative">
+        <div className="flex-1 overflow-y-auto px-4 py-6 relative">
            {/* Initial Chat State */}
            {messages.length === 0 && !isGenerating && (
-             <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4 pointer-events-none">
+             <div className="absolute inset-0 flex flex-col items-center justify-center space-y-6 pointer-events-none px-4">
                 {/* Prompt text */}
-                <span
-                  className="text-gray-900 dark:text-gray-500 text-[1.2rem] font-medium text-center break-words max-w-[300px]">
-              What do you want to do with your data?
-            </span>
+                <div className="text-center">
+                   <h2 className="text-xl font-medium text-gray-900 mb-2">
+                      How can I help you today?
+                   </h2>
+                   <p className="text-gray-500 text-sm max-w-[280px]">
+                      Ask me anything about your data, or try one of these suggestions:
+                   </p>
+                </div>
 
                 {/* Suggestions */}
-                <div className="space-y-2 w-full max-w-96 pointer-events-auto text-left">
+                <div className="space-y-3 w-full max-w-80 pointer-events-auto">
                    {/* Suggestion 1 */}
-                   <div
-                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
-                      <WandSparkles className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                      <div className="ml-3">
-                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                   <button className="flex items-start p-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-left w-full group">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors">
+                         <WandSparkles className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="ml-3 flex-1">
+                         <div className="text-sm font-medium text-gray-900 mb-1">
                             Generate sample data
                          </div>
-                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Create sample data and explore Clerk.
+                         <div className="text-xs text-gray-500 leading-relaxed">
+                            Create sample data and explore Clerk's features
                          </div>
                       </div>
-                   </div>
+                   </button>
 
                    {/* Suggestion 2 */}
-                   <div
-                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
-                      <FileText className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                      <div className="ml-3">
-                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Summarize the data in the sheet
+                   <button className="flex items-start p-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-left w-full group">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-100 transition-colors">
+                         <FileText className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div className="ml-3 flex-1">
+                         <div className="text-sm font-medium text-gray-900 mb-1">
+                            Analyze my data
                          </div>
-                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Get an overview of your data.
+                         <div className="text-xs text-gray-500 leading-relaxed">
+                            Get insights and summaries from your spreadsheet
                          </div>
                       </div>
-                   </div>
+                   </button>
+
+
 
                    {/* Suggestion 3 */}
-                   {/*<div*/}
-                   {/*  className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">*/}
-                   {/*   <ChartNoAxesCombined className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />*/}
-                   {/*   <div className="ml-3">*/}
-                   {/*      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">*/}
-                   {/*         Get insights*/}
-                   {/*      </div>*/}
-                   {/*      <div className="text-xs text-gray-500 dark:text-gray-400">*/}
-                   {/*         See important observations and recommendations about your data.*/}
-                   {/*      </div>*/}
-                   {/*   </div>*/}
-                   {/*</div>*/}
+                   <button className="flex items-start p-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-left w-full group">
+                      <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-100 transition-colors">
+                         <Pi className="w-4 h-4 text-orange-600" />
+                      </div>
+                      <div className="ml-3 flex-1">
+                         <div className="text-sm font-medium text-gray-900 mb-1">
+                            Create formulas
+                         </div>
+                         <div className="text-xs text-gray-500 leading-relaxed">
+                            Describe calculations in plain English
+                         </div>
+                      </div>
+                   </button>
 
                    {/* Suggestion 4 */}
-                   <div
-                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
-                      <Pi className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                      <div className="ml-3">
-                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Work with formulae
+                   <button className="flex items-start p-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-left w-full group">
+                      <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0 group-hover:bg-purple-100 transition-colors">
+                         <SquarePen className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="ml-3 flex-1">
+                         <div className="text-sm font-medium text-gray-900 mb-1">
+                            Edit data naturally
                          </div>
-                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Explain the formula(s) you want in English e.g. put all names of the unique sales reps in
-                            col j.
+                         <div className="text-xs text-gray-500 leading-relaxed">
+                            Add rows, update values, or modify your data
                          </div>
                       </div>
-                   </div>
-
-                   {/* Suggestion 5 */}
-                   <div
-                     className="flex items-start p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:hover:bg-gray-700 transition">
-                      <SquarePen className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                      <div className="ml-3">
-                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Natural language to cell edits
-                         </div>
-                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                            E.g. "Add a new rows to the table" or "Calculate the average rent in row 7 col d
-                         </div>
-                      </div>
-                   </div>
+                   </button>
 
 
                 </div>
@@ -149,7 +153,12 @@ const Conversation: React.FC<ConversationProps> = () => {
 
             {/* Message bubbles */}
            {messages.map((message) => (
-             <MessageBubble key={message.id} message={message} />
+             <MessageBubble 
+               key={message.id} 
+               message={message}
+               onApplyAction={handleApplyAction}
+               onDeclineAction={handleDeclineAction}
+             />
            ))}
            
            {/* Scroll target for auto-scroll */}
@@ -158,62 +167,58 @@ const Conversation: React.FC<ConversationProps> = () => {
 
         {/* Generating animation */}
         {isGenerating && (
-          <div className="px-4 pb-2 flex space-x-1">
-             <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-             <div
-               className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-               style={{ animationDelay: "0.1s" }}
-             ></div>
-             <div
-               className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-               style={{ animationDelay: "0.2s" }}
-             ></div>
+          <div className="px-4 pb-4">
+             <div className="flex items-center space-x-2 p-3 rounded-xl bg-white border border-gray-100">
+                <div className="flex space-x-1">
+                   <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                   <div 
+                     className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" 
+                     style={{ animationDelay: "0.1s" }}
+                   ></div>
+                   <div 
+                     className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" 
+                     style={{ animationDelay: "0.2s" }}
+                   ></div>
+                </div>
+                <span className="text-sm text-gray-500 font-medium">AI is thinking...</span>
+             </div>
           </div>
         )}
 
         {/* Input */}
-        <div className="p-2 ">
-           <form
-             onSubmit={handleSend}
-             className="flex flex-col border rounded-lg overflow-hidden border-gray-200 focus-within:border-blue-500"
-           >
-              <div className="flex justify-start items-center px-2 py-1 bg-gray-50 dark:bg-gray-800">
-                 <button
-                   type="submit"
-                   className={`p-0.5 rounded-none transition-colors border border-gray-100  bg-gray-50 text-gray-700`}
-                 >
-                    <Plus size={14} />
-                 </button>
-              </div>
-              <textarea
-                ref={textareaRef}
-                rows={1}
-                value={userInput}
-                onChange={handleInputChange}
-                placeholder="Ask anything"
-                className="w-full resize-none pr-12 pl-3 py-2 rounded-lg text-sm focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-gray-50 border-gray-50 text-gray-900 placeholder-gray-500 overflow-y-auto max-h-64"
-                disabled={isGenerating}
-                onKeyDown={handleKeyDown}
-              />
-              <div className="flex justify-end items-center px-2 py-1 bg-gray-50 dark:bg-gray-800">
-                 <button
-                   type="submit"
-                   // disabled={!input.trim() || isGenerating}
-                   className={`p-2 rounded-3xl transition-colors ${
-                     isGenerating
-                       ? "dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed bg-gray-300 text-gray-500"
-                       : "bg-blue-500 text-white hover:bg-blue-600"
-                   }`}
-                 >
-                    <ArrowUp className="w-4 h-4" />
-                 </button>
+        <div className="p-4 border-t border-gray-200 bg-white">
+           <form onSubmit={handleSend} className="relative">
+              <div className="flex items-end space-x-2">
+                 <div className="flex-1 relative">
+                    <textarea
+                      ref={textareaRef}
+                      rows={1}
+                      value={userInput}
+                      onChange={handleInputChange}
+                      placeholder="Ask anything about your data..."
+                      className="w-full resize-none pl-4 pr-12 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-gray-400 text-gray-900 overflow-y-auto max-h-32"
+                      disabled={isGenerating}
+                      onKeyDown={handleKeyDown}
+                    />
+                    <button
+                      type="submit"
+                      disabled={!userInput.trim() || isGenerating}
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all ${
+                        userInput.trim() && !isGenerating
+                          ? "bg-blue-500 text-white hover:bg-blue-600 shadow-sm"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                       <ArrowUp className="w-4 h-4" />
+                    </button>
+                 </div>
               </div>
            </form>
         </div>
 
         {/* Resize handle */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-blue-500"
+          className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-blue-400 transition-colors"
           // onMouseDown={handleMouseDown}
         />
      </div>

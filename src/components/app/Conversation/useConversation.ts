@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { CellData } from "../../spreadsheet/Grid/gridTypes";
-import { Message } from "./conversationTypes";
+import { Message, PendingAction } from "./conversationTypes";
 import { batchSetCells, getCompletion, getSheet } from "../../../lib/api/apiClient";
 import { useGrid } from "../../spreadsheet/Grid/useGrid";
 import { useAnimateCell } from "../../providers/AnimatingCellProvider";
@@ -69,12 +69,17 @@ export function useConversation() {
       if (Array.isArray(resultsList)) {
         // map each step result to a different assistant message
         const assistantMessages: Message[] = await Promise.all(
-          resultsList.map(async (stepResult: any) => ({
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: await parseStepOutput(stepResult),
-            timestamp: new Date()
-          }))
+          resultsList.map(async (stepResult: any) => {
+            const parseResult = await parseStepOutput(stepResult);
+            return {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: parseResult.content,
+              timestamp: new Date(),
+              pendingAction: parseResult.pendingAction,
+              actionStatus: parseResult.pendingAction ? 'pending' as const : undefined
+            };
+          })
         );
         setMessages(prev => [...prev, ...assistantMessages]);
       } else {
@@ -103,7 +108,7 @@ export function useConversation() {
     }
   };
 
-  async function parseStepOutput(stepResult: any) {
+  async function parseStepOutput(stepResult: any): Promise<{ content: string; pendingAction?: PendingAction }> {
     const output = stepResult.result;
     switch (stepResult.tool) {
       case "analyze_data": {
@@ -121,15 +126,136 @@ export function useConversation() {
         if (output.observations) {
           message += `\n${output.observations}\n`;
         }
-        return message.trim() || "No analysis results available.";
+        return { content: message.trim() || "No analysis results available." };
       }
       case "generate_table":
-        await applyTableEdits(workbookId, sheet, output.edits, setCellMap, setCellDataBySheet, triggerCellAnimations);
-        return output.description;
+        // Return pending action instead of auto-applying
+        return {
+          content: output.description,
+          pendingAction: {
+            type: 'data',
+            data: { 
+              edits: output.edits,
+              workbookId,
+              sheet,
+              setCellMap,
+              setCellDataBySheet,
+              triggerCellAnimations
+            },
+            description: `Apply ${output.edits?.length || 0} data changes`
+          }
+        };
+      case "generate_formula":
+        // Return pending action instead of auto-applying
+        if (output.target_cells && output.target_cells.length > 0) {
+          const edits = output.target_cells.map((cell: any) => ({
+            address: cell.address,
+            value: "", // Will be calculated by the formula
+            formula: cell.formula,
+          }));
+          return {
+            content: output.description,
+            pendingAction: {
+              type: 'formula',
+              data: { 
+                edits,
+                workbookId,
+                sheet,
+                setCellMap,
+                setCellDataBySheet,
+                triggerCellAnimations
+              },
+              description: `Apply ${edits.length} formula${edits.length > 1 ? 's' : ''}`
+            }
+          };
+        }
+        return { content: output.description };
+      case "structured_calculation":
+        // Handle structured calculation results
+        let message = `Calculated ${output.operation} of column ${output.column}`;
+        if (output.result !== undefined) {
+          message += `: **${output.result}**`;
+        }
+        if (output.rows_matched) {
+          message += ` (${output.rows_matched} rows matched)`;
+        }
+        if (output.target_cell) {
+          message += ` → Result written to cell ${output.target_cell}`;
+          // Refresh the sheet to show the written result
+          try {
+            const response = await getSheet(workbookId, sheet);
+            if (response.data.success) {
+              const sheetData = response.data.data.sheet;
+              const updatedCellMap = new Map();
+              
+              if (sheetData.cells) {
+                Object.entries(sheetData.cells).forEach(([cellId, cellData]: [string, any]) => {
+                  updatedCellMap.set(cellId, {
+                    value: cellData.value || '',
+                    formula: cellData.formula || '',
+                    style: cellData.style || {}
+                  });
+                });
+              }
+              
+              setCellMap(updatedCellMap);
+              setCellDataBySheet(prev => ({
+                ...prev,
+                [sheet]: updatedCellMap
+              }));
+            }
+          } catch (refreshErr) {
+            console.error("Failed to refresh sheet data:", refreshErr);
+          }
+        }
+        if (output.warnings && output.warnings.length > 0) {
+          message += `\n⚠️ Warnings: ${output.warnings.join(', ')}`;
+        }
+        return { content: message };
       default:
-        return "couldn't parse step result";
+        return { content: "couldn't parse step result" };
     }
   }
+
+  // Handle applying a pending action
+  const handleApplyAction = async (messageId: string, action: PendingAction) => {
+    try {
+      switch (action.type) {
+        case 'data':
+        case 'formula':
+          await applyTableEdits(
+            action.data.workbookId,
+            action.data.sheet,
+            action.data.edits,
+            action.data.setCellMap,
+            action.data.setCellDataBySheet,
+            action.data.triggerCellAnimations
+          );
+          break;
+        case 'calculation':
+          // Handle calculation application if needed
+          break;
+      }
+
+      // Update message status
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, actionStatus: 'applied' as const }
+          : msg
+      ));
+    } catch (error) {
+      console.error("Error applying action:", error);
+    }
+  };
+
+  // Handle declining a pending action
+  const handleDeclineAction = (messageId: string) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, actionStatus: 'declined' as const }
+        : msg
+    ));
+  };
 
   async function applyTableEdits(
     workbookId: string,
@@ -244,6 +370,8 @@ export function useConversation() {
     handleSend,
     parseStepOutput,
     applyTableEdits,
-    messagesEndRef
+    messagesEndRef,
+    handleApplyAction,
+    handleDeclineAction
   };
 }
