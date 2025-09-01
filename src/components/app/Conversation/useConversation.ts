@@ -7,7 +7,7 @@ import { useAnimateCell } from "../../providers/AnimatingCellProvider";
 import { useWorkbook } from "../../providers/WorkbookProvider";
 
 export function useConversation() {
-  const { workbookId, activeSheet, cellDataBySheet, setCellDataBySheet, } = useWorkbook()
+  const { workbookId, activeSheet, cellDataBySheet, setCellDataBySheet, sheets } = useWorkbook()
   const sheet = activeSheet ? activeSheet : "Sheet1";
   const [isGenerating, setIsGenerating] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
@@ -62,7 +62,9 @@ export function useConversation() {
     setIsGenerating(true);
 
     try {
-      const response = await getCompletion(workbookId, sheet, userMessage.content);
+      // Use all sheets context if workbook has multiple sheets
+      const useAllSheets = sheets.length > 1;
+      const response = await getCompletion(workbookId, sheet, userMessage.content, useAllSheets);
       console.log(response.data.data);
       const resultsList = response.data.data.results;
 
@@ -370,6 +372,7 @@ export function useConversation() {
     applyTableEdits,
     messagesEndRef,
     handleApplyAction,
-    handleDeclineAction
+    handleDeclineAction,
+    sheets
   };
 }

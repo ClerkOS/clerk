@@ -6,9 +6,10 @@ import Spreadsheet from "../../spreadsheet/Sheet/Sheet";
 import Conversation from "../Conversation/Conversation";
 import React, { useState } from "react";
 import { RangeSelection } from "../Conversation/conversationTypes";
+import { useWorkbook } from "../../providers/WorkbookProvider";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-
+   const { isWorkbookLoaded } = useWorkbook();
    const [panelWidth, setPanelWidth] = useState(10);
    const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
    const [showFormulaBuilder, setShowFormulaBuilder] = useState(false);
@@ -74,13 +75,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
 
         <div className="flex flex-1 overflow-hidden min-h-0">
-           <SideBar
-             onFormulaClick={toggleFormulaBuilder}
-             onChartClick={toggleChartBuilder}
-             onTableClick={toggleTablesPanel}
-             onAIClick={toggleAIPanel}
-             onInsightsClick={toggleInsightsPanel}
-           />
+           {isWorkbookLoaded && (
+             <SideBar
+               onFormulaClick={toggleFormulaBuilder}
+               onChartClick={toggleChartBuilder}
+               onTableClick={toggleTablesPanel}
+               onAIClick={toggleAIPanel}
+               onInsightsClick={toggleInsightsPanel}
+             />
+           )}
 
            {/*<AnimatePresence>*/}
            {/*  {showInsightsPanel && (*/}

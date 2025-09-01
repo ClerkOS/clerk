@@ -91,8 +91,8 @@ export async function addSheet(workbookId: string, sheetName: string){
 }
 
 // Conversation APIs
-export async function getCompletion(workbookId: string, sheet: string, prompt: string) {
-  return api.post(`/chat/completion/${workbookId}`, { sheet, prompt });
+export async function getCompletion(workbookId: string, sheet: string, prompt: string, useAllSheets?: boolean) {
+  return api.post(`/chat/completion/${workbookId}`, { sheet, prompt, use_all_sheets: useAllSheets || false });
 }
 
 

@@ -1,4 +1,4 @@
-it aimport React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { ArrowUp, FileText, Omega, Pi, Plus, ChartNoAxesCombined, WandSparkles, SquarePen } from "lucide-react";
 import { ConversationProps, Message } from "./conversationTypes";
 import { useConversation } from "./useConversation";
@@ -28,7 +28,8 @@ const Conversation: React.FC<ConversationProps> = () => {
       applyTableEdits,
       messagesEndRef,
       handleApplyAction,
-      handleDeclineAction
+      handleDeclineAction,
+      sheets
    } = useConversation()
 
    return (
@@ -53,9 +54,16 @@ const Conversation: React.FC<ConversationProps> = () => {
                      <path d="M2405 3254 c-111 -62 -140 -217 -59 -313 89 -106 288 -76 338 51 35 86 9 192 -60 244 -33 25 -47 29 -113 32 -56 2 -84 -2 -106 -14z"/>
                   </g>
                </svg>
-              <h3 className="font-medium text-gray-900 text-sm">
-                 Clerk AI
-              </h3>
+              <div className="flex flex-col">
+                <h3 className="font-medium text-gray-900 text-sm">
+                   Clerk AI
+                </h3>
+                {sheets.length > 1 && (
+                  <span className="text-xs text-gray-500">
+                    Analyzing {sheets.length} sheets
+                  </span>
+                )}
+              </div>
            </div>
            <div className="flex items-center space-x-1">
               <button
